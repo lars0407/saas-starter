@@ -108,7 +108,7 @@ const data = {
         },
         {
           title: "Anschreiben",
-          url: "/dashboard/documents?type=cover_letter",
+          url: "/dashboard/documents/cover-letter",
         },
         {
           title: "Lebenslauf",
