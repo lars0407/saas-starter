@@ -11,20 +11,28 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { signOut } from '@/app/(login)/actions';
 import { useRouter } from 'next/navigation';
-import { User } from '@/lib/db/schema';
 import useSWR, { mutate } from 'swr';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+// Define Xano user type based on the API response
+type XanoUser = {
+  name: string;
+  email: string;
+  profile_image?: string;
+  profile_completion_score: number;
+  searchprofile_completion_score: number;
+  message: boolean;
+};
+
 function UserMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { data: user } = useSWR<User>('/api/user', fetcher);
+  const { data: user } = useSWR<XanoUser>('/api/user', fetcher);
   const router = useRouter();
 
   async function handleSignOut() {
-    await signOut();
+    await fetch('/api/auth/sign-out', { method: 'POST' });
     mutate('/api/user');
     router.push('/');
   }
@@ -49,9 +57,9 @@ function UserMenu() {
     <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
       <DropdownMenuTrigger>
         <Avatar className="cursor-pointer size-9">
-          <AvatarImage alt={user.name || ''} />
+          <AvatarImage alt={user.name || ''} src={user.profile_image} />
           <AvatarFallback>
-            {user.email
+            {user.name
               .split(' ')
               .map((n) => n[0])
               .join('')}

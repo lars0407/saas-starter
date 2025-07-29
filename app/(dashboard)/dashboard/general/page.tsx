@@ -1,121 +1,126 @@
 'use client';
 
-import { useActionState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
-import { updateAccount } from '@/app/(login)/actions';
-import { User } from '@/lib/db/schema';
+import { User, Mail, Shield } from 'lucide-react';
 import useSWR from 'swr';
 import { Suspense } from 'react';
 
+// Define Xano user type
+type XanoUser = {
+  name: string;
+  email: string;
+  profile_image?: string;
+  profile_completion_score: number;
+  searchprofile_completion_score: number;
+  message: boolean;
+};
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-type ActionState = {
-  name?: string;
-  error?: string;
-  success?: string;
-};
-
-type AccountFormProps = {
-  state: ActionState;
-  nameValue?: string;
-  emailValue?: string;
-};
-
-function AccountForm({
-  state,
-  nameValue = '',
-  emailValue = ''
-}: AccountFormProps) {
+function AccountInfoSkeleton() {
   return (
-    <>
-      <div>
-        <Label htmlFor="name" className="mb-2">
-          Name
-        </Label>
-        <Input
-          id="name"
-          name="name"
-          placeholder="Enter your name"
-          defaultValue={state.name || nameValue}
-          required
-        />
-      </div>
-      <div>
-        <Label htmlFor="email" className="mb-2">
-          Email
-        </Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="Enter your email"
-          defaultValue={emailValue}
-          required
-        />
-      </div>
-    </>
+    <Card>
+      <CardHeader>
+        <CardTitle>Account Information</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="animate-pulse">
+            <Label className="mb-2">Name</Label>
+            <div className="h-10 bg-gray-200 rounded"></div>
+          </div>
+          <div className="animate-pulse">
+            <Label className="mb-2">Email</Label>
+            <div className="h-10 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
-function AccountFormWithData({ state }: { state: ActionState }) {
-  const { data: user } = useSWR<User>('/api/user', fetcher);
+function AccountInfo() {
+  const { data: user } = useSWR<XanoUser>('/api/user', fetcher);
+
+  if (!user) {
+    return <AccountInfoSkeleton />;
+  }
+
   return (
-    <AccountForm
-      state={state}
-      nameValue={user?.name ?? ''}
-      emailValue={user?.email ?? ''}
-    />
+    <Card>
+      <CardHeader>
+        <CardTitle>Account Information</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="name" className="mb-2 flex items-center">
+              <User className="mr-2 h-4 w-4" />
+              Name
+            </Label>
+            <Input
+              id="name"
+              value={user.name}
+              readOnly
+              className="bg-gray-50"
+            />
+          </div>
+          <div>
+            <Label htmlFor="email" className="mb-2 flex items-center">
+              <Mail className="mr-2 h-4 w-4" />
+              Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={user.email}
+              readOnly
+              className="bg-gray-50"
+            />
+          </div>
+          <div>
+            <Label className="mb-2 flex items-center">
+              <Shield className="mr-2 h-4 w-4" />
+              Profile Completion
+            </Label>
+            <div className="flex items-center space-x-2">
+              <div className="flex-1 bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full" 
+                  style={{ width: `${user.profile_completion_score}%` }}
+                ></div>
+              </div>
+              <span className="text-sm text-gray-600">{user.profile_completion_score}%</span>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+          <p className="text-sm text-blue-800">
+            <strong>Note:</strong> User information is managed through Xano. 
+            To update your profile, please contact your administrator or use the Xano dashboard.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
 export default function GeneralPage() {
-  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-    updateAccount,
-    {}
-  );
-
   return (
-    <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
-        General Settings
-      </h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">General Settings</h1>
+        <p className="text-gray-600 mt-2">
+          View your account information and profile status.
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" action={formAction}>
-            <Suspense fallback={<AccountForm state={state} />}>
-              <AccountFormWithData state={state} />
-            </Suspense>
-            {state.error && (
-              <p className="text-red-500 text-sm">{state.error}</p>
-            )}
-            {state.success && (
-              <p className="text-green-500 text-sm">{state.success}</p>
-            )}
-            <Button
-              type="submit"
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-              disabled={isPending}
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </section>
+      <Suspense fallback={<AccountInfoSkeleton />}>
+        <AccountInfo />
+      </Suspense>
+    </div>
   );
 }
