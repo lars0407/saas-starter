@@ -12,7 +12,7 @@ import {
   User
 } from "lucide-react"
 import { toast } from "sonner"
-
+import { apiClient } from "@/lib/api-client"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -47,33 +47,47 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
       await onDelete(document.id)
       toast.success("Dokument erfolgreich gelöscht! 🗑️")
     } catch (error) {
-      toast.error("Fehler beim Löschen des Dokuments 😅")
+      toast.error("Fehler beim Löschen des Dokuments")
     } finally {
       setIsDeleting(false)
     }
   }
 
   const handleDownload = async () => {
-    const downloadUrl = document.file_url || document.url
-    if (!downloadUrl) {
-      toast.error("Download nicht verfügbar 📄")
-      return
-    }
-
     try {
-      const response = await fetch(downloadUrl)
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = window.document.createElement('a')
-      a.href = url
-      a.download = `${document.name}.pdf`
-      window.document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      window.document.body.removeChild(a)
+      // Use the API client to get the download URL
+      const data = await apiClient.post('/api:SiRHLF4Y/documents/download', {
+        document_id: document.id
+      })
+
+      // Fixed: Use correct response structure
+      const signedUrl = data?.download_link?.url
+
+      if (!signedUrl) {
+        console.error('Download response:', data) // Debug log
+        toast.error("Download URL nicht verfügbar 📄")
+        return
+      }
+
+      // WeWeb approach: Add Azure query parameter to force download dialog
+      const downloadUrl = signedUrl + '&rscd=' + encodeURIComponent(`attachment; filename="${document.name}.pdf"`)
+
+      // Open in new tab - browser will download immediately
+      window.open(downloadUrl, '_blank')
       toast.success("Download gestartet! 📥")
     } catch (error) {
-      toast.error("Download fehlgeschlagen 😅")
+      console.error('Download error:', error)
+      
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes('Authentication required')) {
+          toast.error("Du musst dich erst anmelden! 🔐")
+        } else {
+          toast.error("Download fehlgeschlagen 😅")
+        }
+      } else {
+        toast.error("Download fehlgeschlagen 😅")
+      }
     }
   }
 
@@ -91,7 +105,7 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
   }
 
   const getVariantLabel = (variant: string) => {
-    return variant === "ai" ? "von der AI gebrainstormt" : "selbst gemacht – oldschool 😎"
+    return variant === "ai" ? "von der AI gebrainstormt" : "selbst gemacht – oldschool"
   }
 
   const getVariantIcon = (variant: string) => {
