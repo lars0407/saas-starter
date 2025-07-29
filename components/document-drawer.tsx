@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { 
-  Download, 
   Edit, 
   Trash2, 
   Calendar,
@@ -10,8 +9,8 @@ import {
   User,
   FileText
 } from "lucide-react"
+import { useDocumentDownload } from "@/hooks/use-document-download"
 import { toast } from "sonner"
-import { apiClient } from "@/lib/api-client"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -35,13 +34,6 @@ interface Document {
   url?: string
 }
 
-interface DownloadResponse {
-  download_link: {
-    url: string
-    expires_at: string
-  }
-}
-
 interface DocumentDrawerProps {
   document: Document | null
   open: boolean
@@ -58,56 +50,18 @@ export function DocumentDrawer({
   onDelete 
 }: DocumentDrawerProps) {
   const [isDeleting, setIsDeleting] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const { downloadDocument, isLoading: isDownloading } = useDocumentDownload()
 
   // Reset loading states when drawer closes
   useEffect(() => {
     if (!open) {
       setIsDeleting(false)
-      setIsLoading(false)
     }
   }, [open])
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     if (!document) return
-
-    try {
-      setIsLoading(true)
-      
-      // Use the API client to get the download URL with proper typing
-      const data = await apiClient.post<DownloadResponse>('/api:SiRHLF4Y/documents/download', {
-        document_id: document.id
-      })
-
-      const signedUrl = data?.download_link?.url
-
-      if (!signedUrl) {
-        console.error('Download response:', data)
-        toast.error("Download URL nicht verfügbar 📄")
-        return
-      }
-
-      // WeWeb approach: Add Azure query parameter to force download dialog
-      const downloadUrl = signedUrl + '&rscd=' + encodeURIComponent(`attachment; filename="${document.name}.pdf"`)
-
-      // Open in new tab - browser will download immediately
-      window.open(downloadUrl, '_blank')
-      toast.success("Download gestartet! 📥")
-    } catch (error) {
-      console.error('Download error:', error)
-      
-      if (error instanceof Error) {
-        if (error.message.includes('Authentication required')) {
-          toast.error("Du musst dich erst anmelden! 🔐")
-        } else {
-          toast.error("Download fehlgeschlagen 😅")
-        }
-      } else {
-        toast.error("Download fehlgeschlagen 😅")
-      }
-    } finally {
-      setIsLoading(false)
-    }
+    downloadDocument(document)
   }
 
   const handleDelete = async () => {

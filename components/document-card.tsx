@@ -11,8 +11,8 @@ import {
   Sparkles,
   User
 } from "lucide-react"
+import { useDocumentDownload } from "@/hooks/use-document-download"
 import { toast } from "sonner"
-import { apiClient } from "@/lib/api-client"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -40,6 +40,7 @@ interface DocumentCardProps {
 export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const { downloadDocument, isLoading: isDownloading } = useDocumentDownload()
 
   const handleDelete = async () => {
     if (!onDelete) return
@@ -55,42 +56,8 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
     }
   }
 
-  const handleDownload = async () => {
-    try {
-      // Use the API client to get the download URL with proper typing
-      const data = await apiClient.post<DownloadResponse>('/api:SiRHLF4Y/documents/download', {
-        document_id: document.id
-      })
-
-      // Fixed: Use correct response structure with proper typing
-      const signedUrl = data?.download_link?.url
-
-      if (!signedUrl) {
-        console.error('Download response:', data) // Debug log
-        toast.error("Download URL nicht verfügbar 📄")
-        return
-      }
-
-      // WeWeb approach: Add Azure query parameter to force download dialog
-      const downloadUrl = signedUrl + '&rscd=' + encodeURIComponent(`attachment; filename="${document.name}.pdf"`)
-
-      // Open in new tab - browser will download immediately
-      window.open(downloadUrl, '_blank')
-      toast.success("Download gestartet! 📥")
-    } catch (error) {
-      console.error('Download error:', error)
-      
-      // Handle specific error cases
-      if (error instanceof Error) {
-        if (error.message.includes('Authentication required')) {
-          toast.error("Du musst dich erst anmelden! 🔐")
-        } else {
-          toast.error("Download fehlgeschlagen 😅")
-        }
-      } else {
-        toast.error("Download fehlgeschlagen 😅")
-      }
-    }
+  const handleDownload = () => {
+    downloadDocument(document)
   }
 
   const handleView = () => {
@@ -190,10 +157,11 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
                   variant="ghost" 
                   size="sm" 
                   onClick={handleDownload}
+                  disabled={isDownloading}
                   className="h-7 px-2 text-xs justify-start hover:text-[#0F973D] hover:bg-[#0F973D]/10"
                 >
                   <Download className="mr-1 h-3 w-3" />
-                  Download
+                  {isDownloading ? "Download..." : "Download"}
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -223,10 +191,4 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
   )
 }
 
-// Add the missing interface for TypeScript
-interface DownloadResponse {
-  download_link: {
-    url: string
-    expires_at: string
-  }
-} 
+ 
