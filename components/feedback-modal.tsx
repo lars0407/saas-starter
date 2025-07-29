@@ -129,7 +129,7 @@ export function FeedbackModal({ open, onOpenChange, userEmail }: FeedbackModalPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] [&>button]:hover:text-[#0F973D] [&>button]:hover:bg-[#0F973D]/10">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
@@ -147,10 +147,16 @@ export function FeedbackModal({ open, onOpenChange, userEmail }: FeedbackModalPr
             <RadioGroup value={type} onValueChange={setType} className="space-y-3">
               {["bug", "idea", "general"].map((feedbackType) => (
                 <div key={feedbackType} className="flex items-center space-x-3">
-                  <RadioGroupItem value={feedbackType} id={feedbackType} />
+                  <RadioGroupItem 
+                    value={feedbackType} 
+                    id={feedbackType}
+                    className="data-[state=checked]:border-[#0F973D] data-[state=checked]:bg-white [&[data-state=checked]>span]:bg-[#0F973D]"
+                  />
                   <Label
                     htmlFor={feedbackType}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
+                    className={`flex items-center gap-2 text-sm cursor-pointer ${
+                      type === feedbackType ? 'text-[#0F973D] font-medium' : ''
+                    }`}
                   >
                     {getTypeIcon(feedbackType)}
                     {getTypeLabel(feedbackType)}
@@ -169,7 +175,7 @@ export function FeedbackModal({ open, onOpenChange, userEmail }: FeedbackModalPr
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Erzähl uns alles! Je mehr Details, desto besser können wir helfen. 🚀"
-              className="min-h-[120px] resize-none"
+              className="min-h-[120px] resize-none focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-1"
               maxLength={1000}
             />
             <div className="text-xs text-muted-foreground text-right">
@@ -187,7 +193,7 @@ export function FeedbackModal({ open, onOpenChange, userEmail }: FeedbackModalPr
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Wenn du willst, schreib deine Mail rein. Vielleicht melden wir uns."
-              className="text-sm"
+              className="text-sm focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-1"
             />
             <p className="text-xs text-muted-foreground">
               Kein Spam. Ehrenwort. 🤝
@@ -206,7 +212,7 @@ export function FeedbackModal({ open, onOpenChange, userEmail }: FeedbackModalPr
             <Button
               onClick={handleSubmit}
               disabled={loading || !message.trim()}
-              className="flex-1"
+              className="flex-1 bg-[#0F973D] hover:bg-[#0D7A32] disabled:bg-gray-300 disabled:text-gray-500"
             >
               {loading ? (
                 <>
