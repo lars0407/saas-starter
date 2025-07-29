@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Shield, Zap } from 'lucide-react';
+import { ArrowRight, CreditCard, Database } from 'lucide-react';
 import { Terminal } from './terminal';
 
 export default function HomePage() {
@@ -66,30 +66,30 @@ export default function HomePage() {
 
             <div className="mt-10 lg:mt-0">
               <div className="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white">
-                <Shield className="h-6 w-6" />
+                <Database className="h-6 w-6" />
               </div>
               <div className="mt-5">
                 <h2 className="text-lg font-medium text-gray-900">
-                  Xano Authentication
+                  Postgres and Drizzle ORM
                 </h2>
                 <p className="mt-2 text-base text-gray-500">
-                  Secure user authentication and management with Xano's powerful
-                  backend-as-a-service platform.
+                  Robust database solution with an intuitive ORM for efficient
+                  data management and scalability.
                 </p>
               </div>
             </div>
 
             <div className="mt-10 lg:mt-0">
               <div className="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white">
-                <Zap className="h-6 w-6" />
+                <CreditCard className="h-6 w-6" />
               </div>
               <div className="mt-5">
                 <h2 className="text-lg font-medium text-gray-900">
-                  Modern Features
+                  Stripe Integration
                 </h2>
                 <p className="mt-2 text-base text-gray-500">
-                  Built with the latest technologies including TypeScript, Tailwind CSS,
-                  and modern React patterns.
+                  Seamless payment processing and subscription management with
+                  industry-leading Stripe integration.
                 </p>
               </div>
             </div>

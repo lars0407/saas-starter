@@ -1,85 +1,119 @@
-# Next.js SaaS Starter with Xano Authentication
+# Next.js SaaS Starter
 
-A modern SaaS starter template built with Next.js 15, featuring Xano authentication and a beautiful UI.
+This is a starter template for building a SaaS application using **Next.js** with support for authentication, Stripe integration for payments, and a dashboard for logged-in users.
+
+**Demo: [https://next-saas-start.vercel.app/](https://next-saas-start.vercel.app/)**
 
 ## Features
 
-- **🔐 Xano Authentication** - Secure user authentication and management
-- **🎨 Modern UI** - Beautiful, responsive design with Tailwind CSS
-- **⚡ Next.js 15** - Latest features with App Router and Server Components
-- **🔒 TypeScript** - Full type safety throughout the application
-- **📱 Responsive** - Works perfectly on all devices
+- Marketing landing page (`/`) with animated Terminal element
+- Pricing page (`/pricing`) which connects to Stripe Checkout
+- Dashboard pages with CRUD operations on users/teams
+- Basic RBAC with Owner and Member roles
+- Subscription management with Stripe Customer Portal
+- Email/password authentication with JWTs stored to cookies
+- Global middleware to protect logged-in routes
+- Local middleware to protect Server Actions or validate Zod schemas
+- Activity logging system for any user events
 
-## Quick Start
+## Tech Stack
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd saas-starter
-   ```
+- **Framework**: [Next.js](https://nextjs.org/)
+- **Database**: [Postgres](https://www.postgresql.org/)
+- **ORM**: [Drizzle](https://orm.drizzle.team/)
+- **Payments**: [Stripe](https://stripe.com/)
+- **UI Library**: [shadcn/ui](https://ui.shadcn.com/)
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+## Getting Started
 
-3. **Set up environment variables**
-   Create a `.env.local` file with:
-   ```env
-   # Add any environment variables you need for your application
-   ```
-
-4. **Run the development server**
-   ```bash
-   npm run dev
-   ```
-
-5. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## Authentication
-
-This project uses Xano for authentication. The authentication system includes:
-
-- User registration and login
-- JWT token-based authentication
-- Password reset functionality
-- Email verification
-- User profile management
-
-## Project Structure
-
-```
-├── app/                    # Next.js App Router
-│   ├── (dashboard)/       # Protected dashboard routes
-│   ├── api/              # API routes
-│   ├── sign-in/          # Sign-in page
-│   └── sign-up/          # Sign-up page
-├── components/           # Reusable UI components
-├── lib/                  # Utility functions
-│   └── xano.ts          # Xano authentication client
-└── middleware.ts        # Route protection
+```bash
+git clone https://github.com/nextjs/saas-starter
+cd saas-starter
+pnpm install
 ```
 
-## Key Technologies
+## Running Locally
 
-- **Next.js 15** - React framework with App Router
-- **Xano** - Backend-as-a-Service for authentication
-- **Tailwind CSS** - Utility-first CSS framework
-- **TypeScript** - Type-safe JavaScript
-- **SWR** - Data fetching and caching
+[Install](https://docs.stripe.com/stripe-cli) and log in to your Stripe account:
 
-## Deployment
+```bash
+stripe login
+```
 
-This project can be deployed to Vercel, Netlify, or any other hosting platform that supports Next.js.
+Use the included setup script to create your `.env` file:
 
-## Contributing
+```bash
+pnpm db:setup
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+Run the database migrations and seed the database with a default user and team:
 
-## License
+```bash
+pnpm db:migrate
+pnpm db:seed
+```
 
-This project is licensed under the MIT License.
+This will create the following user and team:
+
+- User: `test@test.com`
+- Password: `admin123`
+
+You can also create new users through the `/sign-up` route.
+
+Finally, run the Next.js development server:
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the app in action.
+
+You can listen for Stripe webhooks locally through their CLI to handle subscription change events:
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+## Testing Payments
+
+To test Stripe payments, use the following test card details:
+
+- Card Number: `4242 4242 4242 4242`
+- Expiration: Any future date
+- CVC: Any 3-digit number
+
+## Going to Production
+
+When you're ready to deploy your SaaS application to production, follow these steps:
+
+### Set up a production Stripe webhook
+
+1. Go to the Stripe Dashboard and create a new webhook for your production environment.
+2. Set the endpoint URL to your production API route (e.g., `https://yourdomain.com/api/stripe/webhook`).
+3. Select the events you want to listen for (e.g., `checkout.session.completed`, `customer.subscription.updated`).
+
+### Deploy to Vercel
+
+1. Push your code to a GitHub repository.
+2. Connect your repository to [Vercel](https://vercel.com/) and deploy it.
+3. Follow the Vercel deployment process, which will guide you through setting up your project.
+
+### Add environment variables
+
+In your Vercel project settings (or during deployment), add all the necessary environment variables. Make sure to update the values for the production environment, including:
+
+1. `BASE_URL`: Set this to your production domain.
+2. `STRIPE_SECRET_KEY`: Use your Stripe secret key for the production environment.
+3. `STRIPE_WEBHOOK_SECRET`: Use the webhook secret from the production webhook you created in step 1.
+4. `POSTGRES_URL`: Set this to your production database URL.
+5. `AUTH_SECRET`: Set this to a random string. `openssl rand -base64 32` will generate one.
+
+## Other Templates
+
+While this template is intentionally minimal and to be used as a learning resource, there are other paid versions in the community which are more full-featured:
+
+- https://achromatic.dev
+- https://shipfa.st
+- https://makerkit.dev
+- https://zerotoshipped.com
+- https://turbostarter.dev
