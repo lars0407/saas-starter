@@ -9,8 +9,8 @@ interface EmptyStateProps {
 
 export function EmptyState({ onCreateResume, onCreateCoverLetter }: EmptyStateProps) {
   return (
-    <Card className="border-dashed">
-      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+    <Card className="border-dashed w-full max-w-md">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
           <FileText className="h-8 w-8 text-gray-400" />
         </div>
@@ -26,7 +26,7 @@ export function EmptyState({ onCreateResume, onCreateCoverLetter }: EmptyStatePr
         <div className="flex flex-col space-y-2 sm:flex-row sm:space-x-2 sm:space-y-0">
           <Button 
             onClick={onCreateResume}
-            className="flex items-center"
+            className="flex items-center bg-[#0F973D] hover:bg-[#0D7A32] text-white"
           >
             <Plus className="mr-2 h-4 w-4" />
             Lebenslauf erstellen

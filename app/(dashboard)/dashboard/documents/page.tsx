@@ -301,7 +301,7 @@ export default function DocumentsPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-fit grid-cols-2">
             <TabsTrigger value="human">Basis (Lebenslauf & Anschreiben)</TabsTrigger>
             <TabsTrigger value="ai">KI-generiert (Lebenslauf & Anschreiben)</TabsTrigger>
           </TabsList>
@@ -312,10 +312,12 @@ export default function DocumentsPage() {
                 {renderSkeletons()}
               </div>
                          ) : !documents || documents.length === 0 ? (
-              <EmptyState 
-                onCreateResume={handleCreateResume}
-                onCreateCoverLetter={handleCreateCoverLetter}
-              />
+              <div className="flex items-center justify-center h-[calc(100vh-300px)] w-full">
+                <EmptyState 
+                  onCreateResume={handleCreateResume}
+                  onCreateCoverLetter={handleCreateCoverLetter}
+                />
+              </div>
             ) : (
               <>
                                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
