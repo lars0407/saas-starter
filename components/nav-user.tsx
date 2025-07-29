@@ -9,10 +9,13 @@ import {
   Sparkles,
   Settings,
   Activity,
+  MessageSquare,
 } from "lucide-react"
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import useSWR, { mutate } from 'swr'
+import { useState } from 'react'
+import { FeedbackModal } from '@/components/feedback-modal'
 
 import {
   Avatar,
@@ -69,6 +72,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const router = useRouter()
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const { data: xanoUser } = useSWR<XanoUser>('/api/user', fetcher, {
     revalidateOnFocus: false,
     shouldRetryOnError: false
@@ -147,6 +151,13 @@ export function NavUser({
                   Activity
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setFeedbackOpen(true)}
+                disabled={!xanoUser}
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Feedback
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>
@@ -156,6 +167,12 @@ export function NavUser({
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+      
+      <FeedbackModal 
+        open={feedbackOpen} 
+        onOpenChange={setFeedbackOpen}
+        userEmail={xanoUser?.email}
+      />
     </SidebarMenu>
   )
 }

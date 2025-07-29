@@ -14,11 +14,14 @@ import {
   SquareTerminal,
 } from "lucide-react"
 import useSWR from 'swr'
+import { useState } from 'react'
+import { FeedbackModal } from '@/components/feedback-modal'
 
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
+import { Button } from "@/components/ui/button"
 import {
   Sidebar,
   SidebarContent,
@@ -134,6 +137,7 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const { data: user, error } = useSWR<XanoUser>('/api/user', fetcher, {
     revalidateOnFocus: false,
     shouldRetryOnError: false
@@ -163,6 +167,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavUser user={userData} />
       </SidebarFooter>
       <SidebarRail />
+      
+      <FeedbackModal 
+        open={feedbackOpen} 
+        onOpenChange={setFeedbackOpen}
+        userEmail={user?.email}
+      />
     </Sidebar>
   )
 }
