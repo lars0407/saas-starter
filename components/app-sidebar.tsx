@@ -75,30 +75,26 @@ const data = {
     },
   ],
   navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: "Overview",
+            {
+          title: "Dashboard",
           url: "/dashboard",
+          icon: SquareTerminal,
+          isActive: true,
+          items: [
+            {
+              title: "Overview",
+              url: "/dashboard",
+            },
+            {
+              title: "Security",
+              url: "/dashboard/security",
+            },
+            {
+              title: "Activity",
+              url: "/dashboard/activity",
+            },
+          ],
         },
-        {
-          title: "General",
-          url: "/dashboard/general",
-        },
-        {
-          title: "Security",
-          url: "/dashboard/security",
-        },
-        {
-          title: "Activity",
-          url: "/dashboard/activity",
-        },
-      ],
-    },
     {
       title: "Dokumente",
       url: "/dashboard/documents",
@@ -120,20 +116,32 @@ const data = {
     },
     {
       title: "Settings",
-      url: "/dashboard/general",
+      url: "/dashboard/settings",
       icon: Settings2,
       items: [
         {
-          title: "General",
-          url: "/dashboard/general",
+          title: "Profil",
+          url: "/dashboard/settings",
         },
         {
-          title: "Security",
-          url: "/dashboard/security",
+          title: "Passwort",
+          url: "/dashboard/settings",
         },
         {
-          title: "Activity",
-          url: "/dashboard/activity",
+          title: "Benachrichtigungen",
+          url: "/dashboard/settings",
+        },
+        {
+          title: "Datenschutz",
+          url: "/dashboard/settings",
+        },
+        {
+          title: "Sprache & Region",
+          url: "/dashboard/settings",
+        },
+        {
+          title: "KI-Personalisierung",
+          url: "/dashboard/settings",
         },
       ],
     },
@@ -141,7 +149,7 @@ const data = {
   projects: [
     {
       name: "Profile Management",
-      url: "/dashboard/general",
+      url: "/dashboard/settings",
       icon: Frame,
     },
     {
