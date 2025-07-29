@@ -13,14 +13,10 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
 import { Badge } from "@/components/ui/badge"
 
 interface Document {
@@ -115,14 +111,66 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
         // Check if we're in browser environment
         if (typeof window === 'undefined') return
         
-        // Create a simple canvas-based preview without fetching the PDF
+        // Check if URL is valid
+        if (!downloadUrl || downloadUrl === 'undefined' || downloadUrl === 'null') {
+          throw new Error('Invalid PDF URL')
+        }
+
+        // Create a simple PDF preview using browser's PDF viewer
+        const canvas = window.document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        
+        if (ctx) {
+          canvas.width = 64
+          canvas.height = 80
+          
+          // Create a PDF-like preview
+          ctx.fillStyle = '#ffffff'
+          ctx.fillRect(0, 0, 64, 80)
+          
+          // Header
+          ctx.fillStyle = '#f3f4f6'
+          ctx.fillRect(0, 0, 64, 16)
+          
+          // Document name
+          ctx.fillStyle = '#374151'
+          ctx.font = 'bold 6px Arial'
+          ctx.fillText(document.name.substring(0, 8), 4, 8)
+          
+          // PDF icon
+          ctx.fillStyle = '#ef4444'
+          ctx.fillRect(4, 20, 8, 10)
+          ctx.fillStyle = '#ffffff'
+          ctx.font = 'bold 4px Arial'
+          ctx.fillText('PDF', 5, 27)
+          
+          // Content lines
+          ctx.fillStyle = '#6b7280'
+          ctx.font = '4px Arial'
+          for (let i = 0; i < 3; i++) {
+            const y = 35 + (i * 8)
+            ctx.fillText(`Content ${i + 1}`, 4, y)
+          }
+          
+          // Footer
+          ctx.fillStyle = '#e5e7eb'
+          ctx.fillRect(0, 70, 64, 10)
+          ctx.fillStyle = '#9ca3af'
+          ctx.font = '3px Arial'
+          ctx.fillText('PDF', 4, 77)
+          
+          const dataUrl = canvas.toDataURL()
+          setPdfPreview(dataUrl)
+        }
+      } catch (error) {
+        console.log('Error creating PDF preview:', error)
+        // Fallback preview
         const canvas = window.document.createElement('canvas')
         const ctx = canvas.getContext('2d')
         if (ctx) {
           canvas.width = 64
           canvas.height = 80
           
-          // Create a simple PDF-like preview
           ctx.fillStyle = '#ffffff'
           ctx.fillRect(0, 0, 64, 80)
           
@@ -130,7 +178,12 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
           ctx.fillStyle = '#e5e7eb'
           ctx.fillRect(0, 0, 64, 12)
           
-          // Text lines
+          // Document name
+          ctx.fillStyle = '#374151'
+          ctx.font = 'bold 6px Arial'
+          ctx.fillText(document.name.substring(0, 8), 4, 8)
+          
+          // Content lines
           ctx.fillStyle = '#9ca3af'
           for (let i = 0; i < 6; i++) {
             const y = 16 + (i * 8)
@@ -138,11 +191,16 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
             ctx.fillRect(4, y, width, 2)
           }
           
+          // Footer
+          ctx.fillStyle = '#e5e7eb'
+          ctx.fillRect(0, 70, 64, 10)
+          ctx.fillStyle = '#9ca3af'
+          ctx.font = '3px Arial'
+          ctx.fillText('PDF', 4, 77)
+          
           const dataUrl = canvas.toDataURL()
           setPdfPreview(dataUrl)
         }
-      } catch (error) {
-        console.error('Error creating PDF preview:', error)
       } finally {
         setIsLoadingPreview(false)
       }
@@ -160,7 +218,7 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
         <div className="flex items-center space-x-4">
           {/* Document Preview on Left */}
           <div className="flex-shrink-0">
-            <div className="w-16 h-20 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
+            <div className="w-16 h-20 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm cursor-pointer" onClick={() => onView?.(document.id)}>
               {typeof window !== 'undefined' && isLoadingPreview ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -169,7 +227,7 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
                 <img 
                   src={pdfPreview} 
                   alt="PDF Preview" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover hover:opacity-80 transition-opacity"
                 />
               ) : (
                 <>
@@ -206,46 +264,51 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
               <span>{getVariantLabel(document.variant)}</span>
             </div>
             
-            <div className="flex items-center space-x-1 text-xs text-gray-500">
+            <div className="flex items-center space-x-1 text-xs text-gray-500 mb-3">
               <Calendar className="h-3 w-3" />
               <span>Letztes Update: {formatDate(document.updated_at)}</span>
             </div>
-          </div>
 
-          {/* Actions on Right */}
-          <div className="flex-shrink-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="sr-only">Mehr Optionen</span>
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onView?.(document.id)}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Ansehen
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit?.(document.id)}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Bearbeiten
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDownload}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="text-red-600 focus:text-red-600"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  {isDeleting ? "Löschen..." : "Löschen"}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Actions in 2x2 Grid */}
+            <div className="grid grid-cols-2 gap-1">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onView?.(document.id)}
+                className="h-7 px-2 text-xs justify-start hover:text-[#0F973D] hover:bg-[#0F973D]/10 group"
+              >
+                <Eye className="mr-1 h-3 w-3 group-hover:text-[#0F973D]" />
+                Ansehen
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onEdit?.(document.id)}
+                className="h-7 px-2 text-xs justify-start hover:text-[#0F973D] hover:bg-[#0F973D]/10 group"
+              >
+                <Edit className="mr-1 h-3 w-3 group-hover:text-[#0F973D]" />
+                Bearbeiten
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleDownload}
+                className="h-7 px-2 text-xs justify-start hover:text-[#0F973D] hover:bg-[#0F973D]/10 group"
+              >
+                <Download className="mr-1 h-3 w-3 group-hover:text-[#0F973D]" />
+                Download
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="h-7 px-2 text-xs justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="mr-1 h-3 w-3" />
+                {isDeleting ? "Löschen..." : "Löschen"}
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { Plus, Sparkles, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,6 +27,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 
+import { Button } from "@/components/ui/button"
 import { DocumentCard } from "@/components/document-card"
 import { DocumentSkeleton } from "@/components/document-skeleton"
 import { EmptyState } from "@/components/empty-state"
@@ -164,8 +167,21 @@ export default function DocumentsPage() {
   }
 
   const handleView = (id: string) => {
-    // TODO: Implement view functionality
-    toast.info("Ansehen-Funktion wird implementiert 👀")
+    // Find the document by ID
+    const document = documents.find(doc => doc.id === id)
+    if (!document) {
+      toast.error("Dokument nicht gefunden 😅")
+      return
+    }
+
+    const downloadUrl = document.file_url || document.url
+    if (!downloadUrl) {
+      toast.error("PDF URL nicht verfügbar 📄")
+      return
+    }
+
+    // Open PDF in browser's PDF viewer
+    window.open(downloadUrl, '_blank')
   }
 
   const handleEdit = (id: string) => {
@@ -209,10 +225,17 @@ export default function DocumentsPage() {
       <Pagination>
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious 
+            <PaginationLink
               onClick={() => handlePageChange(currentPage - 1)}
-              className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-            />
+              className={cn(
+                "gap-1 px-2.5 sm:pl-2.5 cursor-pointer",
+                currentPage === 1 ? "pointer-events-none opacity-50" : ""
+              )}
+              size="default"
+            >
+              <ChevronLeftIcon className="h-4 w-4" />
+              <span className="hidden sm:block">Zurück</span>
+            </PaginationLink>
           </PaginationItem>
           
           {startPage > 1 && (
@@ -255,10 +278,17 @@ export default function DocumentsPage() {
           )}
           
           <PaginationItem>
-            <PaginationNext 
+            <PaginationLink
               onClick={() => handlePageChange(currentPage + 1)}
-              className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-            />
+              className={cn(
+                "gap-1 px-2.5 sm:pr-2.5 cursor-pointer",
+                currentPage === totalPages ? "pointer-events-none opacity-50" : ""
+              )}
+              size="default"
+            >
+              <span className="hidden sm:block">Weiter</span>
+              <ChevronRightIcon className="h-4 w-4" />
+            </PaginationLink>
           </PaginationItem>
         </PaginationContent>
       </Pagination>
@@ -292,12 +322,32 @@ export default function DocumentsPage() {
 
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Deine Docs – always ready für Bewerbungs-Action 🚀
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Verwalte hier alle deine Lebensläufe & Anschreiben. Wähle zwischen Basis-Dokumenten und KI-generierten Inhalten.
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Deine Docs – always ready für Bewerbungs-Action 🚀
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Verwalte hier alle deine Lebensläufe & Anschreiben. Wähle zwischen Basis-Dokumenten und KI-generierten Inhalten.
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <Button 
+                onClick={handleCreateResume}
+                className="bg-[#0F973D] hover:bg-[#0D7A32] text-white"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Lebenslauf erstellen
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={handleCreateCoverLetter}
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Anschreiben generieren
+              </Button>
+            </div>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -333,7 +383,7 @@ export default function DocumentsPage() {
                  </div>
                 
                 <div className="mt-8 flex items-center justify-between">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 whitespace-nowrap">
                     {totalDocuments} Dokument{totalDocuments !== 1 ? 'e' : ''} gefunden
                   </p>
                   {renderPagination()}
