@@ -17,7 +17,18 @@ type XanoUser = {
   message: boolean;
 };
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = async (url: string) => {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    return res.json();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    return null;
+  }
+};
 
 function SecurityInfoSkeleton() {
   return (
@@ -48,9 +59,12 @@ function SecurityInfoSkeleton() {
 }
 
 function SecurityInfo() {
-  const { data: user } = useSWR<XanoUser>('/api/user', fetcher);
+  const { data: user, error } = useSWR<XanoUser>('/api/user', fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false
+  });
 
-  if (!user) {
+  if (!user || error) {
     return <SecurityInfoSkeleton />;
   }
 

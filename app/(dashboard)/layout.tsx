@@ -14,7 +14,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
 import useSWR, { mutate } from 'swr';
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = async (url: string) => {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    return res.json();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    return null;
+  }
+};
 
 // Define Xano user type based on the API response
 type XanoUser = {
@@ -28,7 +39,10 @@ type XanoUser = {
 
 function UserMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { data: user } = useSWR<XanoUser>('/api/user', fetcher);
+  const { data: user, error } = useSWR<XanoUser>('/api/user', fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false
+  });
   const router = useRouter();
 
   async function handleSignOut() {
@@ -37,16 +51,13 @@ function UserMenu() {
     router.push('/');
   }
 
-  if (!user) {
+  if (!user || error) {
     return (
       <>
-        <Link
-          href="/pricing"
-          className="text-sm font-medium text-gray-700 hover:text-gray-900"
-        >
-          Pricing
-        </Link>
         <Button asChild className="rounded-full">
+          <Link href="/sign-in">Sign In</Link>
+        </Button>
+        <Button asChild variant="outline" className="rounded-full">
           <Link href="/sign-up">Sign Up</Link>
         </Button>
       </>
@@ -59,10 +70,7 @@ function UserMenu() {
         <Avatar className="cursor-pointer size-9">
           <AvatarImage alt={user.name || ''} src={user.profile_image} />
           <AvatarFallback>
-            {user.name
-              .split(' ')
-              .map((n) => n[0])
-              .join('')}
+            {user.name && user.name.split(' ').map((n) => n[0]).join('')}
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
