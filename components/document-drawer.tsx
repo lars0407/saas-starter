@@ -7,7 +7,8 @@ import {
   Calendar,
   Sparkles,
   User,
-  FileText
+  FileText,
+  Download
 } from "lucide-react"
 import { useDocumentDownload } from "@/hooks/use-document-download"
 import { toast } from "sonner"
@@ -133,16 +134,50 @@ export function DocumentDrawer({
               </h2>
             </div>
             
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="flex items-center gap-1">
-                {getTypeIcon(document.type)}
-                {getTypeLabel(document.type)}
-              </Badge>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {getTypeIcon(document.type)}
+                  {getTypeLabel(document.type)}
+                </Badge>
+                
+                <Badge variant="outline" className="flex items-center gap-1">
+                  {getVariantIcon(document.variant)}
+                  {getVariantLabel(document.variant)}
+                </Badge>
+              </div>
               
-              <Badge variant="outline" className="flex items-center gap-1">
-                {getVariantIcon(document.variant)}
-                {getVariantLabel(document.variant)}
-              </Badge>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleEdit}
+                  className="h-7 px-2 text-xs hover:text-[#0F973D] hover:bg-[#0F973D]/10"
+                >
+                  <Edit className="h-3 w-3" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  className="h-7 px-2 text-xs hover:text-[#0F973D] hover:bg-[#0F973D]/10"
+                >
+                  <Download className="h-3 w-3" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
             
             <div className="flex items-center space-x-1 text-sm text-gray-500">
