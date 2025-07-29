@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 
 export default function SignUpPage() {
@@ -78,7 +80,9 @@ export default function SignUpPage() {
               />
             </div>
             {error && (
-              <div className="text-red-500 text-sm text-center">{error}</div>
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm text-center">{error}</p>
+              </div>
             )}
             <Button
               type="submit"
@@ -88,10 +92,14 @@ export default function SignUpPage() {
               {loading ? "Registrieren..." : "Registrieren"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <Link href="/sign-in" className="text-blue-600 hover:text-blue-800">
-              Bereits ein Konto? Anmelden
-            </Link>
+          <Separator className="my-4" />
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-2">Bereits ein Konto?</p>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/sign-in">
+                Anmelden
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>

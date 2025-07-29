@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Manrope } from 'next/font/google';
 import { SWRConfig } from 'swr';
+import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: 'Next.js SaaS Starter',
@@ -33,6 +34,7 @@ export default function RootLayout({
           }}
         >
           {children}
+          <Toaster />
         </SWRConfig>
       </body>
     </html>
