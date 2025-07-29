@@ -112,7 +112,7 @@ const data = {
         },
         {
           title: "Lebenslauf",
-          url: "/dashboard/documents?type=resume",
+          url: "/dashboard/documents/resume",
         },
       ],
     },
