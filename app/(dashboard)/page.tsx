@@ -1,5 +1,3 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Shield, Zap } from 'lucide-react';
 import { Terminal } from './terminal';
