@@ -29,6 +29,13 @@ interface Document {
   url?: string
 }
 
+interface DownloadResponse {
+  download_link: {
+    url: string
+    expires_at: string
+  }
+}
+
 interface DocumentCardProps {
   document: Document
   onEdit?: (id: string) => void
@@ -55,12 +62,12 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
 
   const handleDownload = async () => {
     try {
-      // Use the API client to get the download URL
-      const data = await apiClient.post('/api:SiRHLF4Y/documents/download', {
+      // Use the API client to get the download URL with proper typing
+      const data = await apiClient.post<DownloadResponse>('/api:SiRHLF4Y/documents/download', {
         document_id: document.id
       })
 
-      // Fixed: Use correct response structure
+      // Fixed: Use correct response structure with proper typing
       const signedUrl = data?.download_link?.url
 
       if (!signedUrl) {
