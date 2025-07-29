@@ -98,6 +98,25 @@ const data = {
       ],
     },
     {
+      title: "Dokumente",
+      url: "/dashboard/documents",
+      icon: BookOpen,
+      items: [
+        {
+          title: "Überblick",
+          url: "/dashboard/documents",
+        },
+        {
+          title: "Anschreiben",
+          url: "/dashboard/documents?type=cover_letter",
+        },
+        {
+          title: "Lebenslauf",
+          url: "/dashboard/documents?type=resume",
+        },
+      ],
+    },
+    {
       title: "Settings",
       url: "/dashboard/general",
       icon: Settings2,
