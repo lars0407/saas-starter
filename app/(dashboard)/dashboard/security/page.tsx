@@ -6,6 +6,18 @@ import { Label } from '@/components/ui/label';
 import { Lock, Trash2, Shield, Key, AlertTriangle } from 'lucide-react';
 import useSWR from 'swr';
 import { Suspense } from 'react';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import {
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
 
 // Define Xano user type
 type XanoUser = {
@@ -155,17 +167,41 @@ function SecurityInfo() {
 
 export default function SecurityPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Security Settings</h1>
-        <p className="text-gray-600 mt-2">
-          Manage your account security and authentication settings.
-        </p>
-      </div>
+    <>
+      <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <div className="flex items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator
+            orientation="vertical"
+            className="mr-2 data-[orientation=vertical]:h-4"
+          />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink href="/dashboard">
+                  Dashboard
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Security Settings</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </header>
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Security Settings</h1>
+          <p className="text-gray-600 mt-2">
+            Manage your account security and authentication settings.
+          </p>
+        </div>
 
-      <Suspense fallback={<SecurityInfoSkeleton />}>
-        <SecurityInfo />
-      </Suspense>
-    </div>
+        <Suspense fallback={<SecurityInfoSkeleton />}>
+          <SecurityInfo />
+        </Suspense>
+      </div>
+    </>
   );
 }
