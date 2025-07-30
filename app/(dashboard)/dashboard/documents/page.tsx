@@ -364,8 +364,7 @@ export default function DocumentsPage() {
                          ) : !documents || documents.length === 0 ? (
               <div className="flex items-center justify-center h-[calc(100vh-300px)] w-full">
                 <EmptyState 
-                  onCreateResume={handleCreateResume}
-                  onCreateCoverLetter={handleCreateCoverLetter}
+                  message="Noch nix am Start 👀 Zeit, deinen ersten Lebenslauf zu bauen oder ein freshes Anschreiben zu generieren!"
                 />
               </div>
             ) : (
