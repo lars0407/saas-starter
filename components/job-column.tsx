@@ -5,6 +5,7 @@ import { JobCard } from './job-card';
 import { JobCardSkeleton } from './job-card-skeleton';
 import { EmptyState } from './empty-state';
 import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
 
 interface JobColumnProps {
@@ -12,9 +13,10 @@ interface JobColumnProps {
   jobs: JobCardData[];
   isLoading?: boolean;
   className?: string;
+  onSortEnd?: (event: any) => void;
 }
 
-export function JobColumn({ column, jobs, isLoading = false, className }: JobColumnProps) {
+export function JobColumn({ column, jobs, isLoading = false, className, onSortEnd }: JobColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
   });
@@ -42,17 +44,27 @@ export function JobColumn({ column, jobs, isLoading = false, className }: JobCol
           isOver ? "border-primary bg-primary/5" : "border-muted bg-muted/20"
         )}
       >
-        <div className="p-4 space-y-3">
+        <div className="p-4">
           {isLoading ? (
             // Loading skeletons
-            Array.from({ length: 3 }).map((_, index) => (
-              <JobCardSkeleton key={index} />
-            ))
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <JobCardSkeleton key={index} />
+              ))}
+            </div>
           ) : jobs.length > 0 ? (
-            // Job cards
-            jobs.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))
+            // Job cards with SortableContext
+            <SortableContext
+              items={jobs.map(job => job.id)}
+              strategy={verticalListSortingStrategy}
+              onSortEnd={onSortEnd}
+            >
+              <div className="space-y-3">
+                {jobs.map((job, index) => (
+                  <JobCard key={job.id} job={job} index={index} />
+                ))}
+              </div>
+            </SortableContext>
           ) : (
             // Empty state
             <EmptyState message={column.emptyMessage} />

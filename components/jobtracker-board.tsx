@@ -13,6 +13,8 @@ import {
 import {
   SortableContext,
   verticalListSortingStrategy,
+  arrayMove,
+  SortEndEvent,
 } from '@dnd-kit/sortable';
 import { JobCardData, JobStatus, JobColumn } from '@/lib/types';
 import { JobColumn as JobColumnComponent } from './job-column';
@@ -124,14 +126,44 @@ export function JobtrackerBoard() {
     if (!over) return;
 
     const jobId = active.id as string;
-    const newStatus = over.id as JobStatus;
+    const overId = over.id as string;
 
-    // Find the job and check if status actually changed
+    // Find the job
     const job = jobs.find(j => j.id === jobId);
-    if (!job || job.status === newStatus) return;
+    if (!job) return;
 
-    // Update job status
-    updateJobStatus(jobId, newStatus);
+    // Check if dropping on a column (status change)
+    const columnIds = COLUMNS.map(col => col.id);
+    if (columnIds.includes(overId)) {
+      const newStatus = overId as JobStatus;
+      if (job.status !== newStatus) {
+        updateJobStatus(jobId, newStatus);
+      }
+      return;
+    }
+
+    // Check if dropping on another job
+    const targetJob = jobs.find(j => j.id === overId);
+    if (targetJob) {
+      if (targetJob.status === job.status) {
+        // Reordering within the same column - let the sortable context handle it
+        // We don't need to manually reorder here since the sortable context will do it
+        console.log('Reordering within same column');
+      } else {
+        // Moving to a different column
+        updateJobStatus(jobId, targetJob.status);
+      }
+    }
+  };
+
+  const handleSortEnd = (event: SortEndEvent) => {
+    const { active, over, oldIndex, newIndex } = event;
+    
+    if (oldIndex !== newIndex) {
+      const newJobs = arrayMove(jobs, oldIndex, newIndex);
+      setJobs(newJobs);
+      toast.success('Job Reihenfolge aktualisiert!');
+    }
   };
 
   const getJobsForColumn = (status: JobStatus) => {
@@ -156,20 +188,15 @@ export function JobtrackerBoard() {
           onDragEnd={handleDragEnd}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-full overflow-x-auto">
-            {COLUMNS.map((column) => (
-              <div key={column.id} className="flex flex-col min-w-0">
-                <SortableContext
-                  items={getJobsForColumn(column.id).map(job => job.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <JobColumnComponent
-                    column={column}
-                    jobs={getJobsForColumn(column.id)}
-                    isLoading={isLoading}
-                  />
-                </SortableContext>
-              </div>
-            ))}
+                          {COLUMNS.map((column) => (
+                <JobColumnComponent
+                  key={column.id}
+                  column={column}
+                  jobs={getJobsForColumn(column.id)}
+                  isLoading={isLoading}
+                  onSortEnd={handleSortEnd}
+                />
+              ))}
           </div>
 
           <DragOverlay>

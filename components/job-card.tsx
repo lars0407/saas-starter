@@ -12,9 +12,10 @@ import { CSS } from '@dnd-kit/utilities';
 interface JobCardProps {
   job: JobCardData;
   className?: string;
+  index?: number;
 }
 
-export function JobCard({ job, className }: JobCardProps) {
+export function JobCard({ job, className, index = 0 }: JobCardProps) {
   const {
     attributes,
     listeners,
@@ -41,49 +42,49 @@ export function JobCard({ job, className }: JobCardProps) {
         className
       )}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-sm font-medium line-clamp-2 leading-tight">
-            {job.title}
-          </CardTitle>
-          {!job.isActive && (
-            <Badge variant="destructive" className="text-xs">
-              <AlertCircle className="w-3 h-3" />
-              Nicht mehr aktiv
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0 space-y-3">
-        <div className="space-y-1">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Building2 className="w-3 h-3" />
-            <span className="truncate">{job.company}</span>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="text-sm font-medium line-clamp-2 leading-tight">
+              {job.title}
+            </CardTitle>
+            {!job.isActive && (
+              <Badge variant="destructive" className="text-xs">
+                <AlertCircle className="w-3 h-3" />
+                Nicht mehr aktiv
+              </Badge>
+            )}
           </div>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="w-3 h-3" />
-            <span className="truncate">{job.location}</span>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Building2 className="w-3 h-3" />
+              <span className="truncate">{job.company}</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <MapPin className="w-3 h-3" />
+              <span className="truncate">{job.location}</span>
+            </div>
           </div>
-        </div>
-        
-        <div className="flex flex-wrap gap-1">
-          <Badge variant="outline" className="text-xs">
-            Ähnliche Jobs ansehen
-          </Badge>
-          {job.status === 'interviewing' && job.joboffer_received && (
-            <Badge variant="default" className="text-xs bg-green-500 hover:bg-green-600">
-              Job bekommen
+          
+          <div className="flex flex-wrap gap-1">
+            <Badge variant="outline" className="text-xs">
+              Ähnliche Jobs ansehen
             </Badge>
-          )}
-        </div>
-        
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="flex-1 text-xs">
-            <Eye className="w-3 h-3 mr-1" />
-            Details
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+            {job.status === 'interviewing' && job.joboffer_received && (
+              <Badge variant="default" className="text-xs bg-green-500 hover:bg-green-600">
+                Job bekommen
+              </Badge>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" className="flex-1 text-xs">
+              <Eye className="w-3 h-3 mr-1" />
+              Details
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
   );
 } 
