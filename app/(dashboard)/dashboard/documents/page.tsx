@@ -195,7 +195,8 @@ export default function DocumentsPage() {
   }
 
   const handleCreateCoverLetter = () => {
-    window.location.href = '/dashboard/documents/cover-letter'
+    // TODO: Implement create cover letter functionality
+    toast.info("Anschreiben generieren wird implementiert ✨")
   }
 
   const renderSkeletons = () => {
