@@ -85,12 +85,15 @@ export function JobtrackerBoard() {
 
   const updateJobStatus = async (jobId: string, newStatus: JobStatus) => {
     try {
-      const response = await fetch(`/api/jobs/${jobId}`, {
-        method: 'PATCH',
+      const response = await fetch('/api/job_tracker/update', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ 
+          job_id: parseInt(jobId), 
+          status: newStatus 
+        }),
       });
 
       if (!response.ok) throw new Error('Failed to update job status');

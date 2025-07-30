@@ -69,4 +69,20 @@ export const updateJobTrackingStatus = async (token: string, trackingId: number,
     { headers: { Authorization: `Bearer ${token}` } }
   );
   return res.data;
+};
+
+export const updateJobTrackerStatus = async (token: string, jobId: number, status: string, applicationDate?: number, notes?: string, interviewQuestions?: Array<{question: string, answer: string}>) => {
+  const payload = {
+    job_id: jobId,
+    status: status,
+    ...(applicationDate && { application_date: applicationDate }),
+    ...(notes && { notes: notes }),
+    ...(interviewQuestions && { interview_question: interviewQuestions })
+  };
+
+  const res = await xanoJobtracker.post('/job_tracker/update', 
+    payload,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return res.data;
 }; 
