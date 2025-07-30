@@ -12,6 +12,7 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  Kanban,
 } from "lucide-react"
 import useSWR from 'swr'
 import { useState } from 'react'
@@ -95,6 +96,17 @@ const data = {
             },
           ],
         },
+    {
+      title: "Jobtracker",
+      url: "/dashboard",
+      icon: Kanban,
+      items: [
+        {
+          title: "Kanban Board",
+          url: "/dashboard",
+        },
+      ],
+    },
     {
       title: "Dokumente",
       url: "/dashboard/documents",

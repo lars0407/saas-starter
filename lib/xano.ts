@@ -1,13 +1,20 @@
 import axios from "axios";
 
+// Auth/User API (correct project for /auth/login)
 export const xano = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_XANO_API_URL || "https://api.jobjaeger.de/api:cPR_tiTl",
+  baseURL: "https://api.jobjaeger.de/api:cPR_tiTl",
+  headers: { "Content-Type": "application/json" },
+});
+
+// Jobtracker API
+export const xanoJobtracker = axios.create({
+  baseURL: "https://api.jobjaeger.de/api:9BqVCxJj",
   headers: { "Content-Type": "application/json" },
 });
 
 export const loginWithXano = async (email: string, password: string) => {
   const res = await xano.post("/auth/login", { email, password });
-  return res.data; // { authToken, user }
+  return res.data; // { authToken }
 };
 
 export const signUpWithXano = async (name: string, email: string, password: string) => {
@@ -46,5 +53,20 @@ export const getOnboardingStatus = async (token: string) => {
   const res = await xano.get("/auth/onboarding", {
     headers: { Authorization: `Bearer ${token}` },
   });
+  return res.data;
+};
+
+export const getJobTracker = async (token: string) => {
+  const res = await xanoJobtracker.get("/job_tracker", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+};
+
+export const updateJobTrackingStatus = async (token: string, trackingId: number, status: string) => {
+  const res = await xanoJobtracker.patch(`/job_tracker/${trackingId}`, 
+    { status },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
   return res.data;
 }; 
