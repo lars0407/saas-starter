@@ -5,8 +5,8 @@ import { SWRConfig } from 'swr';
 import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
-  title: 'Next.js SaaS Starter',
-  description: 'Get started quickly with Next.js, Postgres, and Stripe.'
+  title: 'Jobjäger',
+  description: 'Dein intelligenter Jobtracker für eine erfolgreiche Karriere.',
 };
 
 export const viewport: Viewport = {
