@@ -312,10 +312,43 @@ export function ResumeGeneratorNew() {
             </p>
           </CardHeader>
           <CardContent className="h-[calc(100%-120px)]">
-            <PDFViewer
-              content={JSON.stringify(resumeData)}
-              filename="lebenslauf-preview"
-            />
+            <div className="h-full flex items-center justify-center p-8 text-gray-500 bg-gray-50 rounded-lg">
+              <div className="text-center">
+                <Eye className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-sm mb-2">Live Vorschau</p>
+                <p className="text-xs text-gray-400">
+                  {resumeData.personalInfo.fullName ? 
+                    `Lebenslauf für ${resumeData.personalInfo.fullName}` : 
+                    'Fülle die Formulare aus, um eine Vorschau zu sehen'
+                  }
+                </p>
+                {resumeData.personalInfo.fullName && (
+                  <div className="mt-4 text-left text-xs bg-white p-3 rounded border">
+                    <h3 className="font-semibold mb-2">{resumeData.personalInfo.fullName}</h3>
+                    <p className="text-gray-600 mb-1">{resumeData.personalInfo.email}</p>
+                    <p className="text-gray-600 mb-1">{resumeData.personalInfo.location}</p>
+                    {resumeData.education.length > 0 && (
+                      <div className="mt-2">
+                        <p className="font-medium text-xs">Ausbildung:</p>
+                        <p className="text-gray-600 text-xs">{resumeData.education.length} Eintrag{resumeData.education.length !== 1 ? 'e' : ''}</p>
+                      </div>
+                    )}
+                    {resumeData.experience.length > 0 && (
+                      <div className="mt-1">
+                        <p className="font-medium text-xs">Erfahrung:</p>
+                        <p className="text-gray-600 text-xs">{resumeData.experience.length} Eintrag{resumeData.experience.length !== 1 ? 'e' : ''}</p>
+                      </div>
+                    )}
+                    {resumeData.skills.length > 0 && (
+                      <div className="mt-1">
+                        <p className="font-medium text-xs">Skills:</p>
+                        <p className="text-gray-600 text-xs">{resumeData.skills.length} Skill{resumeData.skills.length !== 1 ? 's' : ''}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
