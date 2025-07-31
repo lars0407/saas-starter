@@ -13,10 +13,9 @@ interface JobColumnProps {
   jobs: JobCardData[];
   isLoading?: boolean;
   className?: string;
-  onSortEnd?: (event: any) => void;
 }
 
-export function JobColumn({ column, jobs, isLoading = false, className, onSortEnd }: JobColumnProps) {
+export function JobColumn({ column, jobs, isLoading = false, className }: JobColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
   });
@@ -57,7 +56,6 @@ export function JobColumn({ column, jobs, isLoading = false, className, onSortEn
             <SortableContext
               items={jobs.map(job => job.id)}
               strategy={verticalListSortingStrategy}
-              onSortEnd={onSortEnd}
             >
               <div className="space-y-3">
                 {jobs.map((job, index) => (

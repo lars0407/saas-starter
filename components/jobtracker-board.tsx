@@ -14,7 +14,6 @@ import {
   SortableContext,
   verticalListSortingStrategy,
   arrayMove,
-  SortEndEvent,
 } from '@dnd-kit/sortable';
 import { JobCardData, JobStatus, JobColumn } from '@/lib/types';
 import { JobColumn as JobColumnComponent } from './job-column';
@@ -156,15 +155,7 @@ export function JobtrackerBoard() {
     }
   };
 
-  const handleSortEnd = (event: SortEndEvent) => {
-    const { active, over, oldIndex, newIndex } = event;
-    
-    if (oldIndex !== newIndex) {
-      const newJobs = arrayMove(jobs, oldIndex, newIndex);
-      setJobs(newJobs);
-      toast.success('Job Reihenfolge aktualisiert!');
-    }
-  };
+
 
   const getJobsForColumn = (status: JobStatus) => {
     return jobs.filter(job => job.status === status);
@@ -194,7 +185,6 @@ export function JobtrackerBoard() {
                   column={column}
                   jobs={getJobsForColumn(column.id)}
                   isLoading={isLoading}
-                  onSortEnd={handleSortEnd}
                 />
               ))}
           </div>
