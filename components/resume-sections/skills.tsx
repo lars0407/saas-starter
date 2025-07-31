@@ -410,7 +410,7 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
             className="w-full mt-4"
           >
             <Plus className="h-4 w-4 mr-2" />
-            + Skill hinzufügen
+            Skill hinzufügen
           </Button>
         )}
       </CardContent>

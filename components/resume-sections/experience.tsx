@@ -382,7 +382,7 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
             className="w-full"
           >
             <Plus className="h-4 w-4 mr-2" />
-            + Neue Station hinzufügen
+            Neue Station hinzufügen
           </Button>
         )}
       </CardContent>
