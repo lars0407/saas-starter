@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -103,21 +103,24 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const { downloadDocument, isLoading: isDownloading } = useDocumentDownload();
 
-  // Create document object for download functionality
-  const currentDocument = documentId ? {
-    id: documentId.toString(),
-    name: resumeData.personalInfo.fullName || 'Lebenslauf',
-    type: 'resume' as const,
-    variant: 'human' as const,
-    updated_at: new Date().toISOString(),
-    file_url: generatedPdfUrl || undefined
-  } : null;
+  // Create document object for download functionality - memoized to prevent unnecessary re-renders
+  const currentDocument = React.useMemo(() => {
+    if (!documentId) return null;
+    return {
+      id: documentId.toString(),
+      name: resumeData.personalInfo.fullName || 'Lebenslauf',
+      type: 'resume' as const,
+      variant: 'human' as const,
+      updated_at: new Date().toISOString(),
+      file_url: generatedPdfUrl || undefined
+    };
+  }, [documentId, resumeData.personalInfo.fullName, generatedPdfUrl]);
 
-  const handleDownloadResume = () => {
+  const handleDownloadResume = React.useCallback(() => {
     if (currentDocument) {
       downloadDocument(currentDocument);
     }
-  };
+  }, [currentDocument, downloadDocument]);
 
   // Load existing document when documentId is provided
   useEffect(() => {
@@ -575,21 +578,18 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
               // Show PDF Viewer when PDF is generated
               <div className="h-full">
 
-                <PDFViewer
-                  pdfUrl={generatedPdfUrl}
-                  showToolbar={false}
-                  showNavigation={false}
-                  showBorder={false}
-                  fallbackMessage="Vorschau nicht verfügbar – aber du kannst's trotzdem runterladen 📄"
-                  downloadMessage=""
-                  placeholderMessage="Lade dein Meisterwerk… 🔄"
-                  className="w-full h-full"
-                  onLoaded={() => console.log('PDF loaded successfully')}
-                  onError={() => {
-                    console.error('PDF loading failed');
-                    toast.error('Fehler beim Laden der PDF-Vorschau');
-                  }}
-                />
+                <div className="w-full h-full">
+                  <iframe
+                    src={`${generatedPdfUrl}#page=1&toolbar=0&navpanes=0&scrollbar=0`}
+                    className="w-full h-full min-h-[400px] border-0"
+                    title="PDF Viewer"
+                    onLoad={() => console.log('PDF loaded successfully')}
+                    onError={() => {
+                      console.error('PDF loading failed');
+                      toast.error('Fehler beim Laden der PDF-Vorschau');
+                    }}
+                  />
+                </div>
               </div>
             ) : (
               // Show empty state when no PDF is generated
