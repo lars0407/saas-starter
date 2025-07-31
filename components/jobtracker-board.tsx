@@ -134,9 +134,13 @@ export function JobtrackerBoard() {
     // Check if dropping on a column (status change)
     const columnIds = COLUMNS.map(col => col.id);
     if (columnIds.includes(overId)) {
-      const newStatus = overId as JobStatus;
-      if (job.status !== newStatus) {
-        updateJobStatus(jobId, newStatus);
+      // Type guard to ensure overId is a valid JobStatus
+      const validStatuses: JobStatus[] = ['saved', 'applied', 'interviewing', 'archived'];
+      if (validStatuses.includes(overId as JobStatus)) {
+        const newStatus = overId as JobStatus;
+        if (job.status !== newStatus) {
+          updateJobStatus(jobId, newStatus);
+        }
       }
       return;
     }
