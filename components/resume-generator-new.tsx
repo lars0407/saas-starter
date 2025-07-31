@@ -531,6 +531,16 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
                   }
                 </p>
                 {resumeData.personalInfo.fullName && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-700 font-medium mb-1">
+                      🚀 Lebenslauf generieren
+                    </p>
+                    <p className="text-xs text-blue-600">
+                      Klicke auf "Generieren" um deinen Lebenslauf zu erstellen und hier als PDF anzuzeigen
+                    </p>
+                  </div>
+                )}
+                {resumeData.personalInfo.fullName && (
                   <div className="mt-4 text-left text-xs bg-white p-3 rounded border">
                     <h3 className="font-semibold mb-2">{resumeData.personalInfo.fullName}</h3>
                     <p className="text-gray-600 mb-1">{resumeData.personalInfo.email}</p>
