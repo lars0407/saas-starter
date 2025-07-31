@@ -147,9 +147,9 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
             email: content.basics?.email || '',
             phone: content.basics?.telephone || '',
             location: content.basics?.adresse_city || '',
-            website: '',
-            linkedin: '',
-            github: '',
+            website: content.link?.find((link: any) => link.label === 'Website')?.url || '',
+            linkedin: content.link?.find((link: any) => link.label === 'LinkedIn')?.url || '',
+            github: content.link?.find((link: any) => link.label === 'GitHub')?.url || '',
             summary: content.basics?.description || '',
           },
           education: content.education?.map((edu: any, index: number) => ({
@@ -281,7 +281,11 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
     try {
       // Convert resume data to API format
       const apiData = {
-        link: [],
+        link: [
+          ...(resumeData.personalInfo.website ? [{ url: resumeData.personalInfo.website, label: 'Website' }] : []),
+          ...(resumeData.personalInfo.linkedin ? [{ url: resumeData.personalInfo.linkedin, label: 'LinkedIn' }] : []),
+          ...(resumeData.personalInfo.github ? [{ url: resumeData.personalInfo.github, label: 'GitHub' }] : [])
+        ],
         skill: resumeData.skills.map(skill => ({
           name: skill.name,
           level: skill.level,
