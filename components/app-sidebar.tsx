@@ -127,6 +127,21 @@ const data = {
       ],
     },
     {
+      title: "KI-Tools",
+      url: "/dashboard/coverletter-generate",
+      icon: Sparkles,
+      items: [
+        {
+          title: "Anschreiben Generator",
+          url: "/dashboard/coverletter-generate",
+        },
+        {
+          title: "Lebenslauf Generator",
+          url: "/dashboard/resume-generate",
+        },
+      ],
+    },
+    {
       title: "Settings",
       url: "/dashboard/settings",
       icon: Settings2,
