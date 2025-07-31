@@ -93,6 +93,13 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
+  
+  /* Resume Generator Input Focus Styles */
+  .resume-generator input:focus,
+  .resume-generator textarea:focus {
+    border-color: #0F973D !important;
+    box-shadow: 0 0 0 2px rgba(15, 151, 61, 0.2) !important;
+  }
 }
 
 @layer base {
