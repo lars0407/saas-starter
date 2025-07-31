@@ -11,11 +11,12 @@ import {
 } from "@/components/ui/breadcrumb"
 
 interface ResumeGeneratePageProps {
-  searchParams: { id?: string }
+  searchParams: Promise<{ id?: string }>
 }
 
-export default function ResumeGeneratePage({ searchParams }: ResumeGeneratePageProps) {
-  const documentId = searchParams.id ? parseInt(searchParams.id) : undefined;
+export default async function ResumeGeneratePage({ searchParams }: ResumeGeneratePageProps) {
+  const params = await searchParams;
+  const documentId = params.id ? parseInt(params.id) : undefined;
 
   return (
     <>

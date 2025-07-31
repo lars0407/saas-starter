@@ -11,11 +11,12 @@ import {
 } from "@/components/ui/breadcrumb"
 
 interface CoverLetterGeneratePageProps {
-  searchParams: { id?: string }
+  searchParams: Promise<{ id?: string }>
 }
 
-export default function CoverLetterGeneratePage({ searchParams }: CoverLetterGeneratePageProps) {
-  const documentId = searchParams.id ? parseInt(searchParams.id) : undefined;
+export default async function CoverLetterGeneratePage({ searchParams }: CoverLetterGeneratePageProps) {
+  const params = await searchParams;
+  const documentId = params.id ? parseInt(params.id) : undefined;
 
   return (
     <>
