@@ -19,7 +19,7 @@ export default async function CoverLetterGeneratePage({ searchParams }: CoverLet
   const documentId = params.id ? parseInt(params.id) : undefined;
 
   return (
-    <>
+    <div className="h-screen flex flex-col">
       <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
@@ -44,8 +44,8 @@ export default async function CoverLetterGeneratePage({ searchParams }: CoverLet
           </Breadcrumb>
         </div>
       </header>
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="mb-6">
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0 min-h-0">
+        <div className="flex-shrink-0 mb-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
@@ -60,8 +60,10 @@ export default async function CoverLetterGeneratePage({ searchParams }: CoverLet
             </div>
           </div>
         </div>
-        <CoverLetterGenerator documentId={documentId} />
+        <div className="flex-1 min-h-0">
+          <CoverLetterGenerator documentId={documentId} />
+        </div>
       </div>
-    </>
+    </div>
   );
 } 

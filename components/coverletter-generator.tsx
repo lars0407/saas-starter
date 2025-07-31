@@ -162,37 +162,41 @@ Mit freundlichen Grüßen
   return (
     <div className="h-full flex flex-col lg:flex-row gap-6">
       {/* Left Column - Form */}
-      <div className="lg:w-1/2">
-        <CoverLetterForm 
-          onSubmit={handleFormSubmit}
-          isLoading={isLoading}
-          initialData={formData}
-        />
+      <div className="lg:w-1/2 flex flex-col min-h-0">
+        <div className="flex-1 overflow-y-auto pr-2 min-h-0">
+          <CoverLetterForm 
+            onSubmit={handleFormSubmit}
+            isLoading={isLoading}
+            initialData={formData}
+          />
+        </div>
       </div>
 
       {/* Right Column - Result */}
-      <div className="lg:w-1/2">
-        {isLoading ? (
-          <LoadingSkeleton />
-        ) : generatedLetter ? (
-          <GeneratedLetter
-            content={generatedLetter.content}
-            timestamp={generatedLetter.timestamp}
-            isEditing={isEditing}
-            onRegenerate={handleRegenerate}
-            onSave={handleSave}
-            onEdit={handleEdit}
-            onEditSave={handleEditSave}
-            onEditCancel={handleEditCancel}
-          />
-        ) : (
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <p className="text-lg mb-2">👋 Willkommen beim KI-Anschreiben Generator!</p>
-              <p className="text-sm">Fülle das Formular aus und lass uns dein perfektes Anschreiben erstellen! 🚀</p>
+      <div className="lg:w-1/2 flex flex-col min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : generatedLetter ? (
+            <GeneratedLetter
+              content={generatedLetter.content}
+              timestamp={generatedLetter.timestamp}
+              isEditing={isEditing}
+              onRegenerate={handleRegenerate}
+              onSave={handleSave}
+              onEdit={handleEdit}
+              onEditSave={handleEditSave}
+              onEditCancel={handleEditCancel}
+            />
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <p className="text-lg mb-2">👋 Willkommen beim KI-Anschreiben Generator!</p>
+                <p className="text-sm">Fülle das Formular aus und lass uns dein perfektes Anschreiben erstellen! 🚀</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

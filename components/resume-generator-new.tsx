@@ -340,9 +340,9 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
       `}</style>
       
       {/* Left Column - Form */}
-      <div className="lg:w-1/2 flex flex-col">
-        {/* Progress Bar */}
-        <div className="mb-6">
+      <div className="lg:w-1/2 flex flex-col min-h-0">
+        {/* Progress Bar - Fixed at top */}
+        <div className="flex-shrink-0 mb-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Fortschritt</span>
             <span className="text-sm text-muted-foreground">
@@ -360,8 +360,8 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
           </div>
         </div>
 
-        {/* Form Content - All Sections */}
-        <div className="flex-1 overflow-y-auto space-y-6">
+        {/* Form Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto space-y-6 pr-2 min-h-0">
           {/* Reload button for existing documents */}
           {documentId && (
             <Card>
@@ -508,9 +508,9 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
       </div>
 
       {/* Right Column - Preview */}
-      <div className="lg:w-1/2">
-        <Card className="h-full">
-          <CardHeader>
+      <div className="lg:w-1/2 flex flex-col min-h-0">
+        <Card className="h-full flex flex-col min-h-0">
+          <CardHeader className="flex-shrink-0">
             <CardTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5 text-primary" />
               Live Vorschau
@@ -519,8 +519,8 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
               So sieht dein Lebenslauf aus
             </p>
           </CardHeader>
-          <CardContent className="h-[calc(100%-120px)]">
-            <div className="h-full flex items-center justify-center p-8 text-gray-500 bg-gray-50 rounded-lg">
+          <CardContent className="flex-1 overflow-y-auto p-6 min-h-0">
+            <div className="min-h-full flex items-center justify-center text-gray-500 bg-gray-50 rounded-lg p-8">
               <div className="text-center">
                 <Eye className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <p className="text-sm mb-2">Live Vorschau</p>
