@@ -356,12 +356,13 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
                             disabled={!isEditing}
                           />
                         </div>
-                        {isEditing && entry.achievements.length > 1 && (
+                        {isEditing && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => removeAchievement(entry.id, achievementIndex)}
                             className="text-red-500 hover:text-red-700"
+                            title="Erfolg entfernen"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>

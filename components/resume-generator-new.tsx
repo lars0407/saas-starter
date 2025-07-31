@@ -103,6 +103,46 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const { downloadDocument, isLoading: isDownloading } = useDocumentDownload();
 
+  // Utility function to convert date formats
+  const convertDateToMonthInput = (dateString: string): string => {
+    if (!dateString) return '';
+    
+    // Handle MM/YYYY format (e.g., "05/2021")
+    if (dateString.includes('/')) {
+      const [month, year] = dateString.split('/');
+      return `${year}-${month.padStart(2, '0')}`;
+    }
+    
+    // Handle YYYY-MM format (already correct)
+    if (dateString.includes('-') && dateString.length === 7) {
+      return dateString;
+    }
+    
+    // Handle other formats - try to parse
+    try {
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      }
+    } catch (e) {
+      // If parsing fails, return empty string
+    }
+    
+    return '';
+  };
+
+  const convertMonthInputToDate = (monthInput: string): string => {
+    if (!monthInput) return '';
+    
+    // Convert YYYY-MM to MM/YYYY format for API
+    if (monthInput.includes('-') && monthInput.length === 7) {
+      const [year, month] = monthInput.split('-');
+      return `${month}/${year}`;
+    }
+    
+    return monthInput;
+  };
+
   // Create document object for download functionality - memoized to prevent unnecessary re-renders
   const currentDocument = React.useMemo(() => {
     if (!documentId) return null;
@@ -157,8 +197,8 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
             institution: edu.school || '',
             degree: edu.degree || '',
             field: edu.subject || '',
-            startDate: edu.startDate || '',
-            endDate: edu.endDate || '',
+            startDate: convertDateToMonthInput(edu.startDate) || '',
+            endDate: convertDateToMonthInput(edu.endDate) || '',
             current: !edu.endDate,
             description: edu.description || '',
             gpa: edu.grade || '',
@@ -168,8 +208,8 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
             company: exp.company || '',
             position: exp.title || '',
             location: exp.location || '',
-            startDate: exp.startDate || '',
-            endDate: exp.endDate || '',
+            startDate: convertDateToMonthInput(exp.startDate) || '',
+            endDate: convertDateToMonthInput(exp.endDate) || '',
             current: !exp.endDate,
             description: exp.description || '',
             achievements: [],
@@ -312,9 +352,9 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
           grade: edu.gpa || "",
           degree: edu.degree,
           school: edu.institution,
-          endDate: edu.current ? "" : edu.endDate,
+          endDate: edu.current ? "" : convertMonthInputToDate(edu.endDate),
           subject: edu.field,
-          startDate: edu.startDate,
+          startDate: convertMonthInputToDate(edu.startDate),
           description: edu.description || "",
           location_city: "",
           location_country: ""
@@ -322,9 +362,9 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
         experience: resumeData.experience.map(exp => ({
           title: exp.position,
           company: exp.company,
-          endDate: exp.current ? "" : exp.endDate,
+          endDate: exp.current ? "" : convertMonthInputToDate(exp.endDate),
           location: exp.location,
-          startDate: exp.startDate,
+          startDate: convertMonthInputToDate(exp.startDate),
           description: exp.description
         }))
       };
