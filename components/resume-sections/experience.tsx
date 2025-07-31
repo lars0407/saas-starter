@@ -346,29 +346,36 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
                   </div>
                   
                   <div className="space-y-2">
-                    {entry.achievements.map((achievement, achievementIndex) => (
-                      <div key={achievementIndex} className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <Input
-                            placeholder="z.B. Umsatz um 25% gesteigert"
-                            value={achievement}
-                            onChange={(e) => updateAchievement(entry.id, achievementIndex, e.target.value)}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        {isEditing && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeAchievement(entry.id, achievementIndex)}
-                            className="text-red-500 hover:text-red-700"
-                            title="Erfolg entfernen"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        )}
+                    {entry.achievements.length === 0 ? (
+                      <div className="text-center py-4 text-muted-foreground">
+                        <p className="text-sm">Noch keine Erfolge hinzugefügt</p>
+                        <p className="text-xs">Füge deine ersten Highlights hinzu</p>
                       </div>
-                    ))}
+                    ) : (
+                      entry.achievements.map((achievement, achievementIndex) => (
+                        <div key={achievementIndex} className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <Input
+                              placeholder="z.B. Umsatz um 25% gesteigert"
+                              value={achievement}
+                              onChange={(e) => updateAchievement(entry.id, achievementIndex, e.target.value)}
+                              disabled={!isEditing}
+                            />
+                          </div>
+                          {isEditing && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeAchievement(entry.id, achievementIndex)}
+                              className="text-red-500 hover:text-red-700"
+                              title="Erfolg entfernen"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
