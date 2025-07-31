@@ -304,76 +304,76 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
                 </div>
               );
             })}
+          </div>
+        )}
 
-            {/* Add new skill form */}
-            {isEditing && (
-              <div className="border rounded-lg p-4 space-y-4">
-                <h4 className="text-sm font-semibold">+ Neuen Skill hinzufügen</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium">Skill Name</Label>
-                    <Input
-                      placeholder="z.B. React, Teamführung"
-                      value={newSkill.name || ''}
-                      onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
-                      className="text-sm"
-                      onKeyPress={(e) => e.key === 'Enter' && addSkill()}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium">Kategorie</Label>
-                    <Select 
-                      value={newSkill.category || 'technical'} 
-                      onValueChange={(value) => setNewSkill({ ...newSkill, category: value as any })}
-                    >
-                      <SelectTrigger className="text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SKILL_CATEGORIES.map(category => (
-                          <SelectItem key={category.value} value={category.value}>
-                            <div className="flex items-center gap-2">
-                              <span>{category.icon}</span>
-                              <span>{category.label.split(' ')[0]}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium">Level</Label>
-                    <Select 
-                      value={newSkill.level || 'intermediate'} 
-                      onValueChange={(value) => setNewSkill({ ...newSkill, level: value as any })}
-                    >
-                      <SelectTrigger className="text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SKILL_LEVELS.map(level => (
-                          <SelectItem key={level.value} value={level.value}>
-                            <div className="flex items-center gap-2">
-                              <span>{level.icon}</span>
-                              <span>{level.label}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <Button
-                  onClick={addSkill}
-                  disabled={!newSkill.name?.trim()}
-                  size="sm"
-                  className="w-full"
-                >
-                  <Plus className="h-3 w-3 mr-2" />
-                  Skill hinzufügen
-                </Button>
+        {/* Add new skill form - Always visible when editing */}
+        {isEditing && (
+          <div className="border rounded-lg p-4 space-y-4">
+            <h4 className="text-sm font-semibold">+ Neuen Skill hinzufügen</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Skill Name</Label>
+                <Input
+                  placeholder="z.B. React, Teamführung"
+                  value={newSkill.name || ''}
+                  onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
+                  className="text-sm"
+                  onKeyPress={(e) => e.key === 'Enter' && addSkill()}
+                />
               </div>
-            )}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Kategorie</Label>
+                <Select 
+                  value={newSkill.category || 'technical'} 
+                  onValueChange={(value) => setNewSkill({ ...newSkill, category: value as any })}
+                >
+                  <SelectTrigger className="text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SKILL_CATEGORIES.map(category => (
+                      <SelectItem key={category.value} value={category.value}>
+                        <div className="flex items-center gap-2">
+                          <span>{category.icon}</span>
+                          <span>{category.label.split(' ')[0]}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Level</Label>
+                <Select 
+                  value={newSkill.level || 'intermediate'} 
+                  onValueChange={(value) => setNewSkill({ ...newSkill, level: value as any })}
+                >
+                  <SelectTrigger className="text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SKILL_LEVELS.map(level => (
+                      <SelectItem key={level.value} value={level.value}>
+                        <div className="flex items-center gap-2">
+                          <span>{level.icon}</span>
+                          <span>{level.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button
+              onClick={addSkill}
+              disabled={!newSkill.name?.trim()}
+              size="sm"
+              className="w-full bg-[#0F973D] hover:bg-[#0F973D]/90 text-white"
+            >
+              <Plus className="h-3 w-3 mr-2" />
+              Skill hinzufügen
+            </Button>
           </div>
         )}
 
@@ -402,17 +402,7 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
           </div>
         )}
 
-        {/* Add Skill Button - Always visible when editing */}
-        {isEditing && (
-          <Button
-            onClick={addSkill}
-            variant="outline"
-            className="w-full mt-4"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Skill hinzufügen
-          </Button>
-        )}
+
       </CardContent>
     </Card>
   );
