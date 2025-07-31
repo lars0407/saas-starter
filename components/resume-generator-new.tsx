@@ -221,6 +221,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
           })) || [],
         };
         
+        console.log('Loaded resume data:', transformedData);
         setResumeData(transformedData);
         
         // Load existing PDF if available
@@ -283,8 +284,18 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
           edu.institution && edu.degree && edu.field
         );
       case 2: // Experience
+        console.log('Experience completion check:', {
+          length: resumeData.experience.length,
+          experience: resumeData.experience,
+          everyCheck: resumeData.experience.every(exp => {
+            const hasCompany = !!exp.company;
+            const hasPosition = !!exp.position;
+            console.log('Experience entry:', { company: exp.company, position: exp.position, hasCompany, hasPosition });
+            return hasCompany && hasPosition;
+          })
+        });
         return resumeData.experience.length > 0 && resumeData.experience.every(exp => 
-          exp.company && exp.position && exp.description
+          exp.company && exp.position
         );
       case 3: // Skills
         return resumeData.skills.length > 0 && resumeData.skills.every(skill => skill.name);
@@ -588,7 +599,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
                 <Button
                   onClick={generateResume}
                   disabled={isGenerating || !Object.values(STEPS.slice(0, -1)).every((_, index) => isStepComplete(index))}
-                  className="flex-1"
+                  className="flex-1 bg-[#0F973D] hover:bg-[#0F973D]/90 text-white"
                 >
                   {isGenerating ? (
                     <>
