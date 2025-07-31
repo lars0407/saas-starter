@@ -22,6 +22,7 @@ import { Education } from './resume-sections/education';
 import { Experience } from './resume-sections/experience';
 import { Skills } from './resume-sections/skills';
 import { saveResume, fetchDocument } from '@/lib/api-client';
+import { useDocumentDownload } from '@/hooks/use-document-download';
 
 // Import the existing PDF viewer component
 import { PDFViewer } from './ui/pdf-viewer';
@@ -100,6 +101,23 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
+  const { downloadDocument, isLoading: isDownloading } = useDocumentDownload();
+
+  // Create document object for download functionality
+  const currentDocument = documentId ? {
+    id: documentId.toString(),
+    name: resumeData.personalInfo.fullName || 'Lebenslauf',
+    type: 'resume' as const,
+    variant: 'human' as const,
+    updated_at: new Date().toISOString(),
+    file_url: generatedPdfUrl || undefined
+  } : null;
+
+  const handleDownloadResume = () => {
+    if (currentDocument) {
+      downloadDocument(currentDocument);
+    }
+  };
 
   // Load existing document when documentId is provided
   useEffect(() => {
@@ -528,15 +546,31 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
       <div className="lg:w-1/2 flex flex-col min-h-0">
         <Card className="h-full flex flex-col min-h-0">
           <CardHeader className="flex-shrink-0">
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-primary" />
-              Live Vorschau
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              So sieht dein Lebenslauf aus
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-primary" />
+                  Live Vorschau
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  So sieht dein Lebenslauf aus
+                </p>
+              </div>
+              {generatedPdfUrl && currentDocument && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadResume}
+                  disabled={isDownloading}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  {isDownloading ? 'Lade...' : 'Download'}
+                </Button>
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto p-6 min-h-0">
+                      <CardContent className="flex-1 overflow-y-auto p-2 min-h-0">
             {generatedPdfUrl ? (
               // Show PDF Viewer when PDF is generated
               <div className="h-full">
