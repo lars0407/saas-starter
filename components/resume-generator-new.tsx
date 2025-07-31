@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { 
   FileText, 
   Eye, 
@@ -532,27 +531,47 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                   <span className="text-sm font-medium">Persönliche Daten</span>
-                  <Badge variant={isStepComplete(0) ? "default" : "secondary"}>
+                  <div className={cn(
+                    "flex items-center justify-center w-6 h-6 rounded-md text-xs font-medium",
+                    isStepComplete(0) 
+                      ? "bg-[#0F973D] text-white" 
+                      : "bg-muted text-muted-foreground"
+                  )}>
                     {isStepComplete(0) ? "✓" : "!"}
-                  </Badge>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                   <span className="text-sm font-medium">Ausbildung</span>
-                  <Badge variant={isStepComplete(1) ? "default" : "secondary"}>
+                  <div className={cn(
+                    "flex items-center justify-center w-6 h-6 rounded-md text-xs font-medium",
+                    isStepComplete(1) 
+                      ? "bg-[#0F973D] text-white" 
+                      : "bg-muted text-muted-foreground"
+                  )}>
                     {isStepComplete(1) ? "✓" : "!"}
-                  </Badge>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                   <span className="text-sm font-medium">Berufserfahrung</span>
-                  <Badge variant={isStepComplete(2) ? "default" : "secondary"}>
+                  <div className={cn(
+                    "flex items-center justify-center w-6 h-6 rounded-md text-xs font-medium",
+                    isStepComplete(2) 
+                      ? "bg-[#0F973D] text-white" 
+                      : "bg-muted text-muted-foreground"
+                  )}>
                     {isStepComplete(2) ? "✓" : "!"}
-                  </Badge>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                   <span className="text-sm font-medium">Skills</span>
-                  <Badge variant={isStepComplete(3) ? "default" : "secondary"}>
+                  <div className={cn(
+                    "flex items-center justify-center w-6 h-6 rounded-md text-xs font-medium",
+                    isStepComplete(3) 
+                      ? "bg-[#0F973D] text-white" 
+                      : "bg-muted text-muted-foreground"
+                  )}>
                     {isStepComplete(3) ? "✓" : "!"}
-                  </Badge>
+                  </div>
                 </div>
               </div>
               
