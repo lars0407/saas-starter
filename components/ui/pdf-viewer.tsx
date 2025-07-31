@@ -231,7 +231,7 @@ export function PDFViewer({
         ) : (
           <iframe
             ref={iframeRef}
-            src={`${pdfUrl}#page=${currentPage}`}
+            src={`${pdfUrl}#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=0`}
             className="w-full h-full min-h-[400px]"
             onError={handleError}
             title="PDF Viewer"

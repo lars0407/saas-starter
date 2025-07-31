@@ -47,30 +47,49 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
   });
 
   const addSkill = () => {
-    if (!newSkill.name?.trim()) return;
-    
-    const skill: Skill = {
-      id: Date.now().toString(),
-      name: newSkill.name.trim(),
-      category: newSkill.category || 'technical',
-      level: newSkill.level || 'intermediate',
-    };
-    onChange([...data, skill]);
-    setNewSkill({ name: '', category: 'technical', level: 'intermediate' });
+    try {
+      // If no name is provided, add a default skill
+      const skillName = newSkill.name?.trim() || 'Neuer Skill';
+      
+      const skill: Skill = {
+        id: Date.now().toString(),
+        name: skillName,
+        category: newSkill.category || 'technical',
+        level: newSkill.level || 'intermediate',
+      };
+      
+      // Ensure data is an array before spreading
+      const currentData = Array.isArray(data) ? data : [];
+      onChange([...currentData, skill]);
+      setNewSkill({ name: '', category: 'technical', level: 'intermediate' });
+    } catch (error) {
+      console.error('Error adding skill:', error);
+    }
   };
 
   const removeSkill = (id: string) => {
-    onChange(data.filter(skill => skill.id !== id));
+    try {
+      const currentData = Array.isArray(data) ? data : [];
+      onChange(currentData.filter(skill => skill.id !== id));
+    } catch (error) {
+      console.error('Error removing skill:', error);
+    }
   };
 
   const updateSkill = (id: string, field: keyof Skill, value: any) => {
-    onChange(data.map(skill => 
-      skill.id === id ? { ...skill, [field]: value } : skill
-    ));
+    try {
+      const currentData = Array.isArray(data) ? data : [];
+      onChange(currentData.map(skill => 
+        skill.id === id ? { ...skill, [field]: value } : skill
+      ));
+    } catch (error) {
+      console.error('Error updating skill:', error);
+    }
   };
 
   const getSkillsByCategory = (category: string) => {
-    return data.filter(skill => skill.category === category);
+    const currentData = Array.isArray(data) ? data : [];
+    return currentData.filter(skill => skill.category === category);
   };
 
   const getLevelIcon = (level: string) => {
@@ -163,8 +182,8 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
           Zeig, was du drauf hast - von Tech bis Teamwork
         </p>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {data.length === 0 ? (
+             <CardContent className="space-y-6">
+         {(Array.isArray(data) ? data.length : 0) === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Zap className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p className="text-sm">Noch keine Skills hinzugefügt</p>
@@ -358,8 +377,8 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
           </div>
         )}
 
-        {/* Quick Add Suggestions */}
-        {isEditing && data.length === 0 && (
+                 {/* Quick Add Suggestions */}
+         {isEditing && (Array.isArray(data) ? data.length : 0) === 0 && (
           <div className="mt-4 p-4 bg-muted/30 rounded-lg">
             <h4 className="text-sm font-medium mb-3">💡 Schnell-Tipps für Skills:</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
@@ -381,6 +400,18 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Add Skill Button - Always visible when editing */}
+        {isEditing && (
+          <Button
+            onClick={addSkill}
+            variant="outline"
+            className="w-full mt-4"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            + Skill hinzufügen
+          </Button>
         )}
       </CardContent>
     </Card>

@@ -99,6 +99,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
 
   // Load existing document when documentId is provided
   useEffect(() => {
@@ -161,6 +162,16 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
         };
         
         setResumeData(transformedData);
+        
+        // Load existing PDF if available
+        // Check for top-level download_link.url (Azure blob)
+        const downloadUrl = response.download_link?.url || document.download_link;
+        
+        if (downloadUrl) {
+          // Use direct URL - simpler and more reliable
+          setGeneratedPdfUrl(downloadUrl);
+        }
+        
         toast.success('Lebenslauf erfolgreich geladen! 📄');
       }
     } catch (error) {
@@ -226,11 +237,17 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
     setIsGenerating(true);
     
     try {
-      // TODO: Replace with actual API call
+      // Clear any existing PDF when generating a new one
+      setGeneratedPdfUrl(null);
+      
+      // TODO: Replace with actual API call to generate PDF
       await new Promise(resolve => setTimeout(resolve, 3000));
       
+      // Simulate PDF generation - in real implementation, this would be the actual PDF URL
+      const mockPdfUrl = `https://api.jobjaeger.de/api:SiRHLF4Y/documents/${documentId || 'new'}/pdf?timestamp=${Date.now()}`;
+      setGeneratedPdfUrl(mockPdfUrl);
+      
       toast.success('Lebenslauf erfolgreich generiert! 🎉');
-      nextStep();
     } catch (error) {
       console.error('Error generating resume:', error);
       toast.error('Fehler beim Generieren des Lebenslaufs');
@@ -520,53 +537,41 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
             </p>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto p-6 min-h-0">
-            <div className="min-h-full flex items-center justify-center text-gray-500 bg-gray-50 rounded-lg p-8">
-              <div className="text-center">
-                <Eye className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-sm mb-2">Live Vorschau</p>
-                <p className="text-xs text-gray-400">
-                  {resumeData.personalInfo.fullName ? 
-                    `Lebenslauf für ${resumeData.personalInfo.fullName}` : 
-                    'Fülle die Formulare aus, um eine Vorschau zu sehen'
-                  }
-                </p>
-                {resumeData.personalInfo.fullName && (
-                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-700 font-medium mb-1">
-                      🚀 Lebenslauf generieren
-                    </p>
-                    <p className="text-xs text-blue-600">
-                      Klicke auf "Generieren" um deinen Lebenslauf zu erstellen und hier als PDF anzuzeigen
-                    </p>
-                  </div>
-                )}
-                {resumeData.personalInfo.fullName && (
-                  <div className="mt-4 text-left text-xs bg-white p-3 rounded border">
-                    <h3 className="font-semibold mb-2">{resumeData.personalInfo.fullName}</h3>
-                    <p className="text-gray-600 mb-1">{resumeData.personalInfo.email}</p>
-                    <p className="text-gray-600 mb-1">{resumeData.personalInfo.location}</p>
-                    {resumeData.education.length > 0 && (
-                      <div className="mt-2">
-                        <p className="font-medium text-xs">Ausbildung:</p>
-                        <p className="text-gray-600 text-xs">{resumeData.education.length} Eintrag{resumeData.education.length !== 1 ? 'e' : ''}</p>
-                      </div>
-                    )}
-                    {resumeData.experience.length > 0 && (
-                      <div className="mt-1">
-                        <p className="font-medium text-xs">Erfahrung:</p>
-                        <p className="text-gray-600 text-xs">{resumeData.experience.length} Eintrag{resumeData.experience.length !== 1 ? 'e' : ''}</p>
-                      </div>
-                    )}
-                    {resumeData.skills.length > 0 && (
-                      <div className="mt-1">
-                        <p className="font-medium text-xs">Skills:</p>
-                        <p className="text-gray-600 text-xs">{resumeData.skills.length} Skill{resumeData.skills.length !== 1 ? 's' : ''}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+            {generatedPdfUrl ? (
+              // Show PDF Viewer when PDF is generated
+              <div className="h-full">
+
+                <PDFViewer
+                  pdfUrl={generatedPdfUrl}
+                  showToolbar={false}
+                  showNavigation={false}
+                  showBorder={false}
+                  fallbackMessage="Vorschau nicht verfügbar – aber du kannst's trotzdem runterladen 📄"
+                  downloadMessage=""
+                  placeholderMessage="Lade dein Meisterwerk… 🔄"
+                  className="w-full h-full"
+                  onLoaded={() => console.log('PDF loaded successfully')}
+                  onError={() => {
+                    console.error('PDF loading failed');
+                    toast.error('Fehler beim Laden der PDF-Vorschau');
+                  }}
+                />
               </div>
-            </div>
+            ) : (
+              // Show empty state when no PDF is generated
+              <div className="min-h-full flex items-center justify-center text-gray-500 bg-gray-50 rounded-lg p-8">
+                <div className="text-center">
+                  <Eye className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-sm mb-2">Live Vorschau</p>
+                  <p className="text-xs text-gray-400">
+                    {resumeData.personalInfo.fullName ? 
+                      `Lebenslauf für ${resumeData.personalInfo.fullName}` : 
+                      'Fülle die Formulare aus, um eine Vorschau zu sehen'
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
