@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Zap, Plus, Trash2, Star } from 'lucide-react';
+import { Zap, Plus, Trash2, Star, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Skill {
@@ -38,14 +38,25 @@ const SKILL_LEVELS = [
 ];
 
 export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [newSkill, setNewSkill] = useState<Partial<Skill>>({
+    name: '',
+    category: 'technical',
+    level: 'intermediate',
+  });
+
   const addSkill = () => {
-    const newSkill: Skill = {
+    if (!newSkill.name?.trim()) return;
+    
+    const skill: Skill = {
       id: Date.now().toString(),
-      name: '',
-      category: 'technical',
-      level: 'intermediate',
+      name: newSkill.name.trim(),
+      category: newSkill.category || 'technical',
+      level: newSkill.level || 'intermediate',
     };
-    onChange([...data, newSkill]);
+    onChange([...data, skill]);
+    setNewSkill({ name: '', category: 'technical', level: 'intermediate' });
   };
 
   const removeSkill = (id: string) => {
@@ -70,6 +81,75 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
   const getCategoryIcon = (category: string) => {
     const categoryData = SKILL_CATEGORIES.find(c => c.value === category);
     return categoryData?.icon || '💡';
+  };
+
+  // Drag and Drop functions for skills within a category
+  const handleDragStart = (e: React.DragEvent, index: number, category: string) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', JSON.stringify({ index, category }));
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number, dropCategory: string) => {
+    e.preventDefault();
+    const dragData = JSON.parse(e.dataTransfer.getData('text/html'));
+    const { index: dragIndex, category: dragCategory } = dragData;
+    
+    // Only allow reordering within the same category
+    if (dragCategory !== dropCategory) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+    
+    if (dragIndex !== dropIndex) {
+      const categorySkills = getSkillsByCategory(dropCategory);
+      const newCategorySkills = [...categorySkills];
+      const [draggedItem] = newCategorySkills.splice(dragIndex, 1);
+      newCategorySkills.splice(dropIndex, 0, draggedItem);
+      
+      // Update the main data array
+      const otherSkills = data.filter(skill => skill.category !== dropCategory);
+      onChange([...otherSkills, ...newCategorySkills]);
+    }
+    
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const moveSkill = (skillId: string, direction: 'up' | 'down') => {
+    const skillIndex = data.findIndex(skill => skill.id === skillId);
+    if (skillIndex === -1) return;
+    
+    const skill = data[skillIndex];
+    const categorySkills = getSkillsByCategory(skill.category);
+    const categoryIndex = categorySkills.findIndex(s => s.id === skillId);
+    
+    if (direction === 'up' && categoryIndex > 0) {
+      const newCategorySkills = [...categorySkills];
+      [newCategorySkills[categoryIndex], newCategorySkills[categoryIndex - 1]] = 
+      [newCategorySkills[categoryIndex - 1], newCategorySkills[categoryIndex]];
+      
+      const otherSkills = data.filter(s => s.category !== skill.category);
+      onChange([...otherSkills, ...newCategorySkills]);
+    } else if (direction === 'down' && categoryIndex < categorySkills.length - 1) {
+      const newCategorySkills = [...categorySkills];
+      [newCategorySkills[categoryIndex], newCategorySkills[categoryIndex + 1]] = 
+      [newCategorySkills[categoryIndex + 1], newCategorySkills[categoryIndex]];
+      
+      const otherSkills = data.filter(s => s.category !== skill.category);
+      onChange([...otherSkills, ...newCategorySkills]);
+    }
   };
 
   return (
@@ -101,28 +181,78 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
                   <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
                     {category.icon} {category.label}
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {categorySkills.map(skill => (
-                      <div key={skill.id} className="border rounded-lg p-3 space-y-2">
+                  <div className="space-y-2">
+                    {categorySkills.map((skill, index) => (
+                      <div 
+                        key={skill.id} 
+                        className={cn(
+                          "border rounded-lg p-3 transition-all duration-200",
+                          draggedIndex === index && "opacity-50 scale-95",
+                          dragOverIndex === index && draggedIndex !== index && "border-primary border-2 bg-primary/5",
+                          "hover:shadow-sm"
+                        )}
+                        draggable={isEditing}
+                        onDragStart={(e) => handleDragStart(e, index, category.value)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, index, category.value)}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
+                            {isEditing && (
+                              <div 
+                                className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+                                title="Zum Verschieben ziehen"
+                              >
+                                <GripVertical className="h-3 w-3 text-gray-400" />
+                              </div>
+                            )}
                             <span className="text-xs">{getLevelIcon(skill.level)}</span>
                             <span className="text-sm font-medium">{skill.name}</span>
                           </div>
-                          {isEditing && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeSkill(skill.id)}
-                              className="text-red-500 hover:text-red-700 h-6 w-6 p-0"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          )}
+                          <div className="flex items-center gap-1">
+                            {isEditing && categorySkills.length > 1 && (
+                              <>
+                                {index > 0 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => moveSkill(skill.id, 'up')}
+                                    className="text-gray-500 hover:text-gray-700 h-6 w-6 p-0"
+                                    title="Nach oben verschieben"
+                                  >
+                                    ↑
+                                  </Button>
+                                )}
+                                {index < categorySkills.length - 1 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => moveSkill(skill.id, 'down')}
+                                    className="text-gray-500 hover:text-gray-700 h-6 w-6 p-0"
+                                    title="Nach unten verschieben"
+                                  >
+                                    ↓
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                            {isEditing && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeSkill(skill.id)}
+                                className="text-red-500 hover:text-red-700 h-6 w-6 p-0"
+                                title="Löschen"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                         
                         {isEditing && (
-                          <div className="space-y-2">
+                          <div className="mt-2 space-y-2">
                             <Input
                               placeholder="Skill Name"
                               value={skill.name}
@@ -165,14 +295,18 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
                     <Label className="text-xs font-medium">Skill Name</Label>
                     <Input
                       placeholder="z.B. React, Teamführung"
-                      value=""
-                      onChange={() => {}}
+                      value={newSkill.name || ''}
+                      onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
                       className="text-sm"
+                      onKeyPress={(e) => e.key === 'Enter' && addSkill()}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">Kategorie</Label>
-                    <Select value="technical" onValueChange={() => {}}>
+                    <Select 
+                      value={newSkill.category || 'technical'} 
+                      onValueChange={(value) => setNewSkill({ ...newSkill, category: value as any })}
+                    >
                       <SelectTrigger className="text-sm">
                         <SelectValue />
                       </SelectTrigger>
@@ -190,7 +324,10 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">Level</Label>
-                    <Select value="intermediate" onValueChange={() => {}}>
+                    <Select 
+                      value={newSkill.level || 'intermediate'} 
+                      onValueChange={(value) => setNewSkill({ ...newSkill, level: value as any })}
+                    >
                       <SelectTrigger className="text-sm">
                         <SelectValue />
                       </SelectTrigger>
@@ -207,20 +344,18 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
                     </Select>
                   </div>
                 </div>
+                <Button
+                  onClick={addSkill}
+                  disabled={!newSkill.name?.trim()}
+                  size="sm"
+                  className="w-full"
+                >
+                  <Plus className="h-3 w-3 mr-2" />
+                  Skill hinzufügen
+                </Button>
               </div>
             )}
           </div>
-        )}
-
-        {isEditing && (
-          <Button
-            onClick={addSkill}
-            variant="outline"
-            className="w-full"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            + Skill hinzufügen
-          </Button>
         )}
 
         {/* Quick Add Suggestions */}

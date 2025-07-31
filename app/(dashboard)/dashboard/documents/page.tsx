@@ -185,18 +185,29 @@ export default function DocumentsPage() {
   }
 
   const handleEdit = (id: string) => {
-    // TODO: Implement edit functionality
-    toast.info("Bearbeiten-Funktion wird implementiert ✏️")
+    // Find the document by ID to check its type
+    const document = documents.find(doc => doc.id === id)
+    if (!document) {
+      toast.error("Dokument nicht gefunden 😅")
+      return
+    }
+
+    // Navigate to the appropriate editor based on document type
+    if (document.type === 'resume') {
+      window.location.href = `/dashboard/resume-generate?id=${id}`
+    } else if (document.type === 'cover_letter' || document.type === 'cover letter') {
+      window.location.href = `/dashboard/coverletter-generate?id=${id}`
+    } else {
+      toast.error("Unbekannter Dokumenttyp 😅")
+    }
   }
 
   const handleCreateResume = () => {
-    // TODO: Implement create resume functionality
-    toast.info("Lebenslauf erstellen wird implementiert 📝")
+    window.location.href = '/dashboard/resume-generate'
   }
 
   const handleCreateCoverLetter = () => {
-    // TODO: Implement create cover letter functionality
-    toast.info("Anschreiben generieren wird implementiert ✨")
+    window.location.href = '/dashboard/coverletter-generate'
   }
 
   const renderSkeletons = () => {

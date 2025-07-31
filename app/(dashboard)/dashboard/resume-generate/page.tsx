@@ -10,7 +10,13 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 
-export default function ResumeGeneratePage() {
+interface ResumeGeneratePageProps {
+  searchParams: { id?: string }
+}
+
+export default function ResumeGeneratePage({ searchParams }: ResumeGeneratePageProps) {
+  const documentId = searchParams.id ? parseInt(searchParams.id) : undefined;
+
   return (
     <>
       <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -29,7 +35,9 @@ export default function ResumeGeneratePage() {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>Lebenslauf Generator</BreadcrumbPage>
+                <BreadcrumbPage>
+                  {documentId ? 'Lebenslauf bearbeiten' : 'Lebenslauf Generator'}
+                </BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -40,15 +48,18 @@ export default function ResumeGeneratePage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Lebenslauf Generator 🚀
+                {documentId ? 'Lebenslauf bearbeiten' : 'Lebenslauf Generator'} 🚀
               </h1>
               <p className="text-gray-600 mt-2">
-                Erstelle deinen perfekten CV Schritt für Schritt
+                {documentId 
+                  ? 'Bearbeite deinen bestehenden Lebenslauf' 
+                  : 'Erstelle deinen perfekten CV Schritt für Schritt'
+                }
               </p>
             </div>
           </div>
         </div>
-        <ResumeGeneratorNew />
+        <ResumeGeneratorNew documentId={documentId} />
       </div>
     </>
   );

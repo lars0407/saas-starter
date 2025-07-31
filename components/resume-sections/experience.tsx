@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, Plus, Trash2, Calendar, Building2, MapPin } from 'lucide-react';
+import { Briefcase, Plus, Trash2, Calendar, Building2, MapPin, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ExperienceEntry {
@@ -29,6 +29,9 @@ interface ExperienceProps {
 }
 
 export function Experience({ data, onChange, isEditing = true }: ExperienceProps) {
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
   const addExperience = () => {
     const newEntry: ExperienceEntry = {
       id: Date.now().toString(),
@@ -83,6 +86,47 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
     ));
   };
 
+  // Drag and Drop functions
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const dragIndex = parseInt(e.dataTransfer.getData('text/html'));
+    
+    if (dragIndex !== dropIndex) {
+      const newData = [...data];
+      const [draggedItem] = newData.splice(dragIndex, 1);
+      newData.splice(dropIndex, 0, draggedItem);
+      onChange(newData);
+    }
+    
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const moveItem = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    
+    const newData = [...data];
+    const [movedItem] = newData.splice(fromIndex, 1);
+    newData.splice(toIndex, 0, movedItem);
+    onChange(newData);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -104,21 +148,73 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
         ) : (
           <div className="space-y-6">
             {data.map((entry, index) => (
-              <div key={entry.id} className="border rounded-lg p-4 space-y-4">
+              <div 
+                key={entry.id} 
+                className={cn(
+                  "border rounded-lg p-4 space-y-4 transition-all duration-200",
+                  draggedIndex === index && "opacity-50 scale-95",
+                  dragOverIndex === index && draggedIndex !== index && "border-primary border-2 bg-primary/5",
+                  "hover:shadow-md"
+                )}
+                draggable={isEditing}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+              >
                 <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="text-xs">
-                    Erfahrung #{index + 1}
-                  </Badge>
-                  {isEditing && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeExperience(entry.id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {isEditing && (
+                      <div 
+                        className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+                        title="Zum Verschieben ziehen"
+                      >
+                        <GripVertical className="h-4 w-4 text-gray-400" />
+                      </div>
+                    )}
+                    <Badge variant="outline" className="text-xs">
+                      Erfahrung #{index + 1}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isEditing && data.length > 1 && (
+                      <>
+                        {index > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => moveItem(index, index - 1)}
+                            className="text-gray-500 hover:text-gray-700"
+                            title="Nach oben verschieben"
+                          >
+                            ↑
+                          </Button>
+                        )}
+                        {index < data.length - 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => moveItem(index, index + 1)}
+                            className="text-gray-500 hover:text-gray-700"
+                            title="Nach unten verschieben"
+                          >
+                            ↓
+                          </Button>
+                        )}
+                      </>
+                    )}
+                    {isEditing && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeExperience(entry.id)}
+                        className="text-red-500 hover:text-red-700"
+                        title="Löschen"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
