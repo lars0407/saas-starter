@@ -32,6 +32,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { JobjaegerLogo } from "@/components/jobjaeger-logo"
 
 // Define Xano user type
 type XanoUser = {
@@ -214,7 +215,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <JobjaegerLogo />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
