@@ -374,9 +374,33 @@ export default function DocumentsPage() {
               </div>
                          ) : !documents || documents.length === 0 ? (
               <div className="flex items-center justify-center h-[calc(100vh-300px)] w-full">
-                <EmptyState 
-                  message="Noch nix am Start 👀 Zeit, deinen ersten Lebenslauf zu bauen oder ein freshes Anschreiben zu generieren!"
-                />
+                <div className="text-center">
+                  <div className="mx-auto h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                    <Plus className="h-12 w-12 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Noch keine Dokumente erstellt 😅
+                  </h3>
+                  <p className="text-gray-600 mb-6 max-w-md">
+                    Fang jetzt an und erstelle deinen ersten Lebenslauf oder Anschreiben – dein Future-Ich wird's dir danken.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                      onClick={handleCreateResume}
+                      className="bg-[#0F973D] hover:bg-[#0D7A32] text-white"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Lebenslauf erstellen
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={handleCreateCoverLetter}
+                    >
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Anschreiben generieren
+                    </Button>
+                  </div>
+                </div>
               </div>
             ) : (
               <>
