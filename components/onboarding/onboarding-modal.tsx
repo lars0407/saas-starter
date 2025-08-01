@@ -17,7 +17,7 @@ import { StepContent } from "./step-content"
 interface OnboardingModalProps {
   isOpen: boolean
   onClose: () => void
-  onComplete: (firstName: string, lastName: string) => void
+  onComplete: (firstName: string, lastName: string, resumeData?: any) => void
   speechText?: string
   characterSrc?: string
   characterAlt?: string
@@ -35,6 +35,8 @@ export function OnboardingModal({
   const [lastName, setLastName] = useState("Mustermann")
   const [currentStep, setCurrentStep] = useState(1)
   const [characterIndex, setCharacterIndex] = useState(0)
+  const [resumeData, setResumeData] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   // Array of character expressions
   const characterExpressions = [
@@ -47,11 +49,25 @@ export function OnboardingModal({
   ]
 
   const handleContinue = () => {
-    // Cycle through character expressions
-    setCharacterIndex((prevIndex) => (prevIndex + 1) % characterExpressions.length)
+    if (currentStep === 1) {
+      // Move to step 2 (resume upload)
+      setCurrentStep(2)
+      setCharacterIndex(1) // Change to different character expression
+    } else if (currentStep === 2) {
+      // Complete onboarding
+      onComplete(firstName, lastName, resumeData)
+    }
+  }
+
+  const handleResumeProcessing = async (data: any) => {
+    setIsLoading(true)
+    setResumeData(data)
     
-    // Don't close modal, just change character
-    // Future: handle next steps
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    
+    setIsLoading(false)
+    setCurrentStep(3) // Move to completion step
   }
 
   const handleFirstNameChange = (value: string) => {
@@ -60,6 +76,10 @@ export function OnboardingModal({
 
   const handleLastNameChange = (value: string) => {
     setLastName(value)
+  }
+
+  const handleResumeDataChange = (data: any) => {
+    setResumeData(data)
   }
 
   return (
@@ -72,7 +92,12 @@ export function OnboardingModal({
         <div className="relative bg-transparent">
           {/* Speech Bubble */}
           <div className="absolute -top-22 right-36 z-10">
-            <SpeechBubble text={speechText} />
+            <SpeechBubble text={
+              currentStep === 1 ? "Hey, cool dich zu sehen! Wie heißt du?" : 
+              currentStep === 2 ? "Super! Jetzt lass uns deinen Lebenslauf hochladen!" :
+              isLoading ? "Einen Moment bitte, ich analysiere deine Daten..." :
+              "Perfekt! Dein Profil ist bereit!"
+            } />
           </div>
 
           {/* Character */}
@@ -94,17 +119,23 @@ export function OnboardingModal({
               lastName={lastName}
               onFirstNameChange={handleFirstNameChange}
               onLastNameChange={handleLastNameChange}
+              onResumeDataChange={handleResumeProcessing}
+              resumeData={resumeData}
+              isLoading={isLoading}
             />
           </div>
 
           {/* Action Button */}
           <div className="flex justify-center">
+                      {!isLoading && (
             <Button
               onClick={handleContinue}
               className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
             >
-              weiter als {firstName || "Max"}
+              {currentStep === 1 ? `weiter als ${firstName || "Max"}` : 
+               currentStep === 2 ? "Fertig" : "Onboarding abschließen"}
             </Button>
+          )}
           </div>
         </div>
       </DialogContent>

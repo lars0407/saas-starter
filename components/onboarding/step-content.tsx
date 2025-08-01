@@ -1,5 +1,8 @@
 import React from "react"
 import { OnboardingForm } from "./onboarding-form"
+import { ResumeUploadForm } from "./resume-upload-form"
+import { LoadingStep } from "./loading-step"
+import { CompletionStep } from "./completion-step"
 
 interface StepContentProps {
   step: number
@@ -7,6 +10,9 @@ interface StepContentProps {
   lastName: string
   onFirstNameChange: (value: string) => void
   onLastNameChange: (value: string) => void
+  onResumeDataChange?: (data: any) => void
+  resumeData?: any
+  isLoading?: boolean
 }
 
 export function StepContent({
@@ -15,8 +21,11 @@ export function StepContent({
   lastName,
   onFirstNameChange,
   onLastNameChange,
+  onResumeDataChange,
+  resumeData,
+  isLoading,
 }: StepContentProps) {
-  // Currently only supporting step 1 (name input)
+  // Step 1: Name input
   if (step === 1) {
     return (
       <OnboardingForm
@@ -26,6 +35,27 @@ export function StepContent({
         onLastNameChange={onLastNameChange}
       />
     )
+  }
+
+  // Step 2: Resume upload
+  if (step === 2) {
+    return (
+      <ResumeUploadForm
+        onResumeDataChange={onResumeDataChange}
+        resumeData={resumeData}
+        isLoading={isLoading}
+      />
+    )
+  }
+
+  // Step 3: Loading state
+  if (isLoading) {
+    return <LoadingStep />
+  }
+
+  // Step 4: Completion
+  if (step === 3) {
+    return <CompletionStep firstName={firstName} lastName={lastName} />
   }
 
   // Placeholder for future steps
