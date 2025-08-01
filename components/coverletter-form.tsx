@@ -45,7 +45,7 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
   }, [initialData]);
 
   const validateForm = (): boolean => {
-    return formData.jobTitle.trim() && formData.company.trim();
+    return Boolean(formData.jobTitle.trim() && formData.company.trim());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -84,7 +84,7 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
     }));
   };
 
-  const isFormValid = formData.jobTitle.trim() && formData.company.trim();
+  const isFormValid = Boolean(formData.jobTitle.trim() && formData.company.trim());
 
   return (
     <div className="space-y-6">

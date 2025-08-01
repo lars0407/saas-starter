@@ -65,10 +65,12 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [currentDocument, setCurrentDocument] = useState<any>(null);
+  const [currentDocumentId, setCurrentDocumentId] = useState<number | null>(documentId || null);
 
   // Load existing document when documentId is provided
   useEffect(() => {
     if (documentId) {
+      setCurrentDocumentId(documentId);
       loadExistingDocument();
     }
   }, [documentId]);
