@@ -32,6 +32,10 @@ interface ResumeData {
     email: string;
     phone?: string;
     location: string;
+    adresse_street?: string;
+    adresse_city: string;
+    adresse_postcode?: string;
+    adresse_country?: string;
     website?: string;
     linkedin?: string;
     github?: string;
@@ -87,6 +91,10 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
       email: '',
       phone: '',
       location: '',
+      adresse_city: '',
+      adresse_street: '',
+      adresse_postcode: '',
+      adresse_country: '',
       website: '',
       linkedin: '',
       github: '',
@@ -189,6 +197,10 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
             email: content.basics?.email || '',
             phone: content.basics?.telephone || '',
             location: content.basics?.adresse_city || '',
+            adresse_city: content.basics?.adresse_city || '',
+            adresse_street: content.basics?.adresse_street || '',
+            adresse_postcode: content.basics?.adresse_postcode || '',
+            adresse_country: content.basics?.adresse_country || '',
             website: content.link?.find((link: any) => link.label === 'Website')?.url || '',
             linkedin: content.link?.find((link: any) => link.label === 'LinkedIn')?.url || '',
             github: content.link?.find((link: any) => link.label === 'GitHub')?.url || '',

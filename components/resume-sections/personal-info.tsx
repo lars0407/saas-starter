@@ -14,6 +14,10 @@ interface PersonalInfoData {
   email: string;
   phone?: string;
   location: string;
+  adresse_street?: string;
+  adresse_city: string;
+  adresse_postcode?: string;
+  adresse_country?: string;
   website?: string;
   linkedin?: string;
   github?: string;
@@ -52,8 +56,8 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
       newErrors.email = 'Gültige E-Mail-Adresse erforderlich';
     }
 
-    if (!data.location.trim()) {
-      newErrors.location = 'Standort ist erforderlich';
+    if (!data.adresse_city.trim()) {
+      newErrors.adresse_city = 'Stadt ist erforderlich';
     }
 
     setErrors(newErrors);
@@ -135,26 +139,86 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
               Optional - für direkten Kontakt
             </p>
           </div>
+        </div>
 
-          {/* Location */}
-          <div className="space-y-2">
-            <Label htmlFor="location" className="text-sm font-medium">
-              Standort 📍
-            </Label>
-            <Input
-              id="location"
-              placeholder="z.B. Berlin, Deutschland"
-              value={data.location}
-              onChange={(e) => handleChange('location', e.target.value)}
-              className={cn(
-                errors.location && "border-red-500",
-                "focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+        {/* Address Information */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-muted-foreground">Adresse 📮</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Street */}
+            <div className="space-y-2">
+              <Label htmlFor="adresse_street" className="text-sm font-medium">
+                Straße & Hausnummer
+              </Label>
+              <Input
+                id="adresse_street"
+                placeholder="z.B. Musterstraße 123"
+                value={data.adresse_street || ''}
+                onChange={(e) => handleChange('adresse_street', e.target.value)}
+                className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                disabled={!isEditing}
+              />
+              <p className="text-xs text-muted-foreground">
+                Optional - für vollständige Adresse
+              </p>
+            </div>
+
+            {/* City */}
+            <div className="space-y-2">
+              <Label htmlFor="adresse_city" className="text-sm font-medium">
+                Stadt 🏙️
+              </Label>
+              <Input
+                id="adresse_city"
+                placeholder="z.B. Berlin"
+                value={data.adresse_city}
+                onChange={(e) => handleChange('adresse_city', e.target.value)}
+                className={cn(
+                  errors.adresse_city && "border-red-500",
+                  "focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                )}
+                disabled={!isEditing}
+              />
+              {errors.adresse_city && (
+                <p className="text-sm text-red-500">{errors.adresse_city}</p>
               )}
-              disabled={!isEditing}
-            />
-            {errors.location && (
-              <p className="text-sm text-red-500">{errors.location}</p>
-            )}
+            </div>
+
+            {/* Postcode */}
+            <div className="space-y-2">
+              <Label htmlFor="adresse_postcode" className="text-sm font-medium">
+                Postleitzahl
+              </Label>
+              <Input
+                id="adresse_postcode"
+                placeholder="z.B. 10115"
+                value={data.adresse_postcode || ''}
+                onChange={(e) => handleChange('adresse_postcode', e.target.value)}
+                className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                disabled={!isEditing}
+              />
+              <p className="text-xs text-muted-foreground">
+                Optional - für vollständige Adresse
+              </p>
+            </div>
+
+            {/* Country */}
+            <div className="space-y-2">
+              <Label htmlFor="adresse_country" className="text-sm font-medium">
+                Land
+              </Label>
+              <Input
+                id="adresse_country"
+                placeholder="z.B. Deutschland"
+                value={data.adresse_country || ''}
+                onChange={(e) => handleChange('adresse_country', e.target.value)}
+                className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                disabled={!isEditing}
+              />
+              <p className="text-xs text-muted-foreground">
+                Optional - Standard: Deutschland
+              </p>
+            </div>
           </div>
         </div>
 
