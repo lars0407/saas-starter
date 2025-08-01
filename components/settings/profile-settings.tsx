@@ -62,10 +62,6 @@ interface Skill {
 }
 
 export function ProfileSettings() {
-  // Profile data state
-  const [firstName, setFirstName] = useState("Max")
-  const [lastName, setLastName] = useState("Mustermann")
-  const [email, setEmail] = useState("max@example.com")
   const [isLoading, setIsLoading] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
 
@@ -96,28 +92,12 @@ export function ProfileSettings() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      toast.success("Profil wurde aktualisiert. Sieht gut aus! 💅")
+      toast.success("Lebenslauf wurde aktualisiert. Sieht gut aus! 💅")
       setHasChanges(false)
     } catch (error) {
       toast.error("Uups, da lief was schief. Probier's nochmal.")
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const handleInputChange = (field: string, value: string) => {
-    setHasChanges(true)
-    
-    switch (field) {
-      case "firstName":
-        setFirstName(value)
-        break
-      case "lastName":
-        setLastName(value)
-        break
-      case "email":
-        setEmail(value)
-        break
     }
   }
 
@@ -143,56 +123,6 @@ export function ProfileSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Profile Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Persönliche Daten
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">Dein Vorname</Label>
-              <Input
-                id="firstName"
-                value={firstName}
-                onChange={(e) => handleInputChange("firstName", e.target.value)}
-                placeholder="Dein Vorname"
-                className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Dein Nachname</Label>
-              <Input
-                id="lastName"
-                value={lastName}
-                onChange={(e) => handleInputChange("lastName", e.target.value)}
-                placeholder="Dein Nachname"
-                className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Deine E-Mail-Adresse</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => handleInputChange("email", e.target.value)}
-              placeholder="deine.email@example.com"
-              className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
-            />
-            <p className="text-xs text-gray-500">
-              Diese E-Mail wird für wichtige Updates und Sicherheitsbenachrichtigungen verwendet.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Resume Sections */}
       <div className="space-y-6">
         {/* Basics Section */}
@@ -285,7 +215,7 @@ export function ProfileSettings() {
             className="bg-[#0F973D] hover:bg-[#0D7A32] text-white w-full"
           >
             <Save className="mr-2 h-4 w-4" />
-            {isLoading ? "Speichern..." : "Profil & Lebenslauf speichern"}
+            {isLoading ? "Speichern..." : "Lebenslauf speichern"}
           </Button>
         </CardContent>
       </Card>
@@ -298,7 +228,7 @@ export function ProfileSettings() {
             <div>
               <h3 className="font-medium text-blue-900">Profil-Tipp 💡</h3>
               <p className="text-sm text-blue-700 mt-1">
-                Ein vollständiges Profil mit Lebenslauf-Daten hilft der KI dabei, dir bessere Jobvorschläge zu machen. 
+                Ein vollständiger Lebenslauf hilft der KI dabei, dir bessere Jobvorschläge zu machen. 
                 Je mehr Infos, desto smarter die Empfehlungen!
               </p>
             </div>
