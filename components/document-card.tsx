@@ -21,20 +21,22 @@ import { PDFViewer } from "@/components/ui/pdf-viewer"
 import { DocumentDrawer } from "@/components/document-drawer"
 
 interface Document {
-  id: string
+  id: number
+  created_at: number
+  updated_at: number
+  type: "resume" | "cover letter"
+  preview_link: string
   name: string
-  type: "resume" | "cover_letter" | "cover letter"
+  storage_path: string
   variant: "human" | "ai"
-  updated_at?: string
-  file_url?: string
-  url?: string
+  url: string
 }
 
 interface DocumentCardProps {
   document: Document
-  onEdit?: (id: string) => void
-  onDelete?: (id: string) => void
-  onView?: (id: string) => void
+  onEdit?: (id: number) => void
+  onDelete?: (id: number) => void
+  onView?: (id: number) => void
 }
 
 export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCardProps) {
@@ -64,9 +66,8 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
     setDrawerOpen(true)
   }
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "Unbekannt"
-    return new Date(dateString).toLocaleDateString('de-DE', {
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString('de-DE', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
@@ -102,7 +103,7 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
                 
                 <div className="w-32 h-40 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm cursor-pointer" onClick={handleView}>
                   <PDFViewer
-                    pdfUrl={document.file_url || document.url}
+                    pdfUrl={document.url}
                     showToolbar={false}
                     showNavigation={false}
                     showBorder={false}

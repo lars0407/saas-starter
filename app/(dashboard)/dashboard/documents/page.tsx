@@ -33,29 +33,24 @@ import { DocumentSkeleton } from "@/components/document-skeleton"
 import { EmptyState } from "@/components/empty-state"
 
 interface Document {
-  id: string
+  id: number
+  created_at: number
+  updated_at: number
+  type: "resume" | "cover letter"
+  preview_link: string
   name: string
-  type: "resume" | "cover_letter" | "cover letter"
+  storage_path: string
   variant: "human" | "ai"
-  updated_at?: string
-  file_url?: string
-  url?: string
+  url: string
 }
 
 interface DocumentsResponse {
-  result?: Document[]
-  documents?: Document[]
-  data?: Document[]
-  items?: Document[]
-  document?: {
+  document: {
     itemsReceived: number
     offset: number
     itemsTotal: number
+    items: Document[]
   }
-  total?: number
-  count?: number
-  offset?: number
-  limit?: number
 }
 
 const ITEMS_PER_PAGE = 6
@@ -94,23 +89,18 @@ export default function DocumentsPage() {
       console.log("Documents API response:", data) // Debug log
       
       // Ensure we have valid data
-      if (!data || typeof data !== 'object') {
+      if (!data || !data.document) {
         throw new Error("Invalid response format")
       }
       
-      // Handle different possible response structures
-      const documents = data.result || data.documents || data.data || data.items || []
-      const total = data.document?.itemsTotal || data.total || data.count || documents.length
+      // Use the new response structure
+      const documents = data.document.items || []
+      const total = data.document.itemsTotal || 0
       
-      // Ensure documents is always an array
-      const documentsArray = Array.isArray(documents) ? documents : []
-      
-      console.log("Processed documents:", documentsArray)
+      console.log("Processed documents:", documents)
       console.log("Total count:", total)
-      console.log("Documents type:", typeof documents)
-      console.log("Is array:", Array.isArray(documents))
       
-      setDocuments(documentsArray)
+      setDocuments(documents)
       setTotalDocuments(total)
       setTotalPages(Math.ceil(total / ITEMS_PER_PAGE))
     } catch (error) {
@@ -137,7 +127,7 @@ export default function DocumentsPage() {
     setCurrentPage(page)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
       const token = document.cookie
         .split('; ')
@@ -166,7 +156,7 @@ export default function DocumentsPage() {
     }
   }
 
-  const handleView = (id: string) => {
+  const handleView = (id: number) => {
     // Find the document by ID
     const document = documents.find(doc => doc.id === id)
     if (!document) {
@@ -174,7 +164,7 @@ export default function DocumentsPage() {
       return
     }
 
-    const downloadUrl = document.file_url || document.url
+    const downloadUrl = document.url
     if (!downloadUrl) {
       toast.error("PDF URL nicht verfügbar 📄")
       return
@@ -184,7 +174,7 @@ export default function DocumentsPage() {
     window.open(downloadUrl, '_blank')
   }
 
-  const handleEdit = (id: string) => {
+  const handleEdit = (id: number) => {
     // Find the document by ID to check its type
     const document = documents.find(doc => doc.id === id)
     if (!document) {
@@ -195,7 +185,7 @@ export default function DocumentsPage() {
     // Navigate to the appropriate editor based on document type
     if (document.type === 'resume') {
       window.location.href = `/dashboard/resume-generate?id=${id}`
-    } else if (document.type === 'cover_letter' || document.type === 'cover letter') {
+    } else if (document.type === 'cover letter') {
       window.location.href = `/dashboard/coverletter-generate?id=${id}`
     } else {
       toast.error("Unbekannter Dokumenttyp 😅")

@@ -31,29 +31,24 @@ import { DocumentSkeleton } from "@/components/document-skeleton"
 import { EmptyState } from "@/components/empty-state"
 
 interface Document {
-  id: string
+  id: number
+  created_at: number
+  updated_at: number
+  type: "resume" | "cover letter"
+  preview_link: string
   name: string
-  type: "resume" | "cover_letter" | "cover letter"
+  storage_path: string
   variant: "human" | "ai"
-  updated_at?: string
-  file_url?: string
-  url?: string
+  url: string
 }
 
 interface DocumentsResponse {
-  result?: Document[]
-  documents?: Document[]
-  data?: Document[]
-  items?: Document[]
-  document?: {
+  document: {
     itemsReceived: number
     offset: number
     itemsTotal: number
+    items: Document[]
   }
-  total?: number
-  count?: number
-  offset?: number
-  limit?: number
 }
 
 const ITEMS_PER_PAGE = 6
@@ -92,21 +87,18 @@ export default function CoverLetterPage() {
       console.log("Cover letters API response:", data) // Debug log
       
       // Ensure we have valid data
-      if (!data || typeof data !== 'object') {
+      if (!data || !data.document) {
         throw new Error("Invalid response format")
       }
       
-      // Handle different possible response structures
-      const documents = data.result || data.documents || data.data || data.items || []
-      const total = data.document?.itemsTotal || data.total || data.count || documents.length
+      // Use the new response structure
+      const documents = data.document.items || []
+      const total = data.document.itemsTotal || 0
       
-      // Ensure documents is always an array
-      const documentsArray = Array.isArray(documents) ? documents : []
-      
-      console.log("Processed cover letters:", documentsArray)
+      console.log("Processed cover letters:", documents)
       console.log("Total count:", total)
       
-      setDocuments(documentsArray)
+      setDocuments(documents)
       setTotalDocuments(total)
       setTotalPages(Math.ceil(total / ITEMS_PER_PAGE))
     } catch (error) {
@@ -133,7 +125,7 @@ export default function CoverLetterPage() {
     setCurrentPage(page)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
       const token = document.cookie
         .split('; ')
@@ -162,7 +154,7 @@ export default function CoverLetterPage() {
     }
   }
 
-  const handleView = (id: string) => {
+  const handleView = (id: number) => {
     // Find the document by ID
     const document = documents.find(doc => doc.id === id)
     if (!document) {
@@ -170,7 +162,7 @@ export default function CoverLetterPage() {
       return
     }
 
-    const downloadUrl = document.file_url || document.url
+    const downloadUrl = document.url
     if (!downloadUrl) {
       toast.error("PDF URL nicht verfügbar 📄")
       return
@@ -180,7 +172,7 @@ export default function CoverLetterPage() {
     window.open(downloadUrl, '_blank')
   }
 
-  const handleEdit = (id: string) => {
+  const handleEdit = (id: number) => {
     // TODO: Implement edit functionality
     toast.info("Bearbeiten-Funktion wird implementiert ✏️")
   }
