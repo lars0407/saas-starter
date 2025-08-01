@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
+import { JobjaegerLogo } from "@/components/jobjaeger-logo"
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState("")
@@ -54,13 +55,9 @@ export default function ResetPasswordPage() {
     return (
       <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
         <div className="flex w-full max-w-sm flex-col gap-6">
-          <a href="#" className="flex items-center gap-2 self-center font-medium">
-            <img 
-              src="/images/branding/Logo.png" 
-              alt="JobJäger Logo" 
-              className="h-8 w-auto"
-            />
-          </a>
+          <div className="flex justify-center">
+            <JobjaegerLogo />
+          </div>
           <div className="flex flex-col gap-6">
             <Card>
               <CardHeader className="text-center">
@@ -108,13 +105,9 @@ export default function ResetPasswordPage() {
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
-        <a href="#" className="flex items-center gap-2 self-center font-medium">
-          <img 
-            src="/images/branding/Logo.png" 
-            alt="JobJäger Logo" 
-            className="h-8 w-auto"
-          />
-        </a>
+        <div className="flex justify-center">
+          <JobjaegerLogo />
+        </div>
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader className="text-center">
