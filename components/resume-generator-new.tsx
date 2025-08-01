@@ -93,6 +93,7 @@ interface ResumeGeneratorNewProps {
 
 export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [currentDocumentId, setCurrentDocumentId] = useState<number | undefined>(documentId);
   const [resumeData, setResumeData] = useState<ResumeData>({
     personalInfo: {
       fullName: '',
@@ -159,11 +160,71 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
     return monthInput;
   };
 
+  const getCategoryLabel = (category: string): string => {
+    switch (category) {
+      case 'technical':
+        return 'Technisch';
+      case 'soft':
+        return 'Soft Skill';
+      case 'language':
+        return 'Sprachen';
+      case 'tool':
+        return 'Tools';
+      default:
+        return category;
+    }
+  };
+
+  const getLanguageLevel = (level: string): string => {
+    switch (level) {
+      case 'beginner':
+        return 'Grundkenntnisse';
+      case 'intermediate':
+        return 'Verhandlungssicher';
+      case 'advanced':
+        return 'Fließend';
+      case 'expert':
+        return 'Muttersprache';
+      default:
+        return level;
+    }
+  };
+
+  const getCategoryFromLabel = (label: string): string => {
+    switch (label) {
+      case 'Technisch':
+        return 'technical';
+      case 'Soft Skill':
+        return 'soft';
+      case 'Sprachen':
+        return 'language';
+      case 'Tools':
+        return 'tool';
+      default:
+        return 'technical';
+    }
+  };
+
+  const getLevelFromLanguageLevel = (level: string): string => {
+    switch (level) {
+      case 'Grundkenntnisse':
+        return 'beginner';
+      case 'Verhandlungssicher':
+        return 'intermediate';
+      case 'Fließend':
+        return 'advanced';
+      case 'Muttersprache':
+        return 'expert';
+      default:
+        return 'intermediate';
+    }
+  };
+
   // Create document object for download functionality - memoized to prevent unnecessary re-renders
   const currentDocument = React.useMemo(() => {
-    if (!documentId) return null;
+    if (!currentDocumentId) return null;
     return {
-      id: documentId,
+      id: currentDocumentId,
       created_at: Date.now(),
       updated_at: Date.now(),
       type: 'resume' as const,
@@ -173,7 +234,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
       variant: 'human' as const,
       url: generatedPdfUrl || ''
     };
-  }, [documentId, resumeData.personalInfo.fullName, generatedPdfUrl]);
+  }, [currentDocumentId, resumeData.personalInfo.fullName, generatedPdfUrl]);
 
   const handleDownloadResume = React.useCallback(() => {
     if (currentDocument) {
@@ -183,17 +244,27 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
 
   // Load existing document when documentId is provided
   useEffect(() => {
+    setCurrentDocumentId(documentId);
     if (documentId) {
       loadExistingDocument();
     }
   }, [documentId]);
 
+  // Update URL when currentDocumentId changes
+  useEffect(() => {
+    if (currentDocumentId && currentDocumentId !== documentId) {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('id', currentDocumentId.toString());
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [currentDocumentId, documentId]);
+
   const loadExistingDocument = async () => {
-    if (!documentId) return;
+    if (!currentDocumentId) return;
     
     setIsLoading(true);
     try {
-      const response = await fetchDocument(documentId);
+      const response = await fetchDocument(currentDocumentId);
       const document = response.document;
       
       if (document && document.content) {
@@ -238,12 +309,48 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
             description: exp.description || '',
             achievements: [],
           })) || [],
-          skills: content.skill?.map((skill: any, index: number) => ({
-            id: `skill-${index}`,
-            name: skill.name || '',
-            category: skill.category || 'technical',
-            level: skill.level || 'intermediate',
-          })) || [],
+          skills: (() => {
+            const allSkills: any[] = [];
+            let skillIndex = 0;
+            
+            // Handle grouped skills format
+            if (content.skill && Array.isArray(content.skill)) {
+              content.skill.forEach((skillGroup: any) => {
+                if (skillGroup.skill && skillGroup.label) {
+                  // Split comma-separated skills
+                  const skillNames = skillGroup.skill.split(',').map((s: string) => s.trim());
+                  const category = getCategoryFromLabel(skillGroup.label);
+                  
+                  skillNames.forEach((skillName: string) => {
+                    if (skillName) {
+                      allSkills.push({
+                        id: `skill-${skillIndex++}`,
+                        name: skillName,
+                        category: category,
+                        level: 'intermediate', // Default level for grouped skills
+                      });
+                    }
+                  });
+                }
+              });
+            }
+            
+            // Handle languages format
+            if (content.language && Array.isArray(content.language)) {
+              content.language.forEach((lang: any) => {
+                if (lang.language && lang.level) {
+                  allSkills.push({
+                    id: `skill-${skillIndex++}`,
+                    name: lang.language,
+                    category: 'language',
+                    level: getLevelFromLanguageLevel(lang.level),
+                  });
+                }
+              });
+            }
+            
+            return allSkills;
+          })(),
         };
         
         console.log('Loaded resume data:', transformedData);
@@ -303,7 +410,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   const isStepComplete = (stepIndex: number): boolean => {
     switch (stepIndex) {
       case 0: // Personal Info
-        return !!(resumeData.personalInfo.fullName && resumeData.personalInfo.email && resumeData.personalInfo.location);
+        return !!(resumeData.personalInfo.fullName && resumeData.personalInfo.email && resumeData.personalInfo.adresse_city);
       case 1: // Education
         return resumeData.education.length > 0 && resumeData.education.every(edu => 
           edu.institution && edu.degree && edu.field
@@ -330,7 +437,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   };
 
   const generateResume = async () => {
-    if (!documentId) {
+    if (!currentDocumentId) {
       toast.error('Bitte speichern Sie zuerst den Lebenslauf');
       return;
     }
@@ -347,11 +454,26 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
           ...(resumeData.personalInfo.linkedin ? [{ url: resumeData.personalInfo.linkedin, label: 'LinkedIn' }] : []),
           ...(resumeData.personalInfo.github ? [{ url: resumeData.personalInfo.github, label: 'GitHub' }] : [])
         ],
-        skill: resumeData.skills.map(skill => ({
-          name: skill.name,
-          level: skill.level,
-          category: skill.category
-        })),
+        skill: (() => {
+          // Group skills by category (excluding languages)
+          const skillGroups: { [key: string]: string[] } = {};
+          
+          resumeData.skills.forEach(skill => {
+            // Skip languages as they go to the language array
+            if (skill.category === 'language') return;
+            
+            if (!skillGroups[skill.category]) {
+              skillGroups[skill.category] = [];
+            }
+            skillGroups[skill.category].push(skill.name);
+          });
+          
+          // Convert to required format
+          return Object.entries(skillGroups).map(([category, skills]) => ({
+            label: getCategoryLabel(category),
+            skill: skills.join(', ')
+          }));
+        })(),
         basics: {
           email: resumeData.personalInfo.email,
           image: "",
@@ -368,7 +490,15 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
           adresse_country: resumeData.personalInfo.adresse_country || "",
           adresse_postcode: resumeData.personalInfo.adresse_postcode || ""
         },
-        language: [],
+        language: (() => {
+          // Extract language skills and convert to required format
+          const languageSkills = resumeData.skills.filter(skill => skill.category === 'language');
+          
+          return languageSkills.map(skill => ({
+            level: getLanguageLevel(skill.level),
+            language: skill.name
+          }));
+        })(),
         education: resumeData.education.map(edu => ({
           grade: edu.gpa || "",
           degree: edu.degree,
@@ -394,7 +524,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
       const result = await generateResumePDF(
         8, // template_id
         `${resumeData.personalInfo.fullName || 'Mein'} Lebenslauf`,
-        documentId,
+        currentDocumentId!,
         apiData
       ) as DownloadResponse;
 
@@ -426,11 +556,26 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
           ...(resumeData.personalInfo.linkedin ? [{ url: resumeData.personalInfo.linkedin, label: 'LinkedIn' }] : []),
           ...(resumeData.personalInfo.github ? [{ url: resumeData.personalInfo.github, label: 'GitHub' }] : [])
         ],
-        skill: resumeData.skills.map(skill => ({
-          name: skill.name,
-          level: skill.level,
-          category: skill.category
-        })),
+        skill: (() => {
+          // Group skills by category (excluding languages)
+          const skillGroups: { [key: string]: string[] } = {};
+          
+          resumeData.skills.forEach(skill => {
+            // Skip languages as they go to the language array
+            if (skill.category === 'language') return;
+            
+            if (!skillGroups[skill.category]) {
+              skillGroups[skill.category] = [];
+            }
+            skillGroups[skill.category].push(skill.name);
+          });
+          
+          // Convert to required format
+          return Object.entries(skillGroups).map(([category, skills]) => ({
+            label: getCategoryLabel(category),
+            skill: skills.join(', ')
+          }));
+        })(),
         basics: {
           email: resumeData.personalInfo.email,
           image: "",
@@ -447,7 +592,15 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
           adresse_country: resumeData.personalInfo.adresse_country || "",
           adresse_postcode: resumeData.personalInfo.adresse_postcode || ""
         },
-        language: [],
+        language: (() => {
+          // Extract language skills and convert to required format
+          const languageSkills = resumeData.skills.filter(skill => skill.category === 'language');
+          
+          return languageSkills.map(skill => ({
+            level: getLanguageLevel(skill.level),
+            language: skill.name
+          }));
+        })(),
         education: resumeData.education.map(edu => ({
           grade: edu.gpa || "",
           degree: edu.degree,
@@ -470,14 +623,21 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
       };
 
       const result = await saveResume(
-        documentId || 0, // Use documentId if available, otherwise 0 for new document
+        currentDocumentId || 0, // Use currentDocumentId if available, otherwise 0 for new document
         `${resumeData.personalInfo.fullName || 'Mein'} Lebenslauf`,
         apiData
         // template_id defaults to 8
       );
 
+      // Update the document ID if this was a new document
+      if (!currentDocumentId && result && result.documentID) {
+        setCurrentDocumentId(result.documentID);
+      } else if (result && result.documentID) {
+        // Also update if we have a documentID (for existing documents)
+        setCurrentDocumentId(result.documentID);
+      }
+
       toast.success(`Lebenslauf erfolgreich gespeichert! 🎉`);
-      console.log('Resume saved:', result);
     } catch (error) {
       console.error('Error saving resume:', error);
       toast.error(`Fehler beim Speichern: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
