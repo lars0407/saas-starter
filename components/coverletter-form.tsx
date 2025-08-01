@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, Save } from 'lucide-react';
+import { Basics, JobDetails, Content } from './coverletter-sections';
 import { cn } from '@/lib/utils';
 
 interface CoverLetterFormProps {
   onSubmit: (data: CoverLetterData) => void;
+  onGenerate: () => void;
   isLoading: boolean;
+  isGenerating: boolean;
   initialData: CoverLetterData;
 }
 
@@ -21,29 +21,31 @@ interface CoverLetterData {
   strengths?: string;
   motivation?: string;
   jobLink?: string;
+  // Basics section
+  senderName: string;
+  senderPhone: string;
+  senderEmail: string;
+  senderAddress: string;
+  // Content section
+  customContent: string;
 }
 
-export function CoverLetterForm({ onSubmit, isLoading, initialData }: CoverLetterFormProps) {
-  const [formData, setFormData] = useState<CoverLetterData>(initialData);
-  const [errors, setErrors] = useState<Partial<CoverLetterData>>({});
+export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating, initialData }: CoverLetterFormProps) {
+  const [formData, setFormData] = useState<CoverLetterData>({
+    ...initialData,
+    senderName: initialData.senderName || '',
+    senderPhone: initialData.senderPhone || '',
+    senderEmail: initialData.senderEmail || '',
+    senderAddress: initialData.senderAddress || '',
+    customContent: initialData.customContent || '',
+  });
 
   useEffect(() => {
     setFormData(initialData);
   }, [initialData]);
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<CoverLetterData> = {};
-
-    if (!formData.jobTitle.trim()) {
-      newErrors.jobTitle = 'Titel der Stelle ist erforderlich';
-    }
-
-    if (!formData.company.trim()) {
-      newErrors.company = 'Unternehmen ist erforderlich';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return formData.jobTitle.trim() && formData.company.trim();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -54,146 +56,150 @@ export function CoverLetterForm({ onSubmit, isLoading, initialData }: CoverLette
     }
   };
 
-  const handleInputChange = (field: keyof CoverLetterData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
-    }
+  const handleBasicsChange = (basicsData: any) => {
+    setFormData(prev => ({
+      ...prev,
+      senderName: basicsData.senderName,
+      senderPhone: basicsData.senderPhone,
+      senderEmail: basicsData.senderEmail,
+      senderAddress: basicsData.senderAddress,
+    }));
+  };
+
+  const handleJobDetailsChange = (jobData: any) => {
+    setFormData(prev => ({
+      ...prev,
+      jobTitle: jobData.jobTitle,
+      company: jobData.company,
+      strengths: jobData.strengths,
+      motivation: jobData.motivation,
+      jobLink: jobData.jobLink,
+    }));
+  };
+
+  const handleContentChange = (contentData: any) => {
+    setFormData(prev => ({
+      ...prev,
+      customContent: contentData.customContent,
+    }));
   };
 
   const isFormValid = formData.jobTitle.trim() && formData.company.trim();
 
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          Anschreiben Generator
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Lass uns dein perfektes Anschreiben erstellen! 🚀
-        </p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Job Title */}
-          <div className="space-y-2">
-            <Label htmlFor="jobTitle" className="text-sm font-medium">
-              Titel der Stelle 🎯
-            </Label>
-            <Input
-              id="jobTitle"
-              placeholder="z.B. Frontend Developer, Marketing Manager..."
-              value={formData.jobTitle}
-              onChange={(e) => handleInputChange('jobTitle', e.target.value)}
-              className={cn(errors.jobTitle && "border-red-500")}
-              disabled={isLoading}
-            />
-            {errors.jobTitle && (
-              <p className="text-sm text-red-500">{errors.jobTitle}</p>
-            )}
+    <div className="space-y-6">
+      {/* Basics Section */}
+      <Basics
+        data={{
+          senderName: formData.senderName,
+          senderPhone: formData.senderPhone,
+          senderEmail: formData.senderEmail,
+          senderAddress: formData.senderAddress,
+        }}
+        onChange={handleBasicsChange}
+        isEditing={!isLoading}
+      />
+
+      {/* Job Details Section */}
+      <JobDetails
+        data={{
+          jobTitle: formData.jobTitle,
+          company: formData.company,
+          strengths: formData.strengths,
+          motivation: formData.motivation,
+          jobLink: formData.jobLink,
+        }}
+        onChange={handleJobDetailsChange}
+        isEditing={!isLoading}
+      />
+
+      {/* Content Section */}
+      <Content
+        data={{
+          customContent: formData.customContent,
+        }}
+        onChange={handleContentChange}
+        isEditing={!isLoading}
+      />
+
+      {/* Generate Button */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Anschreiben generieren 🚀
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Überprüfe alle Angaben und generiere dein Anschreiben
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <span className="text-sm font-medium">Absender</span>
+              <div className={cn(
+                "flex items-center justify-center w-6 h-6 rounded-md text-xs font-medium",
+                formData.senderName && formData.senderEmail 
+                  ? "bg-[#0F973D] text-white" 
+                  : "bg-muted text-muted-foreground"
+              )}>
+                {formData.senderName && formData.senderEmail ? "✓" : "!"}
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <span className="text-sm font-medium">Job Details</span>
+              <div className={cn(
+                "flex items-center justify-center w-6 h-6 rounded-md text-xs font-medium",
+                formData.jobTitle && formData.company 
+                  ? "bg-[#0F973D] text-white" 
+                  : "bg-muted text-muted-foreground"
+              )}>
+                {formData.jobTitle && formData.company ? "✓" : "!"}
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <span className="text-sm font-medium">Inhalt</span>
+              <div className={cn(
+                "flex items-center justify-center w-6 h-6 rounded-md text-xs font-medium",
+                formData.customContent 
+                  ? "bg-[#0F973D] text-white" 
+                  : "bg-muted text-muted-foreground"
+              )}>
+                {formData.customContent ? "✓" : "!"}
+              </div>
+            </div>
           </div>
-
-          {/* Company */}
-          <div className="space-y-2">
-            <Label htmlFor="company" className="text-sm font-medium">
-              Unternehmen 🏢
-            </Label>
-            <Input
-              id="company"
-              placeholder="z.B. Google, Microsoft, Startup XYZ..."
-              value={formData.company}
-              onChange={(e) => handleInputChange('company', e.target.value)}
-              className={cn(errors.company && "border-red-500")}
-              disabled={isLoading}
-            />
-            {errors.company && (
-              <p className="text-sm text-red-500">{errors.company}</p>
-            )}
+          
+          <div className="flex gap-3">
+            <Button
+              onClick={handleSubmit}
+              disabled={!isFormValid || isLoading}
+              variant="outline"
+              className="flex-1"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Speichern
+            </Button>
+            <Button
+              onClick={onGenerate}
+              disabled={isGenerating || !isFormValid}
+              className="flex-1 bg-[#0F973D] hover:bg-[#0F973D]/90 text-white"
+            >
+              {isGenerating ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Generiere...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Generieren
+                </>
+              )}
+            </Button>
           </div>
-
-          {/* Strengths */}
-          <div className="space-y-2">
-            <Label htmlFor="strengths" className="text-sm font-medium">
-              Deine Stärken 💪
-            </Label>
-            <Textarea
-              id="strengths"
-              placeholder="Was macht dich besonders? z.B. Teamführung, technische Skills, Kreativität..."
-              value={formData.strengths}
-              onChange={(e) => handleInputChange('strengths', e.target.value)}
-              rows={3}
-              disabled={isLoading}
-            />
-            <p className="text-xs text-muted-foreground">
-              Optional - hilft der KI, dein Anschreiben zu personalisieren
-            </p>
-          </div>
-
-          {/* Motivation */}
-          <div className="space-y-2">
-            <Label htmlFor="motivation" className="text-sm font-medium">
-              Deine Motivation 🎯
-            </Label>
-            <Textarea
-              id="motivation"
-              placeholder="Warum willst du diesen Job? Was reizt dich an dem Unternehmen?"
-              value={formData.motivation}
-              onChange={(e) => handleInputChange('motivation', e.target.value)}
-              rows={3}
-              disabled={isLoading}
-            />
-            <p className="text-xs text-muted-foreground">
-              Optional - macht dein Anschreiben authentischer
-            </p>
-          </div>
-
-          {/* Job Link */}
-          <div className="space-y-2">
-            <Label htmlFor="jobLink" className="text-sm font-medium">
-              Job-Link 🔍
-            </Label>
-            <Input
-              id="jobLink"
-              type="url"
-              placeholder="https://..."
-              value={formData.jobLink}
-              onChange={(e) => handleInputChange('jobLink', e.target.value)}
-              disabled={isLoading}
-            />
-            <p className="text-xs text-muted-foreground">
-              Optional - wir analysieren die Stellenanzeige für bessere Ergebnisse
-            </p>
-          </div>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={!isFormValid || isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Wir schreiben dein Meisterwerk... 🧠✍️
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Anschreiben generieren 🚀
-              </>
-            )}
-          </Button>
-
-          {!isFormValid && (
-            <p className="text-sm text-muted-foreground text-center">
-              Fülle mindestens Titel und Unternehmen aus, um zu starten
-            </p>
-          )}
-        </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 } 
