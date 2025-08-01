@@ -217,7 +217,7 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Company */}
                   <div className="space-y-2">
                     <Label htmlFor={`company-${entry.id}`} className="text-sm font-medium flex items-center gap-1">
@@ -262,52 +262,51 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
                     />
                   </div>
 
-                  {/* Date Range */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`startDate-${entry.id}`} className="text-sm font-medium flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        Start
-                      </Label>
-                      <Input
-                        id={`startDate-${entry.id}`}
-                        type="month"
-                        value={entry.startDate}
-                        onChange={(e) => updateExperience(entry.id, 'startDate', e.target.value)}
-                        disabled={!isEditing}
-                      />
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor={`endDate-${entry.id}`} className="text-sm font-medium flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        Ende
-                      </Label>
-                      <Input
-                        id={`endDate-${entry.id}`}
-                        type="month"
-                        value={entry.endDate}
-                        onChange={(e) => updateExperience(entry.id, 'endDate', e.target.value)}
-                        disabled={!isEditing || entry.current}
-                      />
-                    </div>
+
+
+                </div>
+
+                {/* Date Range - New Line */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor={`startDate-${entry.id}`} className="text-sm font-medium flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Start
+                    </Label>
+                    <Input
+                      id={`startDate-${entry.id}`}
+                      type="month"
+                      value={entry.startDate}
+                      onChange={(e) => updateExperience(entry.id, 'startDate', e.target.value)}
+                      disabled={!isEditing}
+                      className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                      min="1900-01"
+                      max="2100-12"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Format: MM/YYYY
+                    </p>
                   </div>
 
-                  {/* Current Position */}
-                  <div className="flex items-end">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        id={`current-${entry.id}`}
-                        type="checkbox"
-                        checked={entry.current}
-                        onChange={(e) => updateExperience(entry.id, 'current', e.target.checked)}
-                        disabled={!isEditing}
-                        className="rounded"
-                      />
-                      <Label htmlFor={`current-${entry.id}`} className="text-sm">
-                        Aktuelle Position
-                      </Label>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`endDate-${entry.id}`} className="text-sm font-medium flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Ende
+                    </Label>
+                    <Input
+                      id={`endDate-${entry.id}`}
+                      type="month"
+                      value={entry.endDate}
+                      onChange={(e) => updateExperience(entry.id, 'endDate', e.target.value)}
+                      disabled={!isEditing || entry.current}
+                      className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                      min="1900-01"
+                      max="2100-12"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Format: MM/YYYY
+                    </p>
                   </div>
                 </div>
 

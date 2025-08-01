@@ -250,7 +250,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                 </div>
 
                 {/* Date Range */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor={`startDate-${entry.id}`} className="text-sm font-medium flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
@@ -262,7 +262,13 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                       value={entry.startDate}
                       onChange={(e) => updateEducation(entry.id, 'startDate', e.target.value)}
                       disabled={!isEditing}
+                      className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                      min="1900-01"
+                      max="2100-12"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Format: MM/YYYY
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -276,24 +282,16 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                       value={entry.endDate}
                       onChange={(e) => updateEducation(entry.id, 'endDate', e.target.value)}
                       disabled={!isEditing || entry.current}
+                      className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                      min="1900-01"
+                      max="2100-12"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Format: MM/YYYY
+                    </p>
                   </div>
 
-                  <div className="flex items-end">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        id={`current-${entry.id}`}
-                        type="checkbox"
-                        checked={entry.current}
-                        onChange={(e) => updateEducation(entry.id, 'current', e.target.checked)}
-                        disabled={!isEditing}
-                        className="rounded"
-                      />
-                      <Label htmlFor={`current-${entry.id}`} className="text-sm">
-                        Läuft noch
-                      </Label>
-                    </div>
-                  </div>
+
                 </div>
 
                 {/* Description */}

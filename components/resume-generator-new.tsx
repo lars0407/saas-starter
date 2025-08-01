@@ -366,11 +366,11 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
           description: resumeData.personalInfo.summary || "",
           nationality: "",
           title_after: "",
-          adresse_city: resumeData.personalInfo.location,
+          adresse_city: resumeData.personalInfo.adresse_city || "",
           title_before: "",
-          adresse_street: "",
-          adresse_country: "",
-          adresse_postcode: ""
+          adresse_street: resumeData.personalInfo.adresse_street || "",
+          adresse_country: resumeData.personalInfo.adresse_country || "",
+          adresse_postcode: resumeData.personalInfo.adresse_postcode || ""
         },
         language: [],
         education: resumeData.education.map(edu => ({
