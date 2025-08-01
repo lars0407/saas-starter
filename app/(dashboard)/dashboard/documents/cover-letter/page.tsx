@@ -173,13 +173,13 @@ export default function CoverLetterPage() {
   }
 
   const handleEdit = (id: number) => {
-    // TODO: Implement edit functionality
-    toast.info("Bearbeiten-Funktion wird implementiert ✏️")
+    // Navigate to the cover letter editor with the document ID
+    window.location.href = `/dashboard/coverletter-generate?id=${id}`
   }
 
   const handleCreateCoverLetter = () => {
-    // TODO: Implement create cover letter functionality
-    toast.info("Anschreiben generieren wird implementiert ✨")
+    // Navigate to the cover letter generator
+    window.location.href = '/dashboard/coverletter-generate'
   }
 
   const renderSkeletons = () => {

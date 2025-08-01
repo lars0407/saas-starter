@@ -173,13 +173,13 @@ export default function ResumePage() {
   }
 
   const handleEdit = (id: number) => {
-    // TODO: Implement edit functionality
-    toast.info("Bearbeiten-Funktion wird implementiert ✏️")
+    // Navigate to the resume editor with the document ID
+    window.location.href = `/dashboard/resume-generate?id=${id}`
   }
 
   const handleCreateResume = () => {
-    // TODO: Implement create resume functionality
-    toast.info("Lebenslauf erstellen wird implementiert 📝")
+    // Navigate to the resume generator
+    window.location.href = '/dashboard/resume-generate'
   }
 
   const renderSkeletons = () => {
