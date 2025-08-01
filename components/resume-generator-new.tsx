@@ -146,12 +146,15 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   const currentDocument = React.useMemo(() => {
     if (!documentId) return null;
     return {
-      id: documentId.toString(),
-      name: resumeData.personalInfo.fullName || 'Lebenslauf',
+      id: documentId,
+      created_at: Date.now(),
+      updated_at: Date.now(),
       type: 'resume' as const,
+      preview_link: generatedPdfUrl || '',
+      name: resumeData.personalInfo.fullName || 'Lebenslauf',
+      storage_path: '',
       variant: 'human' as const,
-      updated_at: new Date().toISOString(),
-      file_url: generatedPdfUrl || undefined
+      url: generatedPdfUrl || ''
     };
   }, [documentId, resumeData.personalInfo.fullName, generatedPdfUrl]);
 
