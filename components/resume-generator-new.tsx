@@ -20,8 +20,15 @@ import { PersonalInfo } from './resume-sections/personal-info';
 import { Education } from './resume-sections/education';
 import { Experience } from './resume-sections/experience';
 import { Skills } from './resume-sections/skills';
-import { saveResume, fetchDocument } from '@/lib/api-client';
+import { saveResume, fetchDocument, generateResumePDF } from '@/lib/api-client';
 import { useDocumentDownload } from '@/hooks/use-document-download';
+
+interface DownloadResponse {
+  download_link: {
+    url: string;
+    expires_at: string;
+  };
+}
 
 // Import the existing PDF viewer component
 import { PDFViewer } from './ui/pdf-viewer';
@@ -108,6 +115,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
+  const [pdfGenerationStatus, setPdfGenerationStatus] = useState<'idle' | 'generating' | 'polling' | 'ready' | 'error'>('idle');
   const { downloadDocument, isLoading: isDownloading } = useDocumentDownload();
 
   // Utility function to convert date formats
@@ -320,22 +328,87 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   };
 
   const generateResume = async () => {
+    if (!documentId) {
+      toast.error('Bitte speichern Sie zuerst den Lebenslauf');
+      return;
+    }
+
     setIsGenerating(true);
+    setPdfGenerationStatus('generating');
+    setGeneratedPdfUrl(null);
     
     try {
-      // Clear any existing PDF when generating a new one
-      setGeneratedPdfUrl(null);
-      
-      // TODO: Replace with actual API call to generate PDF
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Simulate PDF generation - in real implementation, this would be the actual PDF URL
-      const mockPdfUrl = `https://api.jobjaeger.de/api:SiRHLF4Y/documents/${documentId || 'new'}/pdf?timestamp=${Date.now()}`;
-      setGeneratedPdfUrl(mockPdfUrl);
-      
+      // Convert resume data to API format (same as handleSave)
+      const apiData = {
+        link: [
+          ...(resumeData.personalInfo.website ? [{ url: resumeData.personalInfo.website, label: 'Website' }] : []),
+          ...(resumeData.personalInfo.linkedin ? [{ url: resumeData.personalInfo.linkedin, label: 'LinkedIn' }] : []),
+          ...(resumeData.personalInfo.github ? [{ url: resumeData.personalInfo.github, label: 'GitHub' }] : [])
+        ],
+        skill: resumeData.skills.map(skill => ({
+          name: skill.name,
+          level: skill.level,
+          category: skill.category
+        })),
+        basics: {
+          email: resumeData.personalInfo.email,
+          image: "",
+          surname: resumeData.personalInfo.fullName.split(' ').slice(-1).join(' ') || "",
+          birthdate: "",
+          telephone: resumeData.personalInfo.phone || "",
+          first_name: resumeData.personalInfo.fullName.split(' ')[0] || "",
+          description: resumeData.personalInfo.summary || "",
+          nationality: "",
+          title_after: "",
+          adresse_city: resumeData.personalInfo.adresse_city || "",
+          title_before: "",
+          adresse_street: resumeData.personalInfo.adresse_street || "",
+          adresse_country: resumeData.personalInfo.adresse_country || "",
+          adresse_postcode: resumeData.personalInfo.adresse_postcode || ""
+        },
+        language: [],
+        education: resumeData.education.map(edu => ({
+          grade: edu.gpa || "",
+          degree: edu.degree,
+          school: edu.institution,
+          endDate: edu.current ? "" : convertMonthInputToDate(edu.endDate),
+          subject: edu.field,
+          startDate: convertMonthInputToDate(edu.startDate),
+          description: edu.description || "",
+          location_city: "",
+          location_country: ""
+        })),
+        experience: resumeData.experience.map(exp => ({
+          title: exp.position,
+          company: exp.company,
+          endDate: exp.current ? "" : convertMonthInputToDate(exp.endDate),
+          location: exp.location,
+          startDate: convertMonthInputToDate(exp.startDate),
+          description: exp.description
+        }))
+      };
+
+      // Generate PDF and get direct download URL
+      const result = await generateResumePDF(
+        8, // template_id
+        `${resumeData.personalInfo.fullName || 'Mein'} Lebenslauf`,
+        documentId,
+        apiData
+      ) as DownloadResponse;
+
+      // Extract the download URL from the response
+      if (!result || !result.download_link || !result.download_link.url) {
+        throw new Error('PDF generation failed - no download URL received');
+      }
+
+      const pdfUrl = result.download_link.url;
+      setGeneratedPdfUrl(pdfUrl);
+      setPdfGenerationStatus('ready');
       toast.success('Lebenslauf erfolgreich generiert! 🎉');
+      
     } catch (error) {
       console.error('Error generating resume:', error);
+      setPdfGenerationStatus('error');
       toast.error('Fehler beim Generieren des Lebenslaufs');
     } finally {
       setIsGenerating(false);
@@ -614,10 +687,35 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
             </div>
           </CardHeader>
                       <CardContent className="flex-1 overflow-y-auto p-2 min-h-0">
-            {generatedPdfUrl ? (
+            {pdfGenerationStatus === 'generating' || pdfGenerationStatus === 'polling' ? (
+              // Show skeleton loader during PDF generation
+              <div className="min-h-full flex items-center justify-center p-8">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0F973D] mx-auto mb-4" />
+                  <p className="text-sm font-medium mb-2">
+                    Generiere PDF...
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Ihr Lebenslauf wird generiert
+                  </p>
+                </div>
+              </div>
+            ) : pdfGenerationStatus === 'error' ? (
+              // Show error state
+              <div className="min-h-full flex items-center justify-center text-red-500 bg-red-50 rounded-lg p-8">
+                <div className="text-center">
+                  <div className="mx-auto h-12 w-12 text-red-400 mb-4 flex items-center justify-center">
+                    <span className="text-2xl">⚠️</span>
+                  </div>
+                  <p className="text-sm font-medium mb-2">Fehler beim Generieren</p>
+                  <p className="text-xs text-red-400">
+                    Versuchen Sie es erneut
+                  </p>
+                </div>
+              </div>
+            ) : generatedPdfUrl ? (
               // Show PDF Viewer when PDF is generated
               <div className="h-full">
-
                 <div className="w-full h-full">
                   <iframe
                     src={`${generatedPdfUrl}#page=1&toolbar=0&navpanes=0&scrollbar=0`}
