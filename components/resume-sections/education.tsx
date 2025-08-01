@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { GraduationCap, Plus, Trash2, Calendar, GripVertical, Move } from 'lucide-react';
+import { GraduationCap, Plus, Trash2, Calendar, GripVertical, Move, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface EducationEntry {
@@ -15,6 +15,7 @@ interface EducationEntry {
   institution: string;
   degree: string;
   field: string;
+  location: string;
   startDate: string;
   endDate: string;
   current: boolean;
@@ -38,6 +39,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
       institution: '',
       degree: '',
       field: '',
+      location: '',
       startDate: '',
       endDate: '',
       current: false,
@@ -227,6 +229,21 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                       placeholder="z.B. Informatik"
                       value={entry.field}
                       onChange={(e) => updateEducation(entry.id, 'field', e.target.value)}
+                      disabled={!isEditing}
+                    />
+                  </div>
+
+                  {/* Location */}
+                  <div className="space-y-2">
+                    <Label htmlFor={`location-${entry.id}`} className="text-sm font-medium flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      Standort
+                    </Label>
+                    <Input
+                      id={`location-${entry.id}`}
+                      placeholder="z.B. Berlin, Deutschland"
+                      value={entry.location}
+                      onChange={(e) => updateEducation(entry.id, 'location', e.target.value)}
                       disabled={!isEditing}
                     />
                   </div>

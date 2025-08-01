@@ -53,6 +53,7 @@ interface ResumeData {
     institution: string;
     degree: string;
     field: string;
+    location: string;
     startDate: string;
     endDate: string;
     current: boolean;
@@ -219,6 +220,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
             institution: edu.school || '',
             degree: edu.degree || '',
             field: edu.subject || '',
+            location: edu.location_city || '',
             startDate: convertDateToMonthInput(edu.startDate) || '',
             endDate: convertDateToMonthInput(edu.endDate) || '',
             current: !edu.endDate,
@@ -375,7 +377,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
           subject: edu.field,
           startDate: convertMonthInputToDate(edu.startDate),
           description: edu.description || "",
-          location_city: "",
+          location_city: edu.location || "",
           location_country: ""
         })),
         experience: resumeData.experience.map(exp => ({
@@ -454,7 +456,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
           subject: edu.field,
           startDate: convertMonthInputToDate(edu.startDate),
           description: edu.description || "",
-          location_city: "",
+          location_city: edu.location || "",
           location_country: ""
         })),
         experience: resumeData.experience.map(exp => ({
