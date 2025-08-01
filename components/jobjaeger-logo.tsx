@@ -5,8 +5,17 @@ import Image from "next/image"
 import { useSidebar } from "@/components/ui/sidebar"
 
 export function JobjaegerLogo() {
-  const { state } = useSidebar()
-  const isCollapsed = state === "collapsed"
+  // Try to use sidebar context, but handle case when not available
+  let isCollapsed = false;
+  
+  try {
+    const { state } = useSidebar();
+    isCollapsed = state === "collapsed";
+  } catch (error) {
+    // If useSidebar throws an error, we're not in a sidebar context
+    // Default to showing the full logo
+    isCollapsed = false;
+  }
 
   return (
     <div className="flex items-center justify-center p-2">
