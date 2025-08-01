@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button"
 import { useDocumentDownload } from "@/hooks/use-document-download"
 
 interface Document {
-  id: string
+  id: number
+  created_at: number
+  updated_at: number
+  type: "resume" | "cover letter"
+  preview_link: string
   name: string
-  type: "resume" | "cover_letter" | "cover letter"
+  storage_path: string
   variant: "human" | "ai"
-  updated_at?: string
-  file_url?: string
-  url?: string
+  url: string
 }
 
 interface DocumentDownloadButtonProps {
