@@ -163,8 +163,8 @@ export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGene
                  {/* Info when required fields are missing */}
          {isEditing && !hasRequiredData && (
            <div className="pt-4 border-t">
-             <div className="text-center p-4 bg-blue-50 rounded-lg">
-               <p className="text-sm text-blue-700">
+             <div className="text-center p-4 bg-green-50 rounded-lg">
+               <p className="text-sm text-green-700">
                  Fülle mindestens Job-Titel und Unternehmen aus, um ein personalisiertes Anschreiben mit KI zu generieren. Je mehr Details du angibst, desto besser wird das Ergebnis.
                </p>
              </div>

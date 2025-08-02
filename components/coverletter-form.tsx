@@ -168,7 +168,7 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
                  "flex items-center justify-center w-6 h-6 rounded-md text-xs font-medium",
                  formData.jobTitle && formData.company 
                    ? "bg-[#0F973D] text-white" 
-                   : "bg-blue-500 text-white"
+                   : "bg-[#0F973D] text-white"
                )}>
                  {formData.jobTitle && formData.company ? "✓" : "?"}
                </div>
