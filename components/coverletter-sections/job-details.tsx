@@ -126,7 +126,8 @@ export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGene
             placeholder="Füge hier den Text der Stellenanzeige ein. Die KI analysiert die Anforderungen und passt dein Anschreiben entsprechend an..."
             value={formData.jobDescription}
             onChange={(e) => handleInputChange('jobDescription', e.target.value)}
-            rows={4}
+            rows={8}
+            className="min-h-[200px] resize-y"
             disabled={!isEditing}
           />
           <p className="text-xs text-muted-foreground">
