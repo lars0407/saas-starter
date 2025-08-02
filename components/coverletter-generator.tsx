@@ -139,15 +139,15 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
         // The data might be directly in content, or nested in a data field
         const data = content.data || content;
         
-        // Transform API data to component format
-        // The API data structure is nested with Sender, Receiver, Content, Context
-        const transformedData: CoverLetterData = {
-          // Context fields (Job Details)
-          jobTitle: data.Context?.['Job Title'] || data.job_title || content.Context?.['Job Title'] || content.job_title || '',
-          company: data.Context?.Company || data.company || content.Context?.Company || content.company || '',
-          jobDescription: data.Context?.['Job Description'] || data.job_description || content.Context?.['Job Description'] || content.job_description || '',
-          strengths: data.strengths || content.strengths || '',
-          motivation: data.motivation || content.motivation || '',
+                 // Transform API data to component format
+         // The API data structure is nested with Sender, Receiver, Content, Context
+         const transformedData: CoverLetterData = {
+           // Context fields (Job Details)
+           jobTitle: data.Context?.['Job Title'] || data.job_title || content.Context?.['Job Title'] || content.job_title || '',
+           company: data.Context?.Company || data.company || content.Context?.Company || content.company || '',
+           jobDescription: data.Context?.['Job Description'] || data.job_description || content.Context?.['Job Description'] || content.job_description || '',
+           strengths: data.Context?.Strengths || data.strengths || content.Context?.Strengths || content.strengths || '',
+           motivation: data.Context?.Motivation || data.motivation || content.Context?.Motivation || content.motivation || '',
           
                      // Sender fields (Basics)
            senderName: data.Sender?.['First name'] || data.sender_name || content.sender_name || '',
@@ -350,7 +350,9 @@ ${data.senderName || '[Ihr Name]'}`;
         Context: {
           "Job Title": formData.jobTitle,
           "Job Description": formData.jobDescription || '',
-          "Company": formData.company
+          "Company": formData.company,
+          "Strengths": formData.strengths || '',
+          "Motivation": formData.motivation || ''
         }
       };
 
@@ -441,7 +443,9 @@ ${data.senderName || '[Ihr Name]'}`;
         Context: {
           "Job Title": formData.jobTitle,
           "Job Description": formData.jobDescription || '',
-          "Company": formData.company
+          "Company": formData.company,
+          "Strengths": formData.strengths || '',
+          "Motivation": formData.motivation || ''
         }
       };
 

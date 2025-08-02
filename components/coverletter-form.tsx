@@ -95,7 +95,16 @@ export function CoverLetterForm({ onSubmit, onGenerate, onSave, onFormDataChange
     isInitialMount.current = true;
   }, [initialData]);
 
-  // Remove the automatic parent notification useEffect to prevent infinite loops
+  // Notify parent when formData changes, but skip the initial mount
+  useEffect(() => {
+    if (!isInitialMount.current) {
+      console.log('Notifying parent of formData change:', formData);
+      onFormDataChange(formData);
+    } else {
+      console.log('Skipping initial mount notification');
+      isInitialMount.current = false;
+    }
+  }, [formData, onFormDataChange]);
 
   const validateForm = (): boolean => {
     // Job Details sind optional für die KI-Generierung
@@ -142,8 +151,6 @@ export function CoverLetterForm({ onSubmit, onGenerate, onSave, onFormDataChange
         motivation: jobData.motivation,
         jobDescription: jobData.jobDescription,
       };
-      // Directly notify parent of the change
-      onFormDataChange(newData);
       return newData;
     });
   };
@@ -154,8 +161,6 @@ export function CoverLetterForm({ onSubmit, onGenerate, onSave, onFormDataChange
         ...prev,
         customContent: contentData.customContent,
       };
-      // Directly notify parent of the change
-      onFormDataChange(newData);
       return newData;
     });
   };
