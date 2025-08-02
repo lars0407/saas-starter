@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CoverLetterForm } from './coverletter-form';
 import { GeneratedLetter } from './generated-letter';
 import { LoadingSkeleton } from './loading-skeleton';
@@ -16,12 +16,15 @@ interface CoverLetterData {
   company: string;
   strengths?: string;
   motivation?: string;
-  jobLink?: string;
+  jobDescription?: string;
   // Basics section
   senderName: string;
   senderPhone: string;
   senderEmail: string;
-  senderAddress: string;
+  senderStreet: string;
+  senderPostcode: string;
+  senderCity: string;
+  senderCountry: string;
   // Content section
   customContent: string;
 }
@@ -43,16 +46,23 @@ interface CoverLetterGeneratorProps {
 }
 
 export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) {
+  // Ensure this component only runs on the client side
+  const [isClient, setIsClient] = useState(false);
+
+  // All state hooks must be called in the same order every time
   const [formData, setFormData] = useState<CoverLetterData>({
     jobTitle: '',
     company: '',
     strengths: '',
     motivation: '',
-    jobLink: '',
+    jobDescription: '',
     senderName: '',
     senderPhone: '',
     senderEmail: '',
-    senderAddress: '',
+    senderStreet: '',
+    senderPostcode: '',
+    senderCity: '',
+    senderCountry: '',
     customContent: '',
   });
   
@@ -67,15 +77,11 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
   const [currentDocument, setCurrentDocument] = useState<any>(null);
   const [currentDocumentId, setCurrentDocumentId] = useState<number | null>(documentId || null);
 
-  // Load existing document when documentId is provided
   useEffect(() => {
-    if (documentId) {
-      setCurrentDocumentId(documentId);
-      loadExistingDocument();
-    }
-  }, [documentId]);
+    setIsClient(true);
+  }, []);
 
-  const loadExistingDocument = async () => {
+  const loadExistingDocument = useCallback(async () => {
     if (!documentId) return;
     
     setIsLoadingDocument(true);
@@ -92,11 +98,14 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
           company: content.company || '',
           strengths: content.strengths || '',
           motivation: content.motivation || '',
-          jobLink: content.job_link || '',
+          jobDescription: content.job_description || '',
           senderName: content.sender_name || '',
           senderPhone: content.sender_phone || '',
           senderEmail: content.sender_email || '',
-          senderAddress: content.sender_address || '',
+          senderStreet: content.sender_street || '',
+          senderPostcode: content.sender_postcode || '',
+          senderCity: content.sender_city || '',
+          senderCountry: content.sender_country || '',
           customContent: content.custom_content || '',
         };
         
@@ -118,7 +127,27 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
     } finally {
       setIsLoadingDocument(false);
     }
-  };
+  }, [documentId]);
+
+  // Load existing document when documentId is provided
+  useEffect(() => {
+    if (documentId) {
+      setCurrentDocumentId(documentId);
+      loadExistingDocument();
+    }
+  }, [documentId, loadExistingDocument]);
+
+  // Early return for client-side check
+  if (!isClient) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-sm text-muted-foreground">Lade...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleFormSubmit = async (data: CoverLetterData) => {
     setIsLoading(true);
@@ -149,8 +178,20 @@ ${data.senderName || '[Ihr Name]'}`;
       // Add sender information if provided
       let finalContent = contentToUse;
       
-      if (data.senderName || data.senderPhone || data.senderEmail || data.senderAddress) {
-        const senderInfo = `${data.senderName ? data.senderName + '\n' : ''}${data.senderPhone ? data.senderPhone + '\n' : ''}${data.senderEmail ? data.senderEmail + '\n' : ''}${data.senderAddress ? data.senderAddress + '\n' : ''}`;
+      if (data.senderName || data.senderPhone || data.senderEmail || data.senderStreet || data.senderPostcode || data.senderCity || data.senderCountry) {
+        // Build address string from separate fields
+        const addressParts = [];
+        if (data.senderStreet) addressParts.push(data.senderStreet);
+        if (data.senderPostcode && data.senderCity) {
+          addressParts.push(`${data.senderPostcode} ${data.senderCity}`);
+        } else if (data.senderPostcode) {
+          addressParts.push(data.senderPostcode);
+        } else if (data.senderCity) {
+          addressParts.push(data.senderCity);
+        }
+        if (data.senderCountry) addressParts.push(data.senderCountry);
+        
+        const senderInfo = `${data.senderName ? data.senderName + '\n' : ''}${data.senderPhone ? data.senderPhone + '\n' : ''}${data.senderEmail ? data.senderEmail + '\n' : ''}${addressParts.length > 0 ? addressParts.join('\n') + '\n' : ''}`;
         finalContent = senderInfo + '\n\n' + contentToUse;
       }
 
@@ -215,7 +256,7 @@ ${data.senderName || '[Ihr Name]'}`;
   };
 
   const handleDownloadCoverLetter = () => {
-    if (generatedPdfUrl) {
+    if (generatedPdfUrl && typeof window !== 'undefined') {
       setIsDownloading(true);
       // Create a temporary link to download the PDF
       const link = document.createElement('a');

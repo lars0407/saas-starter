@@ -12,7 +12,10 @@ interface BasicsData {
   senderName: string;
   senderPhone: string;
   senderEmail: string;
-  senderAddress: string;
+  senderStreet: string;
+  senderPostcode: string;
+  senderCity: string;
+  senderCountry: string;
 }
 
 interface BasicsProps {
@@ -94,18 +97,70 @@ export function Basics({ data, onChange, isEditing }: BasicsProps) {
 
         {/* Sender Address */}
         <div className="space-y-2">
-          <Label htmlFor="senderAddress" className="text-sm font-medium">
+          <Label className="text-sm font-medium">
             Adresse 🏠
           </Label>
-          <Textarea
-            id="senderAddress"
-            placeholder="Deine vollständige Adresse"
-            value={formData.senderAddress}
-            onChange={(e) => handleInputChange('senderAddress', e.target.value)}
-            rows={3}
-            disabled={!isEditing}
-            className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
-          />
+          <div className="grid grid-cols-1 gap-3">
+            {/* Street */}
+            <div className="space-y-1">
+              <Label htmlFor="senderStreet" className="text-xs text-muted-foreground">
+                Straße & Hausnummer
+              </Label>
+              <Input
+                id="senderStreet"
+                placeholder="Musterstraße 123"
+                value={formData.senderStreet}
+                onChange={(e) => handleInputChange('senderStreet', e.target.value)}
+                disabled={!isEditing}
+                className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
+              />
+            </div>
+
+            {/* Postcode and City */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="senderPostcode" className="text-xs text-muted-foreground">
+                  PLZ
+                </Label>
+                <Input
+                  id="senderPostcode"
+                  placeholder="12345"
+                  value={formData.senderPostcode}
+                  onChange={(e) => handleInputChange('senderPostcode', e.target.value)}
+                  disabled={!isEditing}
+                  className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="senderCity" className="text-xs text-muted-foreground">
+                  Stadt
+                </Label>
+                <Input
+                  id="senderCity"
+                  placeholder="Musterstadt"
+                  value={formData.senderCity}
+                  onChange={(e) => handleInputChange('senderCity', e.target.value)}
+                  disabled={!isEditing}
+                  className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
+                />
+              </div>
+            </div>
+
+            {/* Country */}
+            <div className="space-y-1">
+              <Label htmlFor="senderCountry" className="text-xs text-muted-foreground">
+                Land
+              </Label>
+              <Input
+                id="senderCountry"
+                placeholder="Deutschland"
+                value={formData.senderCountry}
+                onChange={(e) => handleInputChange('senderCountry', e.target.value)}
+                disabled={!isEditing}
+                className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
+              />
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

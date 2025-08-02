@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Briefcase } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Briefcase, Sparkles, FileText, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface JobDetailsData {
@@ -13,16 +14,18 @@ interface JobDetailsData {
   company: string;
   strengths?: string;
   motivation?: string;
-  jobLink?: string;
+  jobDescription?: string;
 }
 
 interface JobDetailsProps {
   data: JobDetailsData;
   onChange: (data: JobDetailsData) => void;
   isEditing: boolean;
+  onGenerateWithAI?: () => void;
+  isGenerating?: boolean;
 }
 
-export function JobDetails({ data, onChange, isEditing }: JobDetailsProps) {
+export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGenerating }: JobDetailsProps) {
   const [formData, setFormData] = useState<JobDetailsData>(data);
 
   useEffect(() => {
@@ -35,22 +38,38 @@ export function JobDetails({ data, onChange, isEditing }: JobDetailsProps) {
     onChange(newData);
   };
 
+  const hasRequiredData = formData.jobTitle.trim() && formData.company.trim();
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <Briefcase className="h-5 w-5" />
-          Job Details
+          Job Details - Optional für KI-Generierung
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Informationen über die Stelle
+          Fülle diese Felder aus, um ein personalisiertes Anschreiben mit KI zu generieren
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Info Box */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-start space-x-2">
+            <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm">
+              <p className="text-blue-900 font-medium mb-1">KI-generiertes Anschreiben</p>
+              <p className="text-blue-700">
+                Fülle mindestens Job-Titel und Unternehmen aus, um ein personalisiertes Anschreiben mit KI zu generieren. 
+                Je mehr Details du angibst, desto besser wird das Ergebnis.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Job Title */}
         <div className="space-y-2">
           <Label htmlFor="jobTitle" className="text-sm font-medium">
-            Titel der Stelle 🎯
+            Titel der Stelle 🎯 <span className="text-red-500">*</span>
           </Label>
           <Input
             id="jobTitle"
@@ -65,7 +84,7 @@ export function JobDetails({ data, onChange, isEditing }: JobDetailsProps) {
         {/* Company */}
         <div className="space-y-2">
           <Label htmlFor="company" className="text-sm font-medium">
-            Unternehmen 🏢
+            Unternehmen 🏢 <span className="text-red-500">*</span>
           </Label>
           <Input
             id="company"
@@ -80,7 +99,7 @@ export function JobDetails({ data, onChange, isEditing }: JobDetailsProps) {
         {/* Strengths */}
         <div className="space-y-2">
           <Label htmlFor="strengths" className="text-sm font-medium">
-            Deine Stärken 💪
+            Deine Stärken 💪 <span className="text-gray-500 text-xs">(Optional)</span>
           </Label>
           <Textarea
             id="strengths"
@@ -92,14 +111,14 @@ export function JobDetails({ data, onChange, isEditing }: JobDetailsProps) {
             className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
           />
           <p className="text-xs text-muted-foreground">
-            Optional - hilft der KI, dein Anschreiben zu personalisieren
+            Hilft der KI, dein Anschreiben zu personalisieren
           </p>
         </div>
 
         {/* Motivation */}
         <div className="space-y-2">
           <Label htmlFor="motivation" className="text-sm font-medium">
-            Deine Motivation 🎯
+            Deine Motivation 🎯 <span className="text-gray-500 text-xs">(Optional)</span>
           </Label>
           <Textarea
             id="motivation"
@@ -111,28 +130,54 @@ export function JobDetails({ data, onChange, isEditing }: JobDetailsProps) {
             className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
           />
           <p className="text-xs text-muted-foreground">
-            Optional - macht dein Anschreiben authentischer
+            Macht dein Anschreiben authentischer und überzeugender
           </p>
         </div>
 
-        {/* Job Link */}
+        {/* Job Description */}
         <div className="space-y-2">
-          <Label htmlFor="jobLink" className="text-sm font-medium">
-            Job-Link 🔍
+          <Label htmlFor="jobDescription" className="text-sm font-medium">
+            Stellenanzeige 📋 <span className="text-gray-500 text-xs">(Optional)</span>
           </Label>
-          <Input
-            id="jobLink"
-            type="url"
-            placeholder="https://..."
-            value={formData.jobLink}
-            onChange={(e) => handleInputChange('jobLink', e.target.value)}
+          <Textarea
+            id="jobDescription"
+            placeholder="Füge hier den Text der Stellenanzeige ein. Die KI analysiert die Anforderungen und passt dein Anschreiben entsprechend an..."
+            value={formData.jobDescription}
+            onChange={(e) => handleInputChange('jobDescription', e.target.value)}
+            rows={4}
             disabled={!isEditing}
             className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
           />
           <p className="text-xs text-muted-foreground">
-            Optional - wir analysieren die Stellenanzeige für bessere Ergebnisse
+            Kopiere den Text der Stellenanzeige hier hinein für optimale Ergebnisse
           </p>
         </div>
+
+        {/* AI Generation Button */}
+        {isEditing && hasRequiredData && (
+          <div className="pt-4 border-t">
+            <Button
+              onClick={onGenerateWithAI}
+              disabled={isGenerating || !hasRequiredData}
+              className="w-full bg-[#0F973D] hover:bg-[#0F973D]/90 text-white"
+            >
+              {isGenerating ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Generiere Anschreiben...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Anschreiben mit KI generieren
+                </>
+              )}
+            </Button>
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              Die KI erstellt ein personalisiertes Anschreiben basierend auf deinen Angaben
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

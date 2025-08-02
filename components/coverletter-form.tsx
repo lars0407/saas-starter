@@ -20,12 +20,15 @@ interface CoverLetterData {
   company: string;
   strengths?: string;
   motivation?: string;
-  jobLink?: string;
+  jobDescription?: string;
   // Basics section
   senderName: string;
   senderPhone: string;
   senderEmail: string;
-  senderAddress: string;
+  senderStreet: string;
+  senderPostcode: string;
+  senderCity: string;
+  senderCountry: string;
   // Content section
   customContent: string;
 }
@@ -36,7 +39,10 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
     senderName: initialData.senderName || '',
     senderPhone: initialData.senderPhone || '',
     senderEmail: initialData.senderEmail || '',
-    senderAddress: initialData.senderAddress || '',
+    senderStreet: initialData.senderStreet || '',
+    senderPostcode: initialData.senderPostcode || '',
+    senderCity: initialData.senderCity || '',
+    senderCountry: initialData.senderCountry || '',
     customContent: initialData.customContent || '',
   });
 
@@ -45,7 +51,9 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
   }, [initialData]);
 
   const validateForm = (): boolean => {
-    return Boolean(formData.jobTitle.trim() && formData.company.trim());
+    // Job Details sind optional für die KI-Generierung
+    // Nur Basics (Name und Email) sind erforderlich
+    return Boolean(formData.senderName.trim() && formData.senderEmail.trim());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -62,7 +70,10 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
       senderName: basicsData.senderName,
       senderPhone: basicsData.senderPhone,
       senderEmail: basicsData.senderEmail,
-      senderAddress: basicsData.senderAddress,
+      senderStreet: basicsData.senderStreet,
+      senderPostcode: basicsData.senderPostcode,
+      senderCity: basicsData.senderCity,
+      senderCountry: basicsData.senderCountry,
     }));
   };
 
@@ -73,7 +84,7 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
       company: jobData.company,
       strengths: jobData.strengths,
       motivation: jobData.motivation,
-      jobLink: jobData.jobLink,
+      jobDescription: jobData.jobDescription,
     }));
   };
 
@@ -84,7 +95,7 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
     }));
   };
 
-  const isFormValid = Boolean(formData.jobTitle.trim() && formData.company.trim());
+  const isFormValid = Boolean(formData.senderName.trim() && formData.senderEmail.trim());
 
   return (
     <div className="space-y-6">
@@ -94,7 +105,10 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
           senderName: formData.senderName,
           senderPhone: formData.senderPhone,
           senderEmail: formData.senderEmail,
-          senderAddress: formData.senderAddress,
+          senderStreet: formData.senderStreet,
+          senderPostcode: formData.senderPostcode,
+          senderCity: formData.senderCity,
+          senderCountry: formData.senderCountry,
         }}
         onChange={handleBasicsChange}
         isEditing={!isLoading}
@@ -107,10 +121,12 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
           company: formData.company,
           strengths: formData.strengths,
           motivation: formData.motivation,
-          jobLink: formData.jobLink,
+          jobDescription: formData.jobDescription,
         }}
         onChange={handleJobDetailsChange}
         isEditing={!isLoading}
+        onGenerateWithAI={onGenerate}
+        isGenerating={isGenerating}
       />
 
       {/* Content Section */}
@@ -146,17 +162,17 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
                 {formData.senderName && formData.senderEmail ? "✓" : "!"}
               </div>
             </div>
-            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-              <span className="text-sm font-medium">Job Details</span>
-              <div className={cn(
-                "flex items-center justify-center w-6 h-6 rounded-md text-xs font-medium",
-                formData.jobTitle && formData.company 
-                  ? "bg-[#0F973D] text-white" 
-                  : "bg-muted text-muted-foreground"
-              )}>
-                {formData.jobTitle && formData.company ? "✓" : "!"}
-              </div>
-            </div>
+                         <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+               <span className="text-sm font-medium">Job Details (Optional)</span>
+               <div className={cn(
+                 "flex items-center justify-center w-6 h-6 rounded-md text-xs font-medium",
+                 formData.jobTitle && formData.company 
+                   ? "bg-[#0F973D] text-white" 
+                   : "bg-blue-500 text-white"
+               )}>
+                 {formData.jobTitle && formData.company ? "✓" : "?"}
+               </div>
+             </div>
             <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
               <span className="text-sm font-medium">Inhalt</span>
               <div className={cn(
