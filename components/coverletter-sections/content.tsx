@@ -24,13 +24,27 @@ export function Content({ data, onChange, isEditing }: ContentProps) {
 
   useEffect(() => {
     setFormData(data);
+    // Force update editor content when data changes (e.g., when loading existing document)
+    if (editorRef.current && data.customContent) {
+      setTimeout(() => {
+        if (editorRef.current) {
+          editorRef.current.setContent(data.customContent);
+          updateWordCount(data.customContent);
+        }
+      }, 200);
+    }
   }, [data]);
 
   // Update editor content when formData.customContent changes
   useEffect(() => {
     if (editorRef.current && formData.customContent !== editorRef.current.getContent()) {
-      editorRef.current.setContent(formData.customContent);
-      updateWordCount(formData.customContent);
+      // Use setTimeout to ensure the editor is fully ready
+      setTimeout(() => {
+        if (editorRef.current) {
+          editorRef.current.setContent(formData.customContent || '');
+          updateWordCount(formData.customContent || '');
+        }
+      }, 100);
     }
   }, [formData.customContent]);
 
@@ -72,10 +86,12 @@ export function Content({ data, onChange, isEditing }: ContentProps) {
               onInit={(_evt, editor) => {
                 editorRef.current = editor;
                 // Set content after initialization to avoid cursor position issues
-                if (formData.customContent) {
-                  editor.setContent(formData.customContent);
-                }
-                updateWordCount(editor.getContent());
+                setTimeout(() => {
+                  if (formData.customContent) {
+                    editor.setContent(formData.customContent);
+                  }
+                  updateWordCount(editor.getContent());
+                }, 50);
               }}
               onEditorChange={(content) => {
                 handleInputChange('customContent', content);
