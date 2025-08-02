@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { FileText, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { FileText } from 'lucide-react';
+import { Editor } from '@tinymce/tinymce-react';
 
 interface ContentData {
   customContent: string;
@@ -19,13 +19,20 @@ interface ContentProps {
 
 export function Content({ data, onChange, isEditing }: ContentProps) {
   const [formData, setFormData] = useState<ContentData>(data);
-  const [richTextContent, setRichTextContent] = useState(data.customContent);
-  const editorRef = useRef<HTMLDivElement>(null);
+  const [wordCount, setWordCount] = useState(0);
+  const editorRef = useRef<any>(null);
 
   useEffect(() => {
     setFormData(data);
-    setRichTextContent(data.customContent);
   }, [data]);
+
+  // Update editor content when formData.customContent changes
+  useEffect(() => {
+    if (editorRef.current && formData.customContent !== editorRef.current.getContent()) {
+      editorRef.current.setContent(formData.customContent);
+      updateWordCount(formData.customContent);
+    }
+  }, [formData.customContent]);
 
   const handleInputChange = (field: keyof ContentData, value: string) => {
     const newData = { ...formData, [field]: value };
@@ -33,29 +40,11 @@ export function Content({ data, onChange, isEditing }: ContentProps) {
     onChange(newData);
   };
 
-  const handleRichTextChange = (content: string) => {
-    setRichTextContent(content);
-    handleInputChange('customContent', content);
-  };
-
-  const formatText = (command: string, value: string = '') => {
-    if (!isEditing) return;
-    
-    document.execCommand(command, false, value);
-    if (editorRef.current) {
-      const content = editorRef.current.innerHTML;
-      handleRichTextChange(content);
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const text = e.clipboardData.getData('text/plain');
-    document.execCommand('insertText', false, text);
-    if (editorRef.current) {
-      const content = editorRef.current.innerHTML;
-      handleRichTextChange(content);
-    }
+  const updateWordCount = (content: string) => {
+    // Remove HTML tags and count words
+    const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const words = textContent.split(' ').filter(word => word.length > 0);
+    setWordCount(words.length);
   };
 
   return (
@@ -70,155 +59,209 @@ export function Content({ data, onChange, isEditing }: ContentProps) {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="customContent" className="text-sm font-medium">
-            Anschreiben Inhalt 📝
-          </Label>
-                     <Textarea
-             id="customContent"
-             value={formData.customContent}
-             onChange={(e) => handleInputChange('customContent', e.target.value)}
-             placeholder="Schreiben Sie hier Ihr Anschreiben..."
-             className="min-h-[300px] resize-none"
-             disabled={!isEditing}
-           />
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <p>
-              Schreiben Sie Ihr Anschreiben direkt hier
-            </p>
-            <p>
-              {formData.customContent.length} Zeichen
-            </p>
-          </div>
-        </div>
-
-        {/* Rich Text Editor */}
+        {/* Simple TinyMCE Editor */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">
-            Rich Text Editor ✨
+            Anschreiben Editor ✨
           </Label>
           
-          {/* Toolbar */}
-          <div className="flex flex-wrap gap-1 p-2 border border-gray-200 rounded-t-md bg-gray-50">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => formatText('bold')}
+          <div className="relative">
+            <Editor
+              tinymceScriptSrc='/tinymce/tinymce.min.js'
+              licenseKey='gpl'
+              onInit={(_evt, editor) => {
+                editorRef.current = editor;
+                // Set content after initialization to avoid cursor position issues
+                if (formData.customContent) {
+                  editor.setContent(formData.customContent);
+                }
+                updateWordCount(editor.getContent());
+              }}
+              onEditorChange={(content) => {
+                handleInputChange('customContent', content);
+                updateWordCount(content);
+              }}
+              initialValue=""
               disabled={!isEditing}
-              className="h-8 w-8 p-0"
-              title="Fett"
-            >
-              <Bold className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => formatText('italic')}
-              disabled={!isEditing}
-              className="h-8 w-8 p-0"
-              title="Kursiv"
-            >
-              <Italic className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => formatText('underline')}
-              disabled={!isEditing}
-              className="h-8 w-8 p-0"
-              title="Unterstrichen"
-            >
-              <Underline className="h-4 w-4" />
-            </Button>
+              init={{
+                height: 300,
+                menubar: false,
+                statusbar: false,
+                resize: false,
+                plugins: [],
+                toolbar: false,
+                content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px; line-height:1.6; }',
+                branding: false,
+                promotion: false,
+                setup: function(editor) {
+                  // Hide menubar completely and style the editor
+                  editor.on('init', function() {
+                    // Try multiple selectors to find the menubar
+                    const selectors = ['.tox-menubar', '.tox .tox-menubar', '[role="menubar"]'];
+                    selectors.forEach(selector => {
+                      const menubar = editor.getContainer().querySelector(selector) as HTMLElement;
+                      if (menubar) {
+                        menubar.style.display = 'none';
+                        menubar.style.visibility = 'hidden';
+                        menubar.style.height = '0';
+                        menubar.style.overflow = 'hidden';
+                      }
+                    });
+                    
+                    // Also try to hide any menubar in the document
+                    document.querySelectorAll('.tox-menubar, [role="menubar"]').forEach((el: any) => {
+                      if (el.closest('.tox-tinymce')) {
+                        el.style.display = 'none';
+                        el.style.visibility = 'hidden';
+                        el.style.height = '0';
+                        el.style.overflow = 'hidden';
+                      }
+                    });
+
+                    // Style the editor container and all border elements
+                    const editorContainer = editor.getContainer();
+                    if (editorContainer) {
+                      // Style the main container
+                      editorContainer.style.borderColor = '#d1d5db';
+                      editorContainer.style.borderRadius = '0.5rem';
+                      editorContainer.style.transition = 'border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out';
+                      
+                      // Style ALL possible border elements within the editor
+                      const allElements = editorContainer.querySelectorAll('*');
+                      allElements.forEach((el: any) => {
+                        if (el.style && (el.style.border || el.style.borderColor)) {
+                          el.style.borderColor = '#d1d5db';
+                          el.style.borderRadius = '0.5rem';
+                          el.style.transition = 'border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out';
+                        }
+                      });
+                      
+                      // Also force override any existing border styles
+                      const style = document.createElement('style');
+                      style.textContent = `
+                        .tox-tinymce, .tox-tinymce * {
+                          border-color: #d1d5db !important;
+                        }
+                        
+                        /* Target the specific div-relative container */
+                        .div-relative {
+                          border-color: #d1d5db !important;
+                          outline-color: #d1d5db !important;
+                        }
+                        
+                        .div-relative:after, .div-relative:before {
+                          border-color: #d1d5db !important;
+                        }
+                      `;
+                      editorContainer.appendChild(style);
+                    }
+
+                    // Add focus/blur event listeners
+                    editor.on('focus', function() {
+                      if (editorContainer) {
+                        // Style main container
+                        editorContainer.style.borderColor = '#22c55e';
+                        editorContainer.style.boxShadow = '0 0 0 2px rgba(34, 197, 94, 0.2)';
+                        
+                        // Style ALL possible border elements within the editor
+                        const allElements = editorContainer.querySelectorAll('*');
+                        allElements.forEach((el: any) => {
+                          if (el.style && (el.style.border || el.style.borderColor)) {
+                            el.style.borderColor = '#22c55e';
+                            el.style.boxShadow = '0 0 0 2px rgba(34, 197, 94, 0.2)';
+                          }
+                        });
+                        
+                        // Update the injected style
+                        const existingStyle = editorContainer.querySelector('style');
+                        if (existingStyle) {
+                          existingStyle.textContent = `
+                            .tox-tinymce, .tox-tinymce * {
+                              border-color: #22c55e !important;
+                            }
+                            
+                            /* Target the specific div-relative container */
+                            .div-relative {
+                              border-color: #22c55e !important;
+                              outline-color: #22c55e !important;
+                            }
+                            
+                            .div-relative:after, .div-relative:before {
+                              border-color: #22c55e !important;
+                            }
+                          `;
+                        }
+                      }
+                    });
+
+                    editor.on('blur', function() {
+                      if (editorContainer) {
+                        // Style main container
+                        editorContainer.style.borderColor = '#d1d5db';
+                        editorContainer.style.boxShadow = 'none';
+                        
+                        // Style ALL possible border elements within the editor
+                        const allElements = editorContainer.querySelectorAll('*');
+                        allElements.forEach((el: any) => {
+                          if (el.style && (el.style.border || el.style.borderColor)) {
+                            el.style.borderColor = '#d1d5db';
+                            el.style.boxShadow = 'none';
+                          }
+                        });
+                        
+                        // Update the injected style
+                        const existingStyle = editorContainer.querySelector('style');
+                        if (existingStyle) {
+                          existingStyle.textContent = `
+                            .tox-tinymce, .tox-tinymce * {
+                              border-color: #d1d5db !important;
+                            }
+                            
+                            /* Target the specific div-relative container */
+                            .div-relative {
+                              border-color: #d1d5db !important;
+                              outline-color: #d1d5db !important;
+                            }
+                            
+                            .div-relative:after, .div-relative:before {
+                              border-color: #d1d5db !important;
+                            }
+                          `;
+                        }
+                      }
+                    });
+                  });
+                },
+                forced_root_block: 'p',
+                force_br_newlines: false,
+                force_p_newlines: true,
+                remove_linebreaks: false,
+                convert_newlines_to_brs: false,
+                remove_redundant_brs: false,
+                entity_encoding: 'raw',
+                element_format: 'html',
+                verify_html: false,
+                cleanup: false,
+                cleanup_on_startup: false,
+                valid_elements: 'p,br',
+                valid_children: '+body[p]',
+                extended_valid_elements: 'p,br',
+                invalid_elements: 'h1,h2,h3,h4,h5,h6,div,span,blockquote,pre,code,table,tr,td,th,tbody,thead,tfoot,img,hr,iframe,object,embed,script,style,form,input,textarea,button,select,option,label,fieldset,legend'
+              }}
+            />
             
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => formatText('insertUnorderedList')}
-              disabled={!isEditing}
-              className="h-8 w-8 p-0"
-              title="Aufzählungsliste"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => formatText('insertOrderedList')}
-              disabled={!isEditing}
-              className="h-8 w-8 p-0"
-              title="Nummerierte Liste"
-            >
-              <ListOrdered className="h-4 w-4" />
-            </Button>
-            
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => formatText('justifyLeft')}
-              disabled={!isEditing}
-              className="h-8 w-8 p-0"
-              title="Linksbündig"
-            >
-              <AlignLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => formatText('justifyCenter')}
-              disabled={!isEditing}
-              className="h-8 w-8 p-0"
-              title="Zentriert"
-            >
-              <AlignCenter className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => formatText('justifyRight')}
-              disabled={!isEditing}
-              className="h-8 w-8 p-0"
-              title="Rechtsbündig"
-            >
-              <AlignRight className="h-4 w-4" />
-            </Button>
+            {/* Word count display */}
+            <div className="absolute bottom-2 right-2 bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">
+              {wordCount} Wörter
+            </div>
           </div>
-          
-          {/* Editor */}
-          <div
-            ref={editorRef}
-            contentEditable={isEditing}
-            onInput={(e) => {
-              const content = e.currentTarget.innerHTML;
-              handleRichTextChange(content);
-            }}
-            onPaste={handlePaste}
-            className="min-h-[200px] p-3 border border-gray-200 rounded-b-md focus:outline-none focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] overflow-y-auto"
-            style={{ 
-              whiteSpace: 'pre-wrap',
-              wordWrap: 'break-word'
-            }}
-            dangerouslySetInnerHTML={{ __html: richTextContent }}
-          />
           
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <p>
-              Rich Text Editor mit Formatierungsoptionen
+              Einfacher Text-Editor für Ihr Anschreiben
             </p>
             <p>
-              {richTextContent.replace(/<[^>]*>/g, '').length} Zeichen
+              {formData.customContent.replace(/<[^>]*>/g, '').length} Zeichen
             </p>
           </div>
         </div>
