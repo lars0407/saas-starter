@@ -229,4 +229,70 @@ export async function generateResumePDF(
   return response.json();
 }
 
+export async function saveCoverLetter(
+  documentId: number = 0, 
+  documentName: string, 
+  data: any,
+  templateId: number = 10
+) {
+  const token = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('token='))
+    ?.split('=')[1];
+
+  const response = await fetch("https://api.jobjaeger.de/api:SiRHLF4Y/documents/cover_letter/update", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { "Authorization": `Bearer ${token}` })
+    },
+    body: JSON.stringify({
+      document_id: documentId,
+      document_name: documentName,
+      template_id: templateId,
+      data: data
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function generateCoverLetterPDF(
+  templateId: number = 10,
+  documentName: string,
+  documentId: number,
+  data: any
+) {
+  const token = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('token='))
+    ?.split('=')[1];
+
+  const response = await fetch("https://api.jobjaeger.de/api:SiRHLF4Y/documents/cover_letter/generatepdf", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { "Authorization": `Bearer ${token}` })
+    },
+    body: JSON.stringify({
+      template_id: templateId,
+      document_name: documentName,
+      document_id: documentId,
+      data: data
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
  

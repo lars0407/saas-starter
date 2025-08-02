@@ -27,6 +27,23 @@ interface CoverLetterData {
   senderCountry: string;
   // Content section
   customContent: string;
+  // Additional fields for API
+  senderFirstName?: string;
+  senderSurname?: string;
+  senderTitleBefore?: string;
+  senderTitleAfter?: string;
+  receiverFirstName?: string;
+  receiverSurname?: string;
+  receiverTitleBefore?: string;
+  receiverTitleAfter?: string;
+  receiverPhone?: string;
+  receiverEmail?: string;
+  receiverStreet?: string;
+  receiverCity?: string;
+  receiverZip?: string;
+  receiverCountry?: string;
+  contentSubject?: string;
+  contentDate?: string;
 }
 
 interface GeneratedLetterData {
@@ -64,6 +81,23 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
     senderCity: '',
     senderCountry: '',
     customContent: '',
+    // Additional fields
+    senderFirstName: '',
+    senderSurname: '',
+    senderTitleBefore: '',
+    senderTitleAfter: '',
+    receiverFirstName: '',
+    receiverSurname: '',
+    receiverTitleBefore: '',
+    receiverTitleAfter: '',
+    receiverPhone: '',
+    receiverEmail: '',
+    receiverStreet: '',
+    receiverCity: '',
+    receiverZip: '',
+    receiverCountry: '',
+    contentSubject: '',
+    contentDate: '',
   });
   
   const [generatedLetter, setGeneratedLetter] = useState<GeneratedLetterData | null>(null);
@@ -81,6 +115,11 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
     setIsClient(true);
   }, []);
 
+  const handleFormDataChange = useCallback((data: CoverLetterData) => {
+    console.log('Form data changed in generator:', data);
+    setFormData(data);
+  }, []);
+
   const loadExistingDocument = useCallback(async () => {
     if (!documentId) return;
     
@@ -89,26 +128,61 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
       const response = await fetchDocument(documentId);
       const document = response.document;
       
+      console.log('API Response:', response);
+      console.log('Document:', document);
+      console.log('Document content:', document?.content);
+      
       if (document && document.content) {
         const content = document.content;
         
+        // Handle different possible data structures
+        // The data might be directly in content, or nested in a data field
+        const data = content.data || content;
+        
         // Transform API data to component format
+        // The API data structure is nested with Sender, Receiver, Content, Context
         const transformedData: CoverLetterData = {
-          jobTitle: content.job_title || '',
-          company: content.company || '',
-          strengths: content.strengths || '',
-          motivation: content.motivation || '',
-          jobDescription: content.job_description || '',
-          senderName: content.sender_name || '',
-          senderPhone: content.sender_phone || '',
-          senderEmail: content.sender_email || '',
-          senderStreet: content.sender_street || '',
-          senderPostcode: content.sender_postcode || '',
-          senderCity: content.sender_city || '',
-          senderCountry: content.sender_country || '',
-          customContent: content.custom_content || '',
+          // Context fields (Job Details)
+          jobTitle: data.Context?.['Job Title'] || data.job_title || content.Context?.['Job Title'] || content.job_title || '',
+          company: data.Context?.Company || data.company || content.Context?.Company || content.company || '',
+          jobDescription: data.Context?.['Job Description'] || data.job_description || content.Context?.['Job Description'] || content.job_description || '',
+          strengths: data.strengths || content.strengths || '',
+          motivation: data.motivation || content.motivation || '',
+          
+                     // Sender fields (Basics)
+           senderName: data.Sender?.['First name'] || data.sender_name || content.sender_name || '',
+          senderPhone: data.Sender?.Telephone || data.sender_phone || content.Sender?.Telephone || content.sender_phone || '',
+          senderEmail: data.Sender?.Email || data.sender_email || content.Sender?.Email || content.sender_email || '',
+          senderStreet: data.Sender?.Adresse?.Street || data.sender_street || content.Sender?.Adresse?.Street || content.sender_street || '',
+          senderPostcode: data.Sender?.Adresse?.['Zip code'] || data.sender_postcode || content.Sender?.Adresse?.['Zip code'] || content.sender_postcode || '',
+          senderCity: data.Sender?.Adresse?.City || data.sender_city || content.Sender?.Adresse?.City || content.sender_city || '',
+          senderCountry: data.Sender?.Adresse?.Country || data.sender_country || content.Sender?.Adresse?.Country || content.sender_country || '',
+          
+          // Additional sender fields
+          senderFirstName: data.Sender?.['First name'] || data.sender_first_name || content.Sender?.['First name'] || content.sender_first_name || '',
+          senderSurname: data.Sender?.['Surname'] || data.sender_surname || content.Sender?.['Surname'] || content.sender_surname || '',
+          senderTitleBefore: data.Sender?.TitleBefore || data.sender_titlebefore || content.Sender?.TitleBefore || content.sender_titlebefore || '',
+          senderTitleAfter: data.Sender?.TitleAfter || data.sender_titleafter || content.Sender?.TitleAfter || content.sender_titleafter || '',
+          
+          // Receiver fields
+          receiverFirstName: data.Receiver?.['First name'] || data.receiver_first_name || content.Receiver?.['First name'] || content.receiver_first_name || '',
+          receiverSurname: data.Receiver?.['Surname'] || data.receiver_surname || content.Receiver?.['Surname'] || content.receiver_surname || '',
+          receiverTitleBefore: data.Receiver?.TitleBefore || data.receiver_titlebefore || content.Receiver?.TitleBefore || content.receiver_titlebefore || '',
+          receiverTitleAfter: data.Receiver?.TitleAfter || data.receiver_titleafter || content.Receiver?.TitleAfter || content.receiver_titleafter || '',
+          receiverPhone: data.Receiver?.Telephone || data.receiver_telephone || content.Receiver?.Telephone || content.receiver_telephone || '',
+          receiverEmail: data.Receiver?.Email || data.receiver_email || content.Receiver?.Email || content.receiver_email || '',
+          receiverStreet: data.Receiver?.Adresse?.Street || data.receiver_adresse_street || content.Receiver?.Adresse?.Street || content.receiver_adresse_street || '',
+          receiverCity: data.Receiver?.Adresse?.City || data.receiver_adresse_city || content.Receiver?.Adresse?.City || content.receiver_adresse_city || '',
+          receiverZip: data.Receiver?.Adresse?.['Zip code'] || data.receiver_adresse_zip || content.Receiver?.Adresse?.['Zip code'] || content.receiver_adresse_zip || '',
+          receiverCountry: data.Receiver?.Adresse?.Country || data.receiver_adresse_country || content.Receiver?.Adresse?.Country || content.receiver_adresse_country || '',
+          
+          // Content fields
+          customContent: data.Content?.Text || data.custom_content || content.Content?.Text || content.custom_content || '',
+          contentSubject: data.Content?.Subject || data.content_subject || content.Content?.Subject || content.content_subject || '',
+          contentDate: data.Content?.Date || data.content_date || content.Content?.Date || content.content_date || '',
         };
         
+        console.log('Transformed data:', transformedData);
         setFormData(transformedData);
         
         // If there's generated content, set it
@@ -238,14 +312,67 @@ ${data.senderName || '[Ihr Name]'}`;
     setPdfGenerationStatus('generating');
     setGeneratedPdfUrl(null);
     try {
-      // TODO: Replace with actual API call for cover letter PDF generation
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate API delay
+      // Prepare data for API
+      const apiData = {
+        Sender: {
+          "First name": formData.senderName || '',
+          "Surname": formData.senderSurname || '',
+          "TitleBefore": formData.senderTitleBefore || '',
+          "TitleAfter": formData.senderTitleAfter || '',
+          "Telephone": formData.senderPhone,
+          "Email": formData.senderEmail,
+          "Adresse": {
+            "Street": formData.senderStreet,
+            "City": formData.senderCity,
+            "Zip code": formData.senderPostcode,
+            "Country": formData.senderCountry
+          }
+        },
+        Receiver: {
+          "First name": formData.receiverFirstName || '',
+          "Surname": formData.receiverSurname || '',
+          "TitleBefore": formData.receiverTitleBefore || '',
+          "TitleAfter": formData.receiverTitleAfter || '',
+          "Telephone": formData.receiverPhone || '',
+          "Email": formData.receiverEmail || '',
+          "Adresse": {
+            "Street": formData.receiverStreet || '',
+            "City": formData.receiverCity || '',
+            "Zip code": formData.receiverZip || '',
+            "Country": formData.receiverCountry || ''
+          }
+        },
+        Content: {
+          "Subject": formData.contentSubject || `Bewerbung als ${formData.jobTitle}`,
+          "Date": formData.contentDate || new Date().toISOString().split('T')[0],
+          "Text": formData.customContent || generatedLetter?.content || ''
+        },
+        Context: {
+          "Job Title": formData.jobTitle,
+          "Job Description": formData.jobDescription || '',
+          "Company": formData.company
+        }
+      };
+
+      // Import the generateCoverLetterPDF function
+      const { generateCoverLetterPDF: generatePDF } = await import('@/lib/api-client');
       
-      // Mock PDF URL for demonstration
-      const mockPdfUrl = 'https://example.com/cover-letter.pdf';
-      setGeneratedPdfUrl(mockPdfUrl);
-      setPdfGenerationStatus('ready');
-      toast.success('Anschreiben erfolgreich generiert! 🎉');
+      const documentName = `Anschreiben ${formData.jobTitle} ${formData.company}`.trim();
+      const response = await generatePDF(
+        10, // template_id for cover letter
+        documentName,
+        currentDocumentId,
+        apiData
+      );
+
+      // Handle the response - assuming it returns a download URL directly
+      if (response.download_link && response.download_link.url) {
+        setGeneratedPdfUrl(response.download_link.url);
+        setPdfGenerationStatus('ready');
+        toast.success('Anschreiben erfolgreich generiert! 🎉');
+      } else {
+        throw new Error('Keine Download-URL erhalten');
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
       setPdfGenerationStatus('error');
@@ -272,12 +399,83 @@ ${data.senderName || '[Ihr Name]'}`;
 
   const handleSave = async () => {
     try {
-      // TODO: Implement save functionality
-      console.log('Saving cover letter:', generatedLetter);
-      toast.success('Anschreiben gespeichert! 💾');
+      setIsLoading(true);
+      
+      console.log('Current formData before saving:', formData);
+      
+      // Prepare data for API
+      const apiData = {
+        Sender: {
+          "First name": formData.senderName || '',
+          "Surname": formData.senderSurname || '',
+          "TitleBefore": formData.senderTitleBefore || '',
+          "TitleAfter": formData.senderTitleAfter || '',
+          "Telephone": formData.senderPhone,
+          "Email": formData.senderEmail,
+          "Adresse": {
+            "Street": formData.senderStreet,
+            "City": formData.senderCity,
+            "Zip code": formData.senderPostcode,
+            "Country": formData.senderCountry
+          }
+        },
+        Receiver: {
+          "First name": formData.receiverFirstName || '',
+          "Surname": formData.receiverSurname || '',
+          "TitleBefore": formData.receiverTitleBefore || '',
+          "TitleAfter": formData.receiverTitleAfter || '',
+          "Telephone": formData.receiverPhone || '',
+          "Email": formData.receiverEmail || '',
+          "Adresse": {
+            "Street": formData.receiverStreet || '',
+            "City": formData.receiverCity || '',
+            "Zip code": formData.receiverZip || '',
+            "Country": formData.receiverCountry || ''
+          }
+        },
+        Content: {
+          "Subject": formData.contentSubject || `Bewerbung als ${formData.jobTitle}`,
+          "Date": formData.contentDate || new Date().toISOString().split('T')[0],
+          "Text": formData.customContent || generatedLetter?.content || ''
+        },
+        Context: {
+          "Job Title": formData.jobTitle,
+          "Job Description": formData.jobDescription || '',
+          "Company": formData.company
+        }
+      };
+
+      console.log('API data being sent:', apiData);
+
+      // Import the saveCoverLetter function
+      const { saveCoverLetter } = await import('@/lib/api-client');
+      
+      const documentName = `Anschreiben ${formData.jobTitle} ${formData.company}`.trim();
+      const response = await saveCoverLetter(
+        currentDocumentId || 0,
+        documentName,
+        apiData,
+        10 // template_id for cover letter
+      );
+
+      // Update current document ID if it's a new document
+      if (!currentDocumentId && response.documentID) {
+        setCurrentDocumentId(response.documentID);
+        // Update URL with new document ID
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          url.searchParams.set('id', response.documentID.toString());
+          window.history.replaceState({}, '', url.toString());
+        }
+      }
+
+      setCurrentDocument(response);
+      toast.success('Anschreiben erfolgreich gespeichert! 💾');
     } catch (error) {
       console.error('Error saving cover letter:', error);
-      toast.error('Fehler beim Speichern');
+      toast.error('Fehler beim Speichern des Anschreibens');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -302,6 +500,8 @@ ${data.senderName || '[Ihr Name]'}`;
           <CoverLetterForm 
             onSubmit={handleFormSubmit}
             onGenerate={generateCoverLetterPDF}
+            onSave={handleSave}
+            onFormDataChange={handleFormDataChange}
             isLoading={isLoading}
             isGenerating={isGenerating}
             initialData={formData}

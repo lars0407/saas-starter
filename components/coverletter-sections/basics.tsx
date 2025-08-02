@@ -28,11 +28,14 @@ export function Basics({ data, onChange, isEditing }: BasicsProps) {
   const [formData, setFormData] = useState<BasicsData>(data);
 
   useEffect(() => {
+    console.log('Basics component received data:', data);
     setFormData(data);
   }, [data]);
 
   const handleInputChange = (field: keyof BasicsData, value: string) => {
+    console.log(`Basics input change: ${field} = "${value}"`);
     const newData = { ...formData, [field]: value };
+    console.log('Basics new data:', newData);
     setFormData(newData);
     onChange(newData);
   };

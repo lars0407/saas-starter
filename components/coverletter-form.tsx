@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Sparkles, Save } from 'lucide-react';
@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils';
 interface CoverLetterFormProps {
   onSubmit: (data: CoverLetterData) => void;
   onGenerate: () => void;
+  onSave: () => void;
+  onFormDataChange: (data: CoverLetterData) => void;
   isLoading: boolean;
   isGenerating: boolean;
   initialData: CoverLetterData;
@@ -31,11 +33,34 @@ interface CoverLetterData {
   senderCountry: string;
   // Content section
   customContent: string;
+  // Additional fields for API
+  senderFirstName?: string;
+  senderSurname?: string;
+  senderTitleBefore?: string;
+  senderTitleAfter?: string;
+  receiverFirstName?: string;
+  receiverSurname?: string;
+  receiverTitleBefore?: string;
+  receiverTitleAfter?: string;
+  receiverPhone?: string;
+  receiverEmail?: string;
+  receiverStreet?: string;
+  receiverCity?: string;
+  receiverZip?: string;
+  receiverCountry?: string;
+  contentSubject?: string;
+  contentDate?: string;
 }
 
-export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating, initialData }: CoverLetterFormProps) {
+export function CoverLetterForm({ onSubmit, onGenerate, onSave, onFormDataChange, isLoading, isGenerating, initialData }: CoverLetterFormProps) {
+  const isInitialMount = useRef(true);
   const [formData, setFormData] = useState<CoverLetterData>({
     ...initialData,
+    jobTitle: initialData.jobTitle || '',
+    company: initialData.company || '',
+    strengths: initialData.strengths || '',
+    motivation: initialData.motivation || '',
+    jobDescription: initialData.jobDescription || '',
     senderName: initialData.senderName || '',
     senderPhone: initialData.senderPhone || '',
     senderEmail: initialData.senderEmail || '',
@@ -44,11 +69,33 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
     senderCity: initialData.senderCity || '',
     senderCountry: initialData.senderCountry || '',
     customContent: initialData.customContent || '',
+    // Additional fields
+    senderFirstName: initialData.senderFirstName || '',
+    senderSurname: initialData.senderSurname || '',
+    senderTitleBefore: initialData.senderTitleBefore || '',
+    senderTitleAfter: initialData.senderTitleAfter || '',
+    receiverFirstName: initialData.receiverFirstName || '',
+    receiverSurname: initialData.receiverSurname || '',
+    receiverTitleBefore: initialData.receiverTitleBefore || '',
+    receiverTitleAfter: initialData.receiverTitleAfter || '',
+    receiverPhone: initialData.receiverPhone || '',
+    receiverEmail: initialData.receiverEmail || '',
+    receiverStreet: initialData.receiverStreet || '',
+    receiverCity: initialData.receiverCity || '',
+    receiverZip: initialData.receiverZip || '',
+    receiverCountry: initialData.receiverCountry || '',
+    contentSubject: initialData.contentSubject || '',
+    contentDate: initialData.contentDate || '',
   });
 
   useEffect(() => {
+    console.log('CoverLetterForm received initialData:', initialData);
+    console.log('Current formData before setting:', formData);
     setFormData(initialData);
+    isInitialMount.current = true;
   }, [initialData]);
+
+  // Remove the automatic parent notification useEffect to prevent infinite loops
 
   const validateForm = (): boolean => {
     // Job Details sind optional für die KI-Generierung
@@ -65,34 +112,52 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
   };
 
   const handleBasicsChange = (basicsData: any) => {
-    setFormData(prev => ({
-      ...prev,
-      senderName: basicsData.senderName,
-      senderPhone: basicsData.senderPhone,
-      senderEmail: basicsData.senderEmail,
-      senderStreet: basicsData.senderStreet,
-      senderPostcode: basicsData.senderPostcode,
-      senderCity: basicsData.senderCity,
-      senderCountry: basicsData.senderCountry,
-    }));
+    console.log('Basics data received:', basicsData);
+    console.log('Current formData before update:', formData);
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        senderName: basicsData.senderName,
+        senderPhone: basicsData.senderPhone,
+        senderEmail: basicsData.senderEmail,
+        senderStreet: basicsData.senderStreet,
+        senderPostcode: basicsData.senderPostcode,
+        senderCity: basicsData.senderCity,
+        senderCountry: basicsData.senderCountry,
+      };
+      console.log('Updated form data:', newData);
+      // Directly notify parent of the change
+      onFormDataChange(newData);
+      return newData;
+    });
   };
 
   const handleJobDetailsChange = (jobData: any) => {
-    setFormData(prev => ({
-      ...prev,
-      jobTitle: jobData.jobTitle,
-      company: jobData.company,
-      strengths: jobData.strengths,
-      motivation: jobData.motivation,
-      jobDescription: jobData.jobDescription,
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        jobTitle: jobData.jobTitle,
+        company: jobData.company,
+        strengths: jobData.strengths,
+        motivation: jobData.motivation,
+        jobDescription: jobData.jobDescription,
+      };
+      // Directly notify parent of the change
+      onFormDataChange(newData);
+      return newData;
+    });
   };
 
   const handleContentChange = (contentData: any) => {
-    setFormData(prev => ({
-      ...prev,
-      customContent: contentData.customContent,
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        customContent: contentData.customContent,
+      };
+      // Directly notify parent of the change
+      onFormDataChange(newData);
+      return newData;
+    });
   };
 
   const isFormValid = Boolean(formData.senderName.trim() && formData.senderEmail.trim());
@@ -100,8 +165,8 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
   return (
     <div className="space-y-6">
       {/* Basics Section */}
-      <Basics
-        data={{
+      {(() => {
+        const basicsData = {
           senderName: formData.senderName,
           senderPhone: formData.senderPhone,
           senderEmail: formData.senderEmail,
@@ -109,10 +174,16 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
           senderPostcode: formData.senderPostcode,
           senderCity: formData.senderCity,
           senderCountry: formData.senderCountry,
-        }}
-        onChange={handleBasicsChange}
-        isEditing={!isLoading}
-      />
+        };
+        console.log('Passing data to Basics component:', basicsData);
+        return (
+          <Basics
+            data={basicsData}
+            onChange={handleBasicsChange}
+            isEditing={!isLoading}
+          />
+        );
+      })()}
 
       {/* Job Details Section */}
       <JobDetails
@@ -188,7 +259,7 @@ export function CoverLetterForm({ onSubmit, onGenerate, isLoading, isGenerating,
           
           <div className="flex gap-3">
             <Button
-              onClick={handleSubmit}
+              onClick={onSave}
               disabled={!isFormValid || isLoading}
               variant="outline"
               className="flex-1"
