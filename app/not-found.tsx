@@ -1,25 +1,22 @@
+'use client';
+
 import Link from 'next/link';
-import { CircleIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function NotFound() {
   return (
-    <div className="flex items-center justify-center min-h-[100dvh]">
-      <div className="max-w-md space-y-8 p-4 text-center">
-        <div className="flex justify-center">
-          <CircleIcon className="size-12 text-orange-500" />
-        </div>
-        <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
-          Page Not Found
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="text-center space-y-6 px-4">
+        <h1 className="text-6xl font-bold text-gray-900">
+          404
         </h1>
-        <p className="text-base text-gray-500">
-          The page you are looking for might have been removed, had its name
-          changed, or is temporarily unavailable.
+        <p className="text-lg text-gray-600 max-w-md mx-auto">
+          Es scheint, als hättest du dich in das unbekannte digitale Reich gewagt.
         </p>
-        <Link
-          href="/"
-          className="max-w-48 mx-auto flex justify-center py-2 px-4 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-        >
-          Back to Home
+        <Link href="/dashboard">
+          <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium">
+            Zur Website zurückkehren
+          </Button>
         </Link>
       </div>
     </div>
