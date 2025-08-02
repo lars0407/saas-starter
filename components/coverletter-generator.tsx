@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CoverLetterForm } from './coverletter-form';
 import { GeneratedLetter } from './generated-letter';
 import { LoadingSkeleton } from './loading-skeleton';
 import { fetchDocument } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { Loader2, Eye, Download, Save, Sparkles } from 'lucide-react';
+import { useDocumentDownload } from '@/hooks/use-document-download';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -107,9 +108,10 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const [pdfGenerationStatus, setPdfGenerationStatus] = useState<'idle' | 'generating' | 'ready' | 'error'>('idle');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [currentDocument, setCurrentDocument] = useState<any>(null);
   const [currentDocumentId, setCurrentDocumentId] = useState<number | null>(documentId || null);
+  
+  // Use the document download hook
+  const { downloadDocument, isLoading: isDownloading } = useDocumentDownload();
 
   useEffect(() => {
     setIsClient(true);
@@ -119,6 +121,28 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
     console.log('Form data changed in generator:', data);
     setFormData(data);
   }, []);
+
+  // Create document object for download functionality - memoized to prevent unnecessary re-renders
+  const currentDocument = React.useMemo(() => {
+    if (!currentDocumentId) return null;
+    return {
+      id: currentDocumentId,
+      created_at: Date.now(),
+      updated_at: Date.now(),
+      type: 'cover letter' as const,
+      preview_link: generatedPdfUrl || '',
+      name: formData.senderName || 'Anschreiben',
+      storage_path: '',
+      variant: 'human' as const,
+      url: generatedPdfUrl || ''
+    };
+  }, [currentDocumentId, formData.senderName, generatedPdfUrl]);
+
+  const handleDownloadCoverLetter = useCallback(() => {
+    if (currentDocument) {
+      downloadDocument(currentDocument);
+    }
+  }, [currentDocument, downloadDocument]);
 
   const loadExistingDocument = useCallback(async () => {
     if (!documentId) return;
@@ -191,6 +215,16 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
             content: content.generated_content,
             timestamp: new Date(document.updated_at || Date.now()),
           });
+        }
+        
+        // Load existing PDF if available
+        // Check for top-level download_link.url (Azure blob)
+        const downloadUrl = response.download_link?.url || document.download_link;
+        
+        if (downloadUrl) {
+          // Use direct URL - simpler and more reliable
+          setGeneratedPdfUrl(downloadUrl);
+          setPdfGenerationStatus('ready');
         }
         
         toast.success('Anschreiben erfolgreich geladen! 📄');
@@ -384,21 +418,6 @@ ${data.senderName || '[Ihr Name]'}`;
     }
   };
 
-  const handleDownloadCoverLetter = () => {
-    if (generatedPdfUrl && typeof window !== 'undefined') {
-      setIsDownloading(true);
-      // Create a temporary link to download the PDF
-      const link = document.createElement('a');
-      link.href = generatedPdfUrl;
-      link.download = 'anschreiben.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setIsDownloading(false);
-      toast.success('Download gestartet! 📄');
-    }
-  };
-
   const handleSave = async () => {
     try {
       setIsLoading(true);
@@ -473,8 +492,7 @@ ${data.senderName || '[Ihr Name]'}`;
         }
       }
 
-      setCurrentDocument(response);
-      toast.success('Anschreiben erfolgreich gespeichert! 💾');
+             toast.success('Anschreiben erfolgreich gespeichert! 💾');
     } catch (error) {
       console.error('Error saving cover letter:', error);
       toast.error('Fehler beim Speichern des Anschreibens');
