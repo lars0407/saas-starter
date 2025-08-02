@@ -45,14 +45,14 @@ export function Content({ data, onChange, isEditing }: ContentProps) {
           <Label htmlFor="customContent" className="text-sm font-medium">
             Anschreiben Inhalt 📝
           </Label>
-          <Textarea
-            id="customContent"
-            value={formData.customContent}
-            onChange={(e) => handleInputChange('customContent', e.target.value)}
-            placeholder="Schreiben Sie hier Ihr Anschreiben..."
-            className="min-h-[300px] resize-none"
-            disabled={!isEditing}
-          />
+                     <Textarea
+             id="customContent"
+             value={formData.customContent}
+             onChange={(e) => handleInputChange('customContent', e.target.value)}
+             placeholder="Schreiben Sie hier Ihr Anschreiben..."
+             className="min-h-[300px] resize-none"
+             disabled={!isEditing}
+           />
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <p>
               Schreiben Sie Ihr Anschreiben direkt hier

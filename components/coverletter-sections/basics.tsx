@@ -60,7 +60,6 @@ export function Basics({ data, onChange, isEditing }: BasicsProps) {
             value={formData.senderName}
             onChange={(e) => handleInputChange('senderName', e.target.value)}
             disabled={!isEditing}
-            className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
           />
         </div>
 
@@ -75,7 +74,6 @@ export function Basics({ data, onChange, isEditing }: BasicsProps) {
             value={formData.senderPhone}
             onChange={(e) => handleInputChange('senderPhone', e.target.value)}
             disabled={!isEditing}
-            className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
           />
         </div>
 
@@ -91,7 +89,6 @@ export function Basics({ data, onChange, isEditing }: BasicsProps) {
             value={formData.senderEmail}
             onChange={(e) => handleInputChange('senderEmail', e.target.value)}
             disabled={!isEditing}
-            className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
           />
         </div>
 
@@ -112,7 +109,6 @@ export function Basics({ data, onChange, isEditing }: BasicsProps) {
                 value={formData.senderStreet}
                 onChange={(e) => handleInputChange('senderStreet', e.target.value)}
                 disabled={!isEditing}
-                className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
               />
             </div>
 
@@ -128,7 +124,6 @@ export function Basics({ data, onChange, isEditing }: BasicsProps) {
                   value={formData.senderPostcode}
                   onChange={(e) => handleInputChange('senderPostcode', e.target.value)}
                   disabled={!isEditing}
-                  className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
                 />
               </div>
               <div className="space-y-1">
@@ -141,7 +136,6 @@ export function Basics({ data, onChange, isEditing }: BasicsProps) {
                   value={formData.senderCity}
                   onChange={(e) => handleInputChange('senderCity', e.target.value)}
                   disabled={!isEditing}
-                  className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
                 />
               </div>
             </div>
@@ -157,7 +151,6 @@ export function Basics({ data, onChange, isEditing }: BasicsProps) {
                 value={formData.senderCountry}
                 onChange={(e) => handleInputChange('senderCountry', e.target.value)}
                 disabled={!isEditing}
-                className="focus:border-[#0F973D] focus:ring-[#0F973D]/20"
               />
             </div>
           </div>

@@ -295,7 +295,7 @@ ${data.senderName || '[Ihr Name]'}`;
   }
 
   return (
-    <div className="h-full flex flex-col lg:flex-row gap-6">
+    <div className="h-full flex flex-col lg:flex-row gap-6 coverletter-generator">
       {/* Left Column - Form */}
       <div className="lg:w-1/2 flex flex-col min-h-0">
         <div className="flex-1 overflow-y-auto pr-2 min-h-0">
