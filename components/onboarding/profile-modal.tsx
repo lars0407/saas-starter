@@ -19,7 +19,7 @@ import { Certifications } from "@/components/resume-sections/certifications"
 import { Courses } from "@/components/resume-sections/courses"
 import { Publications } from "@/components/resume-sections/publications"
 import { Interests } from "@/components/resume-sections/interests"
-import { User, GraduationCap, Briefcase, Zap, Award, BookOpen, Heart } from "lucide-react"
+import { User, GraduationCap, Briefcase, Zap, Award, BookOpen, Heart, AlertTriangle } from "lucide-react"
 
 // Import interfaces
 interface PersonalInfoData {
@@ -86,6 +86,7 @@ export function ProfileModal({
   onComplete,
 }: ProfileModalProps) {
   const [activeTab, setActiveTab] = useState("personal")
+  const [showSkipConfirmation, setShowSkipConfirmation] = useState(false)
 
   // Profile data state
   const [personalInfo, setPersonalInfo] = useState<PersonalInfoData>({
@@ -157,9 +158,22 @@ export function ProfileModal({
     onComplete(profileData)
   }
 
+  const handleSkip = () => {
+    setShowSkipConfirmation(true)
+  }
+
+  const handleSkipConfirm = () => {
+    setShowSkipConfirmation(false)
+    onComplete({ method: 'skipped' })
+  }
+
+  const handleSkipCancel = () => {
+    setShowSkipConfirmation(false)
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={() => {}}>
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-gray-900">
             Profil erstellen
@@ -192,89 +206,94 @@ export function ProfileModal({
 
             <div className="mt-6">
               <TabsContent value="personal">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <User className="h-5 w-5" />
-                      Persönliche Informationen
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <PersonalInfo 
-                      data={personalInfo} 
-                      onChange={handlePersonalInfoChange} 
-                      isEditing={true} 
-                    />
-                  </CardContent>
-                </Card>
+                <PersonalInfo 
+                  data={personalInfo} 
+                  onChange={handlePersonalInfoChange} 
+                  isEditing={true} 
+                />
               </TabsContent>
 
               <TabsContent value="education">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <GraduationCap className="h-5 w-5" />
-                      Ausbildung
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Education 
-                      data={education} 
-                      onChange={handleEducationChange} 
-                      isEditing={true} 
-                    />
-                  </CardContent>
-                </Card>
+                <Education 
+                  data={education} 
+                  onChange={handleEducationChange} 
+                  isEditing={true} 
+                />
               </TabsContent>
 
               <TabsContent value="experience">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Briefcase className="h-5 w-5" />
-                      Berufserfahrung
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Experience 
-                      data={experience} 
-                      onChange={handleExperienceChange} 
-                      isEditing={true} 
-                    />
-                  </CardContent>
-                </Card>
+                <Experience 
+                  data={experience} 
+                  onChange={handleExperienceChange} 
+                  isEditing={true} 
+                />
               </TabsContent>
 
               <TabsContent value="skills">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Zap className="h-5 w-5" />
-                      Fähigkeiten
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Skills 
-                      data={skills} 
-                      onChange={handleSkillsChange} 
-                      isEditing={true} 
-                    />
-                  </CardContent>
-                </Card>
+                <Skills 
+                  data={skills} 
+                  onChange={handleSkillsChange} 
+                  isEditing={true} 
+                />
               </TabsContent>
             </div>
           </Tabs>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
-            Abbrechen
+        <div className="flex justify-between mt-6 pt-4 border-t">
+          <Button variant="outline" onClick={handleSkip} className="text-gray-600 hover:text-gray-800">
+            Überspringen
           </Button>
           <Button onClick={handleSave} className="bg-[#0F973D] hover:bg-[#0D7A32] text-white">
             Profil speichern
           </Button>
         </div>
       </DialogContent>
+
+      {/* Skip Confirmation Modal */}
+      <Dialog open={showSkipConfirmation} onOpenChange={handleSkipCancel}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-yellow-600" />
+              </div>
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                Moment mal! 🤔
+              </DialogTitle>
+            </div>
+                         <div className="text-gray-600 text-left">
+               <div className="mb-4">
+                 <strong>Hey, bevor du das überspringst:</strong>
+               </div>
+               <div className="mb-3">
+                 Dein Profil ist <span className="font-semibold text-[#0F973D]">super wichtig</span> für unsere KI! 🤖✨
+               </div>
+               <div className="mb-3">
+                 <strong>Warum?</strong> Ohne deine Infos kann die KI:
+               </div>
+               <ul className="list-disc list-inside space-y-1 mb-4 text-sm">
+                 <li>❌ Keine personalisierten Job-Vorschläge machen</li>
+                 <li>❌ Deine Skills nicht richtig einschätzen</li>
+                 <li>❌ Passende Anschreiben generieren</li>
+                 <li>❌ Deine Erfahrung berücksichtigen</li>
+               </ul>
+               <div className="text-sm text-gray-500">
+                 <strong>Pro-Tipp:</strong> Nimm dir 2-3 Minuten Zeit - es lohnt sich! 💪
+               </div>
+             </div>
+          </DialogHeader>
+
+          <div className="flex gap-3 mt-6">
+            <Button variant="outline" onClick={handleSkipCancel} className="flex-1">
+              Zurück zum Profil
+            </Button>
+            <Button onClick={handleSkipConfirm} variant="destructive" className="flex-1">
+              Trotzdem überspringen
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   )
 } 
