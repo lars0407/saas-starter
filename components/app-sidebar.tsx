@@ -79,21 +79,33 @@ const data = {
   ],
   navMain: [
             {
-          title: "Dashboard",
+          title: "Jobjäger",
+          url: "/dashboard/agent",
+          icon: Bot,
+          isActive: false,
+          items: [
+            {
+              title: "Übersicht",
+              url: "/dashboard/agent",
+            },
+          ],
+        },
+        {
+          title: "Jobsuche",
           url: "/dashboard",
           icon: SquareTerminal,
           isActive: true,
           items: [
             {
-              title: "Overview",
+              title: "Klassisch",
               url: "/dashboard",
             },
             {
-              title: "Security",
+              title: "KI Suche",
               url: "/dashboard/security",
             },
             {
-              title: "Activity",
+              title: "Empfehlungen",
               url: "/dashboard/activity",
             },
           ],
