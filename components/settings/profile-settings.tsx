@@ -7,11 +7,15 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
-import { User, Save, FileText, GraduationCap, Briefcase, Zap } from "lucide-react"
+import { User, Save, FileText, GraduationCap, Briefcase, Zap, Award, BookOpen, FileText as FileTextIcon, Heart } from "lucide-react"
 import { PersonalInfo } from "@/components/resume-sections/personal-info"
 import { Education } from "@/components/resume-sections/education"
 import { Experience } from "@/components/resume-sections/experience"
 import { Skills } from "@/components/resume-sections/skills"
+import { Certifications } from "@/components/resume-sections/certifications"
+import { Courses } from "@/components/resume-sections/courses"
+import { Publications } from "@/components/resume-sections/publications"
+import { Interests } from "@/components/resume-sections/interests"
 
 // Import the interfaces from the resume sections
 interface PersonalInfoData {
@@ -61,6 +65,12 @@ interface Skill {
   level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
 }
 
+// Import interfaces from the new components
+import type { CertificationEntry } from "@/components/resume-sections/certifications"
+import type { CourseEntry } from "@/components/resume-sections/courses"
+import type { PublicationEntry } from "@/components/resume-sections/publications"
+import type { InterestEntry } from "@/components/resume-sections/interests"
+
 export function ProfileSettings() {
   const [isLoading, setIsLoading] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
@@ -84,6 +94,10 @@ export function ProfileSettings() {
   const [education, setEducation] = useState<EducationEntry[]>([])
   const [experience, setExperience] = useState<ExperienceEntry[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
+  const [certifications, setCertifications] = useState<CertificationEntry[]>([])
+  const [courses, setCourses] = useState<CourseEntry[]>([])
+  const [publications, setPublications] = useState<PublicationEntry[]>([])
+  const [interests, setInterests] = useState<InterestEntry[]>([])
 
   const handleSave = async () => {
     setIsLoading(true)
@@ -118,6 +132,26 @@ export function ProfileSettings() {
 
   const handleSkillsChange = (data: Skill[]) => {
     setSkills(data)
+    setHasChanges(true)
+  }
+
+  const handleCertificationsChange = (data: CertificationEntry[]) => {
+    setCertifications(data)
+    setHasChanges(true)
+  }
+
+  const handleCoursesChange = (data: CourseEntry[]) => {
+    setCourses(data)
+    setHasChanges(true)
+  }
+
+  const handlePublicationsChange = (data: PublicationEntry[]) => {
+    setPublications(data)
+    setHasChanges(true)
+  }
+
+  const handleInterestsChange = (data: InterestEntry[]) => {
+    setInterests(data)
     setHasChanges(true)
   }
 
@@ -200,6 +234,86 @@ export function ProfileSettings() {
             <Skills 
               data={skills} 
               onChange={handleSkillsChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+
+        {/* Certifications Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Award className="h-5 w-5" />
+              Zertifikate & Qualifikationen
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Deine beruflichen Zertifikate und Qualifikationen
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Certifications 
+              data={certifications} 
+              onChange={handleCertificationsChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+
+        {/* Courses Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Kurse & Weiterbildung
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Deine absolvierten Kurse und Weiterbildungen
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Courses 
+              data={courses} 
+              onChange={handleCoursesChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+
+        {/* Publications Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <FileTextIcon className="h-5 w-5" />
+              Publikationen & Veröffentlichungen
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Deine wissenschaftlichen und beruflichen Publikationen
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Publications 
+              data={publications} 
+              onChange={handlePublicationsChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+
+        {/* Interests Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Heart className="h-5 w-5" />
+              Interessen & Hobbys
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Deine persönlichen Interessen und Hobbys
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Interests 
+              data={interests} 
+              onChange={handleInterestsChange} 
               isEditing={true} 
             />
           </CardContent>

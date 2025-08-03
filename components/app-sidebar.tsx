@@ -13,6 +13,7 @@ import {
   Settings2,
   SquareTerminal,
   Kanban,
+  User,
 } from "lucide-react"
 import useSWR from 'swr'
 import { useState } from 'react'
@@ -143,14 +144,21 @@ const data = {
       ],
     },
     {
+      title: "Profil",
+      url: "/dashboard/profile",
+      icon: User,
+      items: [
+        {
+          title: "Übersicht",
+          url: "/dashboard/profile",
+        },
+      ],
+    },
+    {
       title: "Settings",
       url: "/dashboard/settings",
       icon: Settings2,
       items: [
-        {
-          title: "Profil",
-          url: "/dashboard/settings",
-        },
         {
           title: "Passwort",
           url: "/dashboard/settings",

@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { 
-  User, 
   Lock, 
   Bell, 
   Shield, 
@@ -18,12 +17,6 @@ interface SettingsSidebarProps {
 }
 
 const settingsSections = [
-  {
-    id: "profile",
-    label: "Profil",
-    description: "Dein Profil – fresh updaten ✨",
-    icon: User
-  },
   {
     id: "password",
     label: "Passwort",

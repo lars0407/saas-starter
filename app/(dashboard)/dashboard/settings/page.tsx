@@ -5,24 +5,16 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ProfileSettings } from "@/components/settings/profile-settings"
 import { PasswordSettings } from "@/components/settings/password-settings"
 import { NotificationSettings } from "@/components/settings/notification-settings"
 import { PrivacySettings } from "@/components/settings/privacy-settings"
 import { LanguageSettings } from "@/components/settings/language-settings"
 import { AiSettings } from "@/components/settings/ai-settings"
-import { User, Lock, Bell, Shield, Globe, Bot } from "lucide-react"
+import { Lock, Bell, Shield, Globe, Bot } from "lucide-react"
 
-type SettingsSection = "profile" | "password" | "notifications" | "privacy" | "language" | "ai"
+type SettingsSection = "password" | "notifications" | "privacy" | "language" | "ai"
 
 const settingsTabs = [
-  {
-    id: "profile" as SettingsSection,
-    label: "Profil",
-    icon: User,
-    headerTitle: "Dein Profil – fresh updaten ✨",
-    headerDescription: "Hier kannst du deine persönlichen Daten anpassen. Alles safe und vertraulich! 🔒"
-  },
   {
     id: "password" as SettingsSection,
     label: "Passwort",
@@ -61,7 +53,7 @@ const settingsTabs = [
 ]
 
 export default function SettingsPage() {
-  const [activeSection, setActiveSection] = useState<SettingsSection>("profile")
+  const [activeSection, setActiveSection] = useState<SettingsSection>("password")
 
   const currentTab = settingsTabs.find(tab => tab.id === activeSection) || settingsTabs[0]
 
@@ -96,7 +88,7 @@ export default function SettingsPage() {
 
       {/* Tab Navigation */}
       <Tabs value={activeSection} onValueChange={(value) => setActiveSection(value as SettingsSection)} className="w-full">
-        <TabsList className="grid w-full grid-cols-6 mb-6">
+        <TabsList className="grid w-full grid-cols-5 mb-6">
           {settingsTabs.map((tab) => {
             const Icon = tab.icon
             return (
@@ -107,10 +99,6 @@ export default function SettingsPage() {
             )
           })}
         </TabsList>
-
-        <TabsContent value="profile" className="mt-0">
-          <ProfileSettings />
-        </TabsContent>
         
         <TabsContent value="password" className="mt-0">
           <PasswordSettings />
