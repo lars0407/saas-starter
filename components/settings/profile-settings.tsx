@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import { User, Save, FileText, GraduationCap, Briefcase, Zap, Award, BookOpen, FileText as FileTextIcon, Heart } from "lucide-react"
 import { PersonalInfo } from "@/components/resume-sections/personal-info"
@@ -76,6 +77,17 @@ export function ProfileSettings() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [hasChanges, setHasChanges] = useState(false)
+  const [activeTab, setActiveTab] = useState("personal")
+
+  // Refs for scrolling to sections
+  const personalRef = useRef<HTMLDivElement>(null)
+  const educationRef = useRef<HTMLDivElement>(null)
+  const experienceRef = useRef<HTMLDivElement>(null)
+  const skillsRef = useRef<HTMLDivElement>(null)
+  const certificationsRef = useRef<HTMLDivElement>(null)
+  const coursesRef = useRef<HTMLDivElement>(null)
+  const publicationsRef = useRef<HTMLDivElement>(null)
+  const interestsRef = useRef<HTMLDivElement>(null)
 
   // Resume data state
   const [personalInfo, setPersonalInfo] = useState<PersonalInfoData>({
@@ -465,6 +477,28 @@ export function ProfileSettings() {
     setHasChanges(true)
   }
 
+  const scrollToSection = (sectionId: string) => {
+    const refs: { [key: string]: React.RefObject<HTMLDivElement | null> } = {
+      personal: personalRef,
+      education: educationRef,
+      experience: experienceRef,
+      skills: skillsRef,
+      certifications: certificationsRef,
+      courses: coursesRef,
+      publications: publicationsRef,
+      interests: interestsRef,
+    }
+
+    const ref = refs[sectionId]
+    if (ref?.current) {
+      ref.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      })
+    }
+    setActiveTab(sectionId)
+  }
+
   if (isLoadingData) {
     return (
       <div className="profile-settings space-y-6">
@@ -480,141 +514,197 @@ export function ProfileSettings() {
 
   return (
     <div className="profile-settings space-y-6">
+      {/* Tab Navigation */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 pb-4">
+        <Tabs value={activeTab} onValueChange={scrollToSection} className="w-full">
+          <TabsList className="grid w-full grid-cols-8">
+            <TabsTrigger value="personal" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Persönlich
+            </TabsTrigger>
+            <TabsTrigger value="education" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Ausbildung
+            </TabsTrigger>
+            <TabsTrigger value="experience" className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              Erfahrung
+            </TabsTrigger>
+            <TabsTrigger value="skills" className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Skills
+            </TabsTrigger>
+            <TabsTrigger value="certifications" className="flex items-center gap-2">
+              <Award className="h-4 w-4" />
+              Zertifikate
+            </TabsTrigger>
+            <TabsTrigger value="courses" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Kurse
+            </TabsTrigger>
+            <TabsTrigger value="publications" className="flex items-center gap-2">
+              <FileTextIcon className="h-4 w-4" />
+              Publikationen
+            </TabsTrigger>
+            <TabsTrigger value="interests" className="flex items-center gap-2">
+              <Heart className="h-4 w-4" />
+              Interessen
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       {/* Personal Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Persönliche Informationen
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PersonalInfo 
-            data={personalInfo} 
-            onChange={handlePersonalInfoChange} 
-            isEditing={true} 
-          />
-        </CardContent>
-      </Card>
+      <div ref={personalRef}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Persönliche Informationen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PersonalInfo 
+              data={personalInfo} 
+              onChange={handlePersonalInfoChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Education */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5" />
-            Ausbildung
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Education 
-            data={education} 
-            onChange={handleEducationChange} 
-            isEditing={true} 
-          />
-        </CardContent>
-      </Card>
+      <div ref={educationRef}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5" />
+              Ausbildung
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Education 
+              data={education} 
+              onChange={handleEducationChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Experience */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5" />
-            Berufserfahrung
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Experience 
-            data={experience} 
-            onChange={handleExperienceChange} 
-            isEditing={true} 
-          />
-        </CardContent>
-      </Card>
+      <div ref={experienceRef}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5" />
+              Berufserfahrung
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Experience 
+              data={experience} 
+              onChange={handleExperienceChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Skills */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Fähigkeiten
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Skills 
-            data={skills} 
-            onChange={handleSkillsChange} 
-            isEditing={true} 
-          />
-        </CardContent>
-      </Card>
+      <div ref={skillsRef}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              Fähigkeiten
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Skills 
+              data={skills} 
+              onChange={handleSkillsChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Certifications */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Award className="h-5 w-5" />
-            Zertifikate
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Certifications 
-            data={certifications} 
-            onChange={handleCertificationsChange} 
-            isEditing={true} 
-          />
-        </CardContent>
-      </Card>
+      <div ref={certificationsRef}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5" />
+              Zertifikate
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Certifications 
+              data={certifications} 
+              onChange={handleCertificationsChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Courses */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Kurse & Weiterbildung
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Courses 
-            data={courses} 
-            onChange={handleCoursesChange} 
-            isEditing={true} 
-          />
-        </CardContent>
-      </Card>
+      <div ref={coursesRef}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Kurse & Weiterbildung
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Courses 
+              data={courses} 
+              onChange={handleCoursesChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Publications */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileTextIcon className="h-5 w-5" />
-            Publikationen & Veröffentlichungen
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Publications 
-            data={publications} 
-            onChange={handlePublicationsChange} 
-            isEditing={true} 
-          />
-        </CardContent>
-      </Card>
+      <div ref={publicationsRef}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileTextIcon className="h-5 w-5" />
+              Publikationen & Veröffentlichungen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Publications 
+              data={publications} 
+              onChange={handlePublicationsChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Interests */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Heart className="h-5 w-5" />
-            Interessen
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Interests 
-            data={interests} 
-            onChange={handleInterestsChange} 
-            isEditing={true} 
-          />
-        </CardContent>
-      </Card>
+      <div ref={interestsRef}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Heart className="h-5 w-5" />
+              Interessen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Interests 
+              data={interests} 
+              onChange={handleInterestsChange} 
+              isEditing={true} 
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Save Button */}
       <div className="flex justify-center">
