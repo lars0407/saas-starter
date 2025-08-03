@@ -106,6 +106,14 @@
     border-color: #0F973D !important;
     box-shadow: 0 0 0 3px rgba(15, 151, 61, 0.5) !important;
   }
+
+  /* Profile Page Input Focus Styles */
+  .profile-settings input:focus-visible,
+  .profile-settings textarea:focus-visible,
+  .profile-settings select:focus-visible {
+    border-color: #0F973D !important;
+    box-shadow: 0 0 0 3px rgba(15, 151, 61, 0.5) !important;
+  }
 }
 
 @layer base {

@@ -22,10 +22,7 @@ export interface CertificationEntry {
   name: string;
   issuer: string;
   issueDate: string;
-  expiryDate?: string;
-  credentialId?: string;
   description?: string;
-  url?: string;
 }
 
 interface CertificationsProps {
@@ -40,10 +37,7 @@ export function Certifications({ data, onChange, isEditing }: CertificationsProp
     name: '',
     issuer: '',
     issueDate: '',
-    expiryDate: '',
-    credentialId: '',
-    description: '',
-    url: ''
+    description: ''
   });
 
   const handleAdd = () => {
@@ -56,10 +50,7 @@ export function Certifications({ data, onChange, isEditing }: CertificationsProp
       name: newCertification.name,
       issuer: newCertification.issuer,
       issueDate: newCertification.issueDate,
-      expiryDate: newCertification.expiryDate || undefined,
-      credentialId: newCertification.credentialId || undefined,
-      description: newCertification.description || undefined,
-      url: newCertification.url || undefined
+      description: newCertification.description || undefined
     };
 
     onChange([...data, certification]);
@@ -67,10 +58,7 @@ export function Certifications({ data, onChange, isEditing }: CertificationsProp
       name: '',
       issuer: '',
       issueDate: '',
-      expiryDate: '',
-      credentialId: '',
-      description: '',
-      url: ''
+      description: ''
     });
   };
 
@@ -105,18 +93,12 @@ export function Certifications({ data, onChange, isEditing }: CertificationsProp
                     <div className="flex items-center gap-2 mb-2">
                       <Award className="h-4 w-4 text-green-600" />
                       <h3 className="font-medium">{certification.name}</h3>
-                      {certification.credentialId && (
-                        <Badge variant="secondary" className="text-xs">
-                          ID: {certification.credentialId}
-                        </Badge>
-                      )}
                     </div>
                     <p className="text-sm text-muted-foreground mb-1">
                       Ausgestellt von: {certification.issuer}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Ausgestellt: {formatDate(certification.issueDate)}
-                      {certification.expiryDate && ` • Gültig bis: ${formatDate(certification.expiryDate)}`}
                     </p>
                     {certification.description && (
                       <p className="text-sm mt-2">{certification.description}</p>
@@ -163,44 +145,13 @@ export function Certifications({ data, onChange, isEditing }: CertificationsProp
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="cert-issue-date">Ausstellungsdatum *</Label>
-              <Input
-                id="cert-issue-date"
-                type="date"
-                value={newCertification.issueDate}
-                onChange={(e) => setNewCertification({ ...newCertification, issueDate: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cert-expiry-date">Ablaufdatum</Label>
-              <Input
-                id="cert-expiry-date"
-                type="date"
-                value={newCertification.expiryDate}
-                onChange={(e) => setNewCertification({ ...newCertification, expiryDate: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cert-credential-id">Zertifikats-ID</Label>
-              <Input
-                id="cert-credential-id"
-                value={newCertification.credentialId}
-                onChange={(e) => setNewCertification({ ...newCertification, credentialId: e.target.value })}
-                placeholder="z.B. AWS-123456"
-              />
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <Label htmlFor="cert-url">Verifizierungs-URL</Label>
+            <Label htmlFor="cert-issue-date">Ausstellungsdatum *</Label>
             <Input
-              id="cert-url"
-              type="url"
-              value={newCertification.url}
-              onChange={(e) => setNewCertification({ ...newCertification, url: e.target.value })}
-              placeholder="https://verify.credential.com/..."
+              id="cert-issue-date"
+              type="date"
+              value={newCertification.issueDate}
+              onChange={(e) => setNewCertification({ ...newCertification, issueDate: e.target.value })}
             />
           </div>
 
@@ -218,7 +169,7 @@ export function Certifications({ data, onChange, isEditing }: CertificationsProp
           <Button 
             onClick={handleAdd}
             disabled={!newCertification.name || !newCertification.issuer || !newCertification.issueDate}
-            className="w-full"
+            className="w-full bg-green-600 hover:bg-green-700"
           >
             <Plus className="mr-2 h-4 w-4" />
             Zertifikat hinzufügen
@@ -286,38 +237,12 @@ function CertificationEditCard({ certification, isEditing, onEdit, onSave, onDel
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Ausstellungsdatum</Label>
-              <Input
-                type="date"
-                value={formData.issueDate}
-                onChange={(e) => setFormData({ ...formData, issueDate: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Ablaufdatum</Label>
-              <Input
-                type="date"
-                value={formData.expiryDate || ''}
-                onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value || undefined })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Zertifikats-ID</Label>
-              <Input
-                value={formData.credentialId || ''}
-                onChange={(e) => setFormData({ ...formData, credentialId: e.target.value || undefined })}
-              />
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <Label>Verifizierungs-URL</Label>
+            <Label>Ausstellungsdatum</Label>
             <Input
-              type="url"
-              value={formData.url || ''}
-              onChange={(e) => setFormData({ ...formData, url: e.target.value || undefined })}
+              type="date"
+              value={formData.issueDate}
+              onChange={(e) => setFormData({ ...formData, issueDate: e.target.value })}
             />
           </div>
 
@@ -331,7 +256,7 @@ function CertificationEditCard({ certification, isEditing, onEdit, onSave, onDel
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={handleSave} size="sm">
+            <Button onClick={handleSave} size="sm" className="bg-green-600 hover:bg-green-700">
               <Edit2 className="mr-2 h-4 w-4" />
               Speichern
             </Button>
@@ -356,18 +281,12 @@ function CertificationEditCard({ certification, isEditing, onEdit, onSave, onDel
           <div className="flex items-center gap-2 mb-2">
             <Award className="h-4 w-4 text-green-600" />
             <h3 className="font-medium">{certification.name}</h3>
-            {certification.credentialId && (
-              <Badge variant="secondary" className="text-xs">
-                ID: {certification.credentialId}
-              </Badge>
-            )}
           </div>
           <p className="text-sm text-muted-foreground mb-1">
             Ausgestellt von: {certification.issuer}
           </p>
           <p className="text-sm text-muted-foreground">
             Ausgestellt: {formatDate(certification.issueDate)}
-            {certification.expiryDate && ` • Gültig bis: ${formatDate(certification.expiryDate)}`}
           </p>
           {certification.description && (
             <p className="text-sm mt-2">{certification.description}</p>

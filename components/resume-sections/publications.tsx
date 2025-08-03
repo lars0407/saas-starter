@@ -40,7 +40,6 @@ export interface PublicationEntry {
   doi?: string;
   url?: string;
   abstract?: string;
-  keywords?: string[];
   type: 'article' | 'book' | 'conference' | 'thesis' | 'patent' | 'other';
 }
 
@@ -61,7 +60,6 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
     doi: '',
     url: '',
     abstract: '',
-    keywords: [],
     type: 'article'
   });
 
@@ -80,7 +78,6 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
       doi: newPublication.doi || undefined,
       url: newPublication.url || undefined,
       abstract: newPublication.abstract || undefined,
-      keywords: newPublication.keywords || [],
       type: newPublication.type || 'article'
     };
 
@@ -94,7 +91,6 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
       doi: '',
       url: '',
       abstract: '',
-      keywords: [],
       type: 'article'
     });
   };
@@ -144,15 +140,6 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
                     </p>
                     {publication.abstract && (
                       <p className="text-sm mt-2">{publication.abstract}</p>
-                    )}
-                    {publication.keywords && publication.keywords.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {publication.keywords.map((keyword, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {keyword}
-                          </Badge>
-                        ))}
-                      </div>
                     )}
                     {(publication.doi || publication.url) && (
                       <div className="flex gap-2 mt-2">
@@ -304,23 +291,10 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="pub-keywords">Schlagwörter</Label>
-            <Input
-              id="pub-keywords"
-              value={newPublication.keywords?.join(', ') || ''}
-              onChange={(e) => setNewPublication({ 
-                ...newPublication, 
-                keywords: e.target.value.split(',').map(keyword => keyword.trim()).filter(Boolean)
-              })}
-              placeholder="Schlagwörter (durch Kommas getrennt)"
-            />
-          </div>
-
           <Button 
             onClick={handleAdd}
             disabled={!newPublication.title || !newPublication.authors || !newPublication.publicationDate}
-            className="w-full"
+            className="w-full bg-green-600 hover:bg-green-700"
           >
             <Plus className="mr-2 h-4 w-4" />
             Publikation hinzufügen
@@ -458,19 +432,8 @@ function PublicationEditCard({ publication, isEditing, onEdit, onSave, onDelete 
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Schlagwörter</Label>
-            <Input
-              value={formData.keywords?.join(', ') || ''}
-              onChange={(e) => setFormData({ 
-                ...formData, 
-                keywords: e.target.value.split(',').map(keyword => keyword.trim()).filter(Boolean)
-              })}
-            />
-          </div>
-
           <div className="flex gap-2">
-            <Button onClick={handleSave} size="sm">
+            <Button onClick={handleSave} size="sm" className="bg-green-600 hover:bg-green-700">
               <Edit2 className="mr-2 h-4 w-4" />
               Speichern
             </Button>
@@ -509,15 +472,6 @@ function PublicationEditCard({ publication, isEditing, onEdit, onSave, onDelete 
           </p>
           {publication.abstract && (
             <p className="text-sm mt-2">{publication.abstract}</p>
-          )}
-          {publication.keywords && publication.keywords.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {publication.keywords.map((keyword, index) => (
-                <Badge key={index} variant="outline" className="text-xs">
-                  {keyword}
-                </Badge>
-              ))}
-            </div>
           )}
           {(publication.doi || publication.url) && (
             <div className="flex gap-2 mt-2">

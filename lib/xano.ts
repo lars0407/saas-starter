@@ -12,6 +12,12 @@ export const xanoJobtracker = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// Profile API
+export const xanoProfile = axios.create({
+  baseURL: "https://api.jobjaeger.de/api:7yCsbR9L",
+  headers: { "Content-Type": "application/json" },
+});
+
 export const loginWithXano = async (email: string, password: string) => {
   const res = await xano.post("/auth/login", { email, password });
   return res.data; // { authToken }
@@ -82,6 +88,22 @@ export const updateJobTrackerStatus = async (token: string, jobId: number, statu
 
   const res = await xanoJobtracker.post('/job_tracker/update', 
     payload,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return res.data;
+};
+
+// Profile API functions
+export const getProfile = async (token: string, profileId: number) => {
+  const res = await xanoProfile.get(`/v2/profile/${profileId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+};
+
+export const updateProfile = async (token: string, profileId: number, profileData: any) => {
+  const res = await xanoProfile.put(`/v2/profile/${profileId}`, 
+    { data: profileData },
     { headers: { Authorization: `Bearer ${token}` } }
   );
   return res.data;

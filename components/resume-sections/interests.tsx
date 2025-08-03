@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X, Edit2, Trash2, Heart } from 'lucide-react';
 
-// Helper functions
+// Helper function
 const getCategoryLabel = (category: string) => {
   const labels = {
     hobby: 'Hobby',
@@ -26,34 +26,11 @@ const getCategoryLabel = (category: string) => {
   return labels[category as keyof typeof labels] || category;
 };
 
-const getLevelLabel = (level: string) => {
-  const labels = {
-    beginner: 'Anfänger',
-    intermediate: 'Fortgeschritten',
-    advanced: 'Erweitert',
-    expert: 'Experte'
-  };
-  return labels[level as keyof typeof labels] || level;
-};
-
-const getLevelColor = (level: string) => {
-  const colors = {
-    beginner: 'bg-blue-100 text-blue-800',
-    intermediate: 'bg-green-100 text-green-800',
-    advanced: 'bg-yellow-100 text-yellow-800',
-    expert: 'bg-red-100 text-red-800'
-  };
-  return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-};
-
 export interface InterestEntry {
   id: string;
   name: string;
   category: 'hobby' | 'sport' | 'technology' | 'arts' | 'travel' | 'music' | 'reading' | 'cooking' | 'volunteering' | 'other';
   description?: string;
-  level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
-  yearsOfExperience?: number;
-  url?: string;
 }
 
 interface InterestsProps {
@@ -67,10 +44,7 @@ export function Interests({ data, onChange, isEditing }: InterestsProps) {
   const [newInterest, setNewInterest] = useState<Partial<InterestEntry>>({
     name: '',
     category: 'hobby',
-    description: '',
-    level: 'beginner',
-    yearsOfExperience: undefined,
-    url: ''
+    description: ''
   });
 
   const handleAdd = () => {
@@ -82,20 +56,14 @@ export function Interests({ data, onChange, isEditing }: InterestsProps) {
       id: Date.now().toString(),
       name: newInterest.name,
       category: newInterest.category || 'hobby',
-      description: newInterest.description || undefined,
-      level: newInterest.level || 'beginner',
-      yearsOfExperience: newInterest.yearsOfExperience || undefined,
-      url: newInterest.url || undefined
+      description: newInterest.description || undefined
     };
 
     onChange([...data, interest]);
     setNewInterest({
       name: '',
       category: 'hobby',
-      description: '',
-      level: 'beginner',
-      yearsOfExperience: undefined,
-      url: ''
+      description: ''
     });
   };
 
@@ -133,18 +101,10 @@ export function Interests({ data, onChange, isEditing }: InterestsProps) {
                       <Badge variant="secondary" className="text-xs">
                         {getCategoryLabel(interest.category)}
                       </Badge>
-                      <Badge className={`text-xs ${getLevelColor(interest.level)}`}>
-                        {getLevelLabel(interest.level)}
-                      </Badge>
                     </div>
                     {interest.description && (
-                      <p className="text-sm text-muted-foreground mb-1">
-                        {interest.description}
-                      </p>
-                    )}
-                    {interest.yearsOfExperience && (
                       <p className="text-sm text-muted-foreground">
-                        {interest.yearsOfExperience} Jahre Erfahrung
+                        {interest.description}
                       </p>
                     )}
                   </div>
@@ -199,48 +159,6 @@ export function Interests({ data, onChange, isEditing }: InterestsProps) {
               </select>
             </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="interest-level">Niveau</Label>
-              <select
-                id="interest-level"
-                value={newInterest.level}
-                onChange={(e) => setNewInterest({ ...newInterest, level: e.target.value as InterestEntry['level'] })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="beginner">Anfänger</option>
-                <option value="intermediate">Fortgeschritten</option>
-                <option value="advanced">Erweitert</option>
-                <option value="expert">Experte</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="interest-years">Jahre Erfahrung</Label>
-              <Input
-                id="interest-years"
-                type="number"
-                min="0"
-                value={newInterest.yearsOfExperience || ''}
-                onChange={(e) => setNewInterest({ 
-                  ...newInterest, 
-                  yearsOfExperience: e.target.value ? parseInt(e.target.value) : undefined 
-                })}
-                placeholder="z.B. 5"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="interest-url">Website/Portfolio</Label>
-            <Input
-              id="interest-url"
-              type="url"
-              value={newInterest.url}
-              onChange={(e) => setNewInterest({ ...newInterest, url: e.target.value })}
-              placeholder="https://..."
-            />
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="interest-description">Beschreibung</Label>
@@ -256,7 +174,7 @@ export function Interests({ data, onChange, isEditing }: InterestsProps) {
           <Button 
             onClick={handleAdd}
             disabled={!newInterest.name}
-            className="w-full"
+            className="w-full bg-green-600 hover:bg-green-700"
           >
             <Plus className="mr-2 h-4 w-4" />
             Interesse hinzufügen
@@ -335,43 +253,6 @@ function InterestEditCard({ interest, isEditing, onEdit, onSave, onDelete }: Int
               </select>
             </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Niveau</Label>
-              <select
-                value={formData.level}
-                onChange={(e) => setFormData({ ...formData, level: e.target.value as InterestEntry['level'] })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="beginner">Anfänger</option>
-                <option value="intermediate">Fortgeschritten</option>
-                <option value="advanced">Erweitert</option>
-                <option value="expert">Experte</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label>Jahre Erfahrung</Label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.yearsOfExperience || ''}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  yearsOfExperience: e.target.value ? parseInt(e.target.value) : undefined 
-                })}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Website/Portfolio</Label>
-            <Input
-              type="url"
-              value={formData.url || ''}
-              onChange={(e) => setFormData({ ...formData, url: e.target.value || undefined })}
-            />
-          </div>
 
           <div className="space-y-2">
             <Label>Beschreibung</Label>
@@ -383,7 +264,7 @@ function InterestEditCard({ interest, isEditing, onEdit, onSave, onDelete }: Int
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={handleSave} size="sm">
+            <Button onClick={handleSave} size="sm" className="bg-green-600 hover:bg-green-700">
               <Edit2 className="mr-2 h-4 w-4" />
               Speichern
             </Button>
@@ -411,18 +292,10 @@ function InterestEditCard({ interest, isEditing, onEdit, onSave, onDelete }: Int
             <Badge variant="secondary" className="text-xs">
               {getCategoryLabel(interest.category)}
             </Badge>
-            <Badge className={`text-xs ${getLevelColor(interest.level)}`}>
-              {getLevelLabel(interest.level)}
-            </Badge>
           </div>
           {interest.description && (
-            <p className="text-sm text-muted-foreground mb-1">
-              {interest.description}
-            </p>
-          )}
-          {interest.yearsOfExperience && (
             <p className="text-sm text-muted-foreground">
-              {interest.yearsOfExperience} Jahre Erfahrung
+              {interest.description}
             </p>
           )}
         </div>

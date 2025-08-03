@@ -26,7 +26,6 @@ export interface CourseEntry {
   duration?: string;
   certificate?: string;
   description?: string;
-  url?: string;
   skills?: string[];
 }
 
@@ -46,7 +45,6 @@ export function Courses({ data, onChange, isEditing }: CoursesProps) {
     duration: '',
     certificate: '',
     description: '',
-    url: '',
     skills: []
   });
 
@@ -64,7 +62,6 @@ export function Courses({ data, onChange, isEditing }: CoursesProps) {
       duration: newCourse.duration || undefined,
       certificate: newCourse.certificate || undefined,
       description: newCourse.description || undefined,
-      url: newCourse.url || undefined,
       skills: newCourse.skills || []
     };
 
@@ -77,7 +74,6 @@ export function Courses({ data, onChange, isEditing }: CoursesProps) {
       duration: '',
       certificate: '',
       description: '',
-      url: '',
       skills: []
     });
   };
@@ -211,26 +207,14 @@ export function Courses({ data, onChange, isEditing }: CoursesProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="course-certificate">Zertifikat</Label>
-              <Input
-                id="course-certificate"
-                value={newCourse.certificate}
-                onChange={(e) => setNewCourse({ ...newCourse, certificate: e.target.value })}
-                placeholder="z.B. Certificate of Completion"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="course-url">Kurs-URL</Label>
-              <Input
-                id="course-url"
-                type="url"
-                value={newCourse.url}
-                onChange={(e) => setNewCourse({ ...newCourse, url: e.target.value })}
-                placeholder="https://course.url/..."
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="course-certificate">Zertifikat</Label>
+            <Input
+              id="course-certificate"
+              value={newCourse.certificate}
+              onChange={(e) => setNewCourse({ ...newCourse, certificate: e.target.value })}
+              placeholder="z.B. Certificate of Completion"
+            />
           </div>
 
           <div className="space-y-2">
@@ -260,7 +244,7 @@ export function Courses({ data, onChange, isEditing }: CoursesProps) {
           <Button 
             onClick={handleAdd}
             disabled={!newCourse.title || !newCourse.provider || !newCourse.startDate}
-            className="w-full"
+            className="w-full bg-green-600 hover:bg-green-700"
           >
             <Plus className="mr-2 h-4 w-4" />
             Kurs hinzufügen
@@ -354,22 +338,12 @@ function CourseEditCard({ course, isEditing, onEdit, onSave, onDelete }: CourseE
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Zertifikat</Label>
-              <Input
-                value={formData.certificate || ''}
-                onChange={(e) => setFormData({ ...formData, certificate: e.target.value || undefined })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Kurs-URL</Label>
-              <Input
-                type="url"
-                value={formData.url || ''}
-                onChange={(e) => setFormData({ ...formData, url: e.target.value || undefined })}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Zertifikat</Label>
+            <Input
+              value={formData.certificate || ''}
+              onChange={(e) => setFormData({ ...formData, certificate: e.target.value || undefined })}
+            />
           </div>
 
           <div className="space-y-2">
@@ -393,7 +367,7 @@ function CourseEditCard({ course, isEditing, onEdit, onSave, onDelete }: CourseE
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={handleSave} size="sm">
+            <Button onClick={handleSave} size="sm" className="bg-green-600 hover:bg-green-700">
               <Edit2 className="mr-2 h-4 w-4" />
               Speichern
             </Button>

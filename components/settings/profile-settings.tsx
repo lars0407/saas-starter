@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +16,7 @@ import { Certifications } from "@/components/resume-sections/certifications"
 import { Courses } from "@/components/resume-sections/courses"
 import { Publications } from "@/components/resume-sections/publications"
 import { Interests } from "@/components/resume-sections/interests"
+import { getProfile, updateProfile } from "@/lib/xano"
 
 // Import the interfaces from the resume sections
 interface PersonalInfoData {
@@ -73,6 +74,7 @@ import type { InterestEntry } from "@/components/resume-sections/interests"
 
 export function ProfileSettings() {
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(true)
   const [hasChanges, setHasChanges] = useState(false)
 
   // Resume data state
@@ -99,17 +101,325 @@ export function ProfileSettings() {
   const [publications, setPublications] = useState<PublicationEntry[]>([])
   const [interests, setInterests] = useState<InterestEntry[]>([])
 
+  // Load profile data on component mount
+  useEffect(() => {
+    loadProfileData()
+  }, [])
+
+  const loadProfileData = async () => {
+    try {
+      setIsLoadingData(true)
+      
+      // Get auth token from cookies (same as other parts of the app)
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+      
+      // Debug: log what we found
+      console.log('Auth token found:', !!token)
+      
+      if (!token) {
+        console.error('No auth token found in cookies')
+        toast.error("Nicht angemeldet - Bitte melden Sie sich erneut an")
+        return
+      }
+
+      // For now, using a default profile ID of 1 - you might need to get this from user context
+      // In a real app, you might get this from the user's profile or a separate endpoint
+      const profileId = 1
+      console.log('Loading profile data for ID:', profileId)
+      
+      const profileData = await getProfile(token, profileId)
+      console.log('Profile data received:', profileData)
+      
+      // Transform API data to component format
+      transformApiDataToComponent(profileData)
+      
+    } catch (error: any) {
+      console.error('Error loading profile data:', error)
+      
+      // More specific error handling
+      if (error.response?.status === 401) {
+        toast.error("Nicht angemeldet - Bitte melden Sie sich erneut an")
+      } else if (error.response?.status === 404) {
+        toast.error("Profil nicht gefunden")
+      } else {
+        toast.error("Fehler beim Laden der Profildaten")
+      }
+    } finally {
+      setIsLoadingData(false)
+    }
+  }
+
+  const transformApiDataToComponent = (apiData: any) => {
+    // The API response now has the profile data nested under profile_data
+    const profileData = apiData.profile_data || apiData
+    
+    console.log('Transforming profile data:', profileData)
+         console.log('Skills data:', profileData.skills)
+     console.log('Skill data (alternative):', profileData.skill)
+     console.log('Experience data:', profileData.experience)
+     console.log('Courses data:', profileData.courses)
+     console.log('Publications data:', profileData.publications)
+     console.log('Interests data:', profileData.interests)
+    
+    // Transform basic profile data
+    if (profileData) {
+      // Handle the basics object if it exists
+      const basics = profileData.basics || {}
+      
+      setPersonalInfo({
+        fullName: basics.first_name && basics.surname 
+          ? `${basics.first_name} ${basics.surname}`.trim()
+          : profileData.title || '',
+        email: basics.email || '',
+        phone: basics.telephone || profileData.number || '',
+        location: profileData.residence?.place_formatted || '',
+        adresse_street: basics.adresse_street || '',
+        adresse_city: basics.adresse_city || profileData.residence?.name || '',
+        adresse_postcode: basics.adresse_postcode || '',
+        adresse_country: basics.adresse_country || profileData.residence?.country || '',
+        website: profileData.link?.find((link: any) => link.label === 'website')?.url || 
+                profileData.links?.find((link: any) => link.label === 'website')?.url || '',
+        linkedin: profileData.link?.find((link: any) => link.label === 'linkedin')?.url || 
+                 profileData.links?.find((link: any) => link.label === 'linkedin')?.url || 
+                 profileData.linkedin_url || '',
+        github: profileData.link?.find((link: any) => link.label === 'github')?.url || 
+               profileData.links?.find((link: any) => link.label === 'github')?.url || '',
+        summary: basics.description || profileData.hobby || '',
+      })
+    }
+
+    // Transform skills data
+    if (profileData.skills && Array.isArray(profileData.skills)) {
+      const transformedSkills = profileData.skills.map((skill: any, index: number) => ({
+        id: index.toString(),
+        name: typeof skill === 'string' ? skill : skill.skill || skill.name || '',
+        category: (typeof skill === 'object' && skill.label) || 'technical' as const,
+        level: 'intermediate' as const,
+      }))
+      setSkills(transformedSkills)
+    } else if (profileData.skill && Array.isArray(profileData.skill)) {
+      // Alternative field name for skills
+      const transformedSkills = profileData.skill.map((skill: any, index: number) => ({
+        id: index.toString(),
+        name: typeof skill === 'string' ? skill : skill.skill || skill.name || '',
+        category: (typeof skill === 'object' && skill.label) || 'technical' as const,
+        level: 'intermediate' as const,
+      }))
+      setSkills(transformedSkills)
+    }
+
+    // Transform education data
+    if (profileData.education && Array.isArray(profileData.education)) {
+      const transformedEducation = profileData.education.map((edu: any, index: number) => ({
+        id: index.toString(),
+        institution: edu.school || '',
+        degree: edu.degree || '',
+        field: edu.subject || '',
+        location: edu.location_city || '',
+        startDate: edu.startDate || '',
+        endDate: edu.endDate || '',
+        current: false,
+        description: edu.description || '',
+        gpa: edu.grade || '',
+      }))
+      setEducation(transformedEducation)
+    }
+
+    // Transform experience data
+    if (profileData.experience && Array.isArray(profileData.experience)) {
+      const transformedExperience = profileData.experience.map((exp: any, index: number) => ({
+        id: index.toString(),
+        company: exp.company || '',
+        position: exp.title || '',
+        location: exp.location || '',
+        startDate: exp.startDate || '',
+        endDate: exp.endDate || '',
+        current: false,
+        description: exp.description || '',
+        achievements: exp.achievements && Array.isArray(exp.achievements) ? exp.achievements : [],
+      }))
+      setExperience(transformedExperience)
+    }
+
+    // Transform certifications data
+    if (profileData.certifications && Array.isArray(profileData.certifications)) {
+      const transformedCertifications = profileData.certifications.map((cert: any, index: number) => ({
+        id: index.toString(),
+        name: cert.name || '',
+        issuer: cert.organization || '',
+        issueDate: cert.issue_date || '',
+      }))
+      setCertifications(transformedCertifications)
+    }
+
+         // Transform courses data
+     if (profileData.courses && Array.isArray(profileData.courses)) {
+       const transformedCourses = profileData.courses.map((course: any, index: number) => ({
+         id: index.toString(),
+         title: course.name || '',
+         provider: course.institution || '',
+         startDate: course.startDate || '',
+         endDate: course.endDate || '',
+         description: course.description || '',
+       }))
+       setCourses(transformedCourses)
+     }
+
+         // Transform publications data
+     if (profileData.publications && Array.isArray(profileData.publications)) {
+       const transformedPublications = profileData.publications.map((pub: any, index: number) => ({
+         id: index.toString(),
+         title: pub.title || '',
+         authors: pub.authors || '',
+         journal: pub.journal || '',
+         publicationDate: pub.year || '',
+         doi: pub.doi || '',
+         abstract: pub.description || '',
+         type: 'article' as const,
+       }))
+       setPublications(transformedPublications)
+     }
+
+    // Transform interests data
+    if (profileData.interests && Array.isArray(profileData.interests)) {
+      const transformedInterests = profileData.interests.map((interest: any, index: number) => ({
+        id: index.toString(),
+        name: interest.name || '',
+        category: interest.category || 'other',
+        description: interest.description || '',
+      }))
+      setInterests(transformedInterests)
+    }
+  }
+
+  const transformComponentDataToApi = () => {
+    // For the PUT request, we need to match the structure expected by the API
+    // Based on the original data structure you provided, we'll use that format
+    const nameParts = personalInfo.fullName.split(' ')
+    const firstName = nameParts[0] || ''
+    const surname = nameParts.slice(1).join(' ') || ''
+
+    return {
+      link: [
+        {
+          url: personalInfo.website || '',
+          label: 'website'
+        },
+        {
+          url: personalInfo.linkedin || '',
+          label: 'linkedin'
+        },
+        {
+          url: personalInfo.github || '',
+          label: 'github'
+        }
+      ].filter(link => link.url),
+      skill: skills.map(skill => ({
+        label: skill.category,
+        skill: skill.name
+      })),
+      basics: {
+        email: personalInfo.email,
+        image: "",
+        surname: surname,
+        birthdate: "",
+        telephone: personalInfo.phone || "",
+        first_name: firstName,
+        description: personalInfo.summary || "",
+        nationality: "",
+        gender: "",
+        title_after: "",
+        adresse_city: personalInfo.adresse_city,
+        title_before: "",
+        adresse_street: personalInfo.adresse_street || "",
+        adresse_country: personalInfo.adresse_country || "",
+        adresse_postcode: personalInfo.adresse_postcode || ""
+      },
+      language: [],
+      education: education.map(edu => ({
+        grade: edu.gpa || "",
+        degree: edu.degree,
+        school: edu.institution,
+        endDate: edu.endDate,
+        subject: edu.field,
+        startDate: edu.startDate,
+        description: edu.description || "",
+        location_city: edu.location,
+        location_country: ""
+      })),
+      experience: experience.map(exp => ({
+        title: exp.position,
+        company: exp.company,
+        endDate: exp.endDate,
+        location: exp.location,
+        startDate: exp.startDate,
+        description: exp.description,
+        achievements: exp.achievements
+      })),
+             certifications: certifications.map(cert => ({
+         name: cert.name,
+         organization: cert.issuer,
+         endDate: "",
+         issue_date: cert.issueDate
+       })),
+       courses: courses.map(course => ({
+         name: course.title,
+         institution: course.provider,
+         startDate: course.startDate,
+         endDate: course.endDate || "",
+         description: course.description || ""
+       })),
+       publications: publications.map(pub => ({
+         title: pub.title,
+         authors: pub.authors,
+         journal: pub.journal || "",
+         year: pub.publicationDate,
+         doi: pub.doi || "",
+         description: pub.abstract || ""
+       })),
+       interests: interests.map(interest => ({
+         name: interest.name,
+         category: interest.category,
+         description: interest.description || ""
+       }))
+    }
+  }
+
   const handleSave = async () => {
     setIsLoading(true)
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Get auth token from cookies (same as other parts of the app)
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
       
-      toast.success("Lebenslauf wurde aktualisiert. Sieht gut aus! 💅")
+      if (!token) {
+        toast.error("Nicht angemeldet - Bitte melden Sie sich erneut an")
+        return
+      }
+
+      const profileId = 1 // You might need to get this from user context
+      const apiData = transformComponentDataToApi()
+      
+      await updateProfile(token, profileId, apiData)
+      
+      toast.success("Profil erfolgreich gespeichert!")
       setHasChanges(false)
-    } catch (error) {
-      toast.error("Uups, da lief was schief. Probier's nochmal.")
+    } catch (error: any) {
+      console.error('Error saving profile:', error)
+      
+      // More specific error handling
+      if (error.response?.status === 401) {
+        toast.error("Nicht angemeldet - Bitte melden Sie sich erneut an")
+      } else if (error.response?.status === 404) {
+        toast.error("Profil nicht gefunden")
+      } else {
+        toast.error("Fehler beim Speichern des Profils")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -155,200 +465,168 @@ export function ProfileSettings() {
     setHasChanges(true)
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Resume Sections */}
-      <div className="space-y-6">
-        {/* Basics Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Basics
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Deine grundlegenden Informationen für den Lebenslauf
-            </p>
-          </CardHeader>
-          <CardContent>
-            <PersonalInfo 
-              data={personalInfo} 
-              onChange={handlePersonalInfoChange} 
-              isEditing={true} 
-            />
-          </CardContent>
-        </Card>
-
-        {/* Education Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <GraduationCap className="h-5 w-5" />
-              Ausbildung
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Deine Bildungsweg und Qualifikationen
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Education 
-              data={education} 
-              onChange={handleEducationChange} 
-              isEditing={true} 
-            />
-          </CardContent>
-        </Card>
-
-        {/* Experience Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Briefcase className="h-5 w-5" />
-              Berufserfahrung
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Deine bisherigen Arbeitserfahrungen und Positionen
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Experience 
-              data={experience} 
-              onChange={handleExperienceChange} 
-              isEditing={true} 
-            />
-          </CardContent>
-        </Card>
-
-        {/* Skills Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              Fähigkeiten & Skills
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Deine technischen und soft Skills, Sprachen und Tools
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Skills 
-              data={skills} 
-              onChange={handleSkillsChange} 
-              isEditing={true} 
-            />
-          </CardContent>
-        </Card>
-
-        {/* Certifications Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Award className="h-5 w-5" />
-              Zertifikate & Qualifikationen
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Deine beruflichen Zertifikate und Qualifikationen
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Certifications 
-              data={certifications} 
-              onChange={handleCertificationsChange} 
-              isEditing={true} 
-            />
-          </CardContent>
-        </Card>
-
-        {/* Courses Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Kurse & Weiterbildung
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Deine absolvierten Kurse und Weiterbildungen
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Courses 
-              data={courses} 
-              onChange={handleCoursesChange} 
-              isEditing={true} 
-            />
-          </CardContent>
-        </Card>
-
-        {/* Publications Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <FileTextIcon className="h-5 w-5" />
-              Publikationen & Veröffentlichungen
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Deine wissenschaftlichen und beruflichen Publikationen
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Publications 
-              data={publications} 
-              onChange={handlePublicationsChange} 
-              isEditing={true} 
-            />
-          </CardContent>
-        </Card>
-
-        {/* Interests Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Heart className="h-5 w-5" />
-              Interessen & Hobbys
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Deine persönlichen Interessen und Hobbys
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Interests 
-              data={interests} 
-              onChange={handleInterestsChange} 
-              isEditing={true} 
-            />
-          </CardContent>
-        </Card>
+  if (isLoadingData) {
+    return (
+      <div className="profile-settings space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Lade Profildaten...</p>
+          </div>
+        </div>
       </div>
+    )
+  }
+
+  return (
+    <div className="profile-settings space-y-6">
+      {/* Personal Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Persönliche Informationen
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PersonalInfo 
+            data={personalInfo} 
+            onChange={handlePersonalInfoChange} 
+            isEditing={true} 
+          />
+        </CardContent>
+      </Card>
+
+      {/* Education */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <GraduationCap className="h-5 w-5" />
+            Ausbildung
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Education 
+            data={education} 
+            onChange={handleEducationChange} 
+            isEditing={true} 
+          />
+        </CardContent>
+      </Card>
+
+      {/* Experience */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Briefcase className="h-5 w-5" />
+            Berufserfahrung
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Experience 
+            data={experience} 
+            onChange={handleExperienceChange} 
+            isEditing={true} 
+          />
+        </CardContent>
+      </Card>
+
+      {/* Skills */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Fähigkeiten
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skills 
+            data={skills} 
+            onChange={handleSkillsChange} 
+            isEditing={true} 
+          />
+        </CardContent>
+      </Card>
+
+      {/* Certifications */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Award className="h-5 w-5" />
+            Zertifikate
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Certifications 
+            data={certifications} 
+            onChange={handleCertificationsChange} 
+            isEditing={true} 
+          />
+        </CardContent>
+      </Card>
+
+      {/* Courses */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Kurse & Weiterbildung
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Courses 
+            data={courses} 
+            onChange={handleCoursesChange} 
+            isEditing={true} 
+          />
+        </CardContent>
+      </Card>
+
+      {/* Publications */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileTextIcon className="h-5 w-5" />
+            Publikationen & Veröffentlichungen
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Publications 
+            data={publications} 
+            onChange={handlePublicationsChange} 
+            isEditing={true} 
+          />
+        </CardContent>
+      </Card>
+
+      {/* Interests */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="h-5 w-5" />
+            Interessen
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Interests 
+            data={interests} 
+            onChange={handleInterestsChange} 
+            isEditing={true} 
+          />
+        </CardContent>
+      </Card>
 
       {/* Save Button */}
-      <Card>
-        <CardContent className="pt-6">
-          <Button
-            onClick={handleSave}
-            disabled={!hasChanges || isLoading}
-            className="bg-[#0F973D] hover:bg-[#0D7A32] text-white w-full"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {isLoading ? "Speichern..." : "Lebenslauf speichern"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Info Section */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="pt-6">
-          <div className="flex items-start space-x-3">
-            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-            <div>
-              <h3 className="font-medium text-blue-900">Profil-Tipp 💡</h3>
-              <p className="text-sm text-blue-700 mt-1">
-                Ein vollständiger Lebenslauf hilft der KI dabei, dir bessere Jobvorschläge zu machen. 
-                Je mehr Infos, desto smarter die Empfehlungen!
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex justify-center">
+        <Button 
+          onClick={handleSave} 
+          disabled={isLoading || !hasChanges}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <Save className="mr-2 h-4 w-4" />
+          {isLoading ? "Speichern..." : "Speichern"}
+        </Button>
+      </div>
     </div>
   )
 } 
