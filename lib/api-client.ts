@@ -273,7 +273,7 @@ export async function generateCoverLetterPDF(
     .find(row => row.startsWith('token='))
     ?.split('=')[1];
 
-  const response = await fetch("https://api.jobjaeger.de/api:SiRHLF4Y/documents/cover_letter/generatepdf", {
+  const response = await fetch("https://api.jobjaeger.de/api:SiRHLF4Y/documents/cover_letter/generate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -292,7 +292,10 @@ export async function generateCoverLetterPDF(
     throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
   }
 
-  return response.json();
+  const result = await response.json();
+  
+  // Return the new response format directly
+  return result;
 }
 
  
