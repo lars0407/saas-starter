@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { Manrope } from 'next/font/google';
 import { SWRConfig } from 'swr';
 import { Toaster } from '@/components/ui/sonner';
+import { CrispChat } from '@/components/crisp-chat';
 
 export const metadata: Metadata = {
   title: 'Jobjäger',
@@ -35,6 +36,7 @@ export default function RootLayout({
         >
           {children}
           <Toaster />
+          <CrispChat />
         </SWRConfig>
       </body>
     </html>
