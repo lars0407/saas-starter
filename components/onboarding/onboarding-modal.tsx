@@ -112,7 +112,7 @@ export function OnboardingModal({
         
         <div className="relative p-2 rounded-b-2xl">
           {/* Form Content */}
-          <div className="mt-2 mb-6">
+          <div className="mt-2 mb-6 px-4">
             <StepContent
               step={currentStep}
               firstName={firstName}

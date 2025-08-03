@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Upload, Linkedin, FileText, Plus } from "lucide-react"
+import { ProfileModal } from "./profile-modal"
 
 interface ResumeUploadFormProps {
   onResumeDataChange?: (data: any) => void
@@ -19,6 +20,7 @@ export function ResumeUploadForm({
   const [uploadMethod, setUploadMethod] = useState<'file' | 'linkedin' | 'manual' | null>(null)
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [manualContent, setManualContent] = useState('')
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -37,6 +39,16 @@ export function ResumeUploadForm({
     if (manualContent) {
       onResumeDataChange?.({ method: 'manual', content: manualContent })
     }
+  }
+
+  const handleManualOptionClick = () => {
+    setUploadMethod('manual')
+    setIsProfileModalOpen(true)
+  }
+
+  const handleProfileModalComplete = (profileData: any) => {
+    setIsProfileModalOpen(false)
+    onResumeDataChange?.({ method: 'manual', profileData })
   }
 
   return (
@@ -124,7 +136,7 @@ export function ResumeUploadForm({
           className={`cursor-pointer transition-all hover:shadow-md ${
             uploadMethod === 'manual' ? 'ring-2 ring-[#0F973D]' : ''
           }`}
-          onClick={() => setUploadMethod('manual')}
+          onClick={handleManualOptionClick}
         >
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
@@ -133,28 +145,19 @@ export function ResumeUploadForm({
               </div>
               <div className="flex-1">
                 <h4 className="font-medium text-gray-900">Manuell eingeben</h4>
-                <p className="text-sm text-gray-600">Lebenslauf manuell erstellen</p>
+                <p className="text-sm text-gray-600">Profil mit Formular erstellen</p>
               </div>
             </div>
-            {uploadMethod === 'manual' && (
-              <div className="mt-3 space-y-2">
-                <textarea
-                  placeholder="Füge hier deinen Lebenslauf ein oder beschreibe deine Erfahrungen..."
-                  value={manualContent}
-                  onChange={(e) => setManualContent(e.target.value)}
-                  className="w-full h-32 p-3 border border-gray-300 rounded-md focus:border-[#0F973D] focus:ring-[#0F973D] focus-visible:border-[#0F973D] focus-visible:ring-[#0F973D]/50 resize-none"
-                />
-                <Button 
-                  onClick={handleManualSubmit}
-                  className="w-full bg-[#0F973D] hover:bg-[#0D7A32] text-white"
-                >
-                  Speichern
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Profile Modal */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        onComplete={handleProfileModalComplete}
+      />
     </div>
   )
 } 
