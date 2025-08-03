@@ -499,6 +499,34 @@ export function ProfileSettings() {
     setActiveTab(sectionId)
   }
 
+  // Calculate profile completion percentage
+  const calculateProfileCompletion = () => {
+    const sections = [
+      // Personal Info - check if name and email are filled
+      personalInfo.fullName.trim() !== '' && personalInfo.email.trim() !== '',
+      // Education - check if at least one entry exists
+      education.length > 0,
+      // Experience - check if at least one entry exists
+      experience.length > 0,
+      // Skills - check if at least one skill exists
+      skills.length > 0,
+      // Certifications - check if at least one entry exists
+      certifications.length > 0,
+      // Courses - check if at least one entry exists
+      courses.length > 0,
+      // Publications - check if at least one entry exists
+      publications.length > 0,
+      // Interests - check if at least one entry exists
+      interests.length > 0,
+    ]
+
+    const completedSections = sections.filter(Boolean).length
+    const totalSections = sections.length
+    return Math.round((completedSections / totalSections) * 100)
+  }
+
+  const profileCompletion = calculateProfileCompletion()
+
   if (isLoadingData) {
     return (
       <div className="profile-settings space-y-6">
@@ -514,6 +542,24 @@ export function ProfileSettings() {
 
   return (
     <div className="profile-settings space-y-6">
+      {/* Progress Indicator */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-gray-700">Profil-Vervollständigung</h3>
+          <span className="text-sm font-semibold text-green-600">{profileCompletion}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className="bg-green-600 h-2 rounded-full transition-all duration-300 ease-in-out"
+            style={{ width: `${profileCompletion}%` }}
+          ></div>
+        </div>
+        <div className="flex justify-between text-xs text-gray-500 mt-2">
+          <span>0%</span>
+          <span>100%</span>
+        </div>
+      </div>
+
       {/* Tab Navigation */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 pb-4">
         <Tabs value={activeTab} onValueChange={scrollToSection} className="w-full">
