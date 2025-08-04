@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -20,10 +20,12 @@ import { Courses } from "@/components/resume-sections/courses"
 import { Publications } from "@/components/resume-sections/publications"
 import { Interests } from "@/components/resume-sections/interests"
 import { User, GraduationCap, Briefcase, Zap, Award, BookOpen, Heart, AlertTriangle } from "lucide-react"
+import { onboardingProfileStorage, OnboardingProfileData } from "@/lib/localStorage"
 
 // Import interfaces
 interface PersonalInfoData {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone?: string;
   location: string;
@@ -78,20 +80,271 @@ interface ProfileModalProps {
   isOpen: boolean
   onClose: () => void
   onComplete: (profileData: any) => void
+  initialData?: {
+    firstName?: string
+    lastName?: string
+    email?: string
+  }
 }
+
+// Helper function to transform component data to target format
+const transformToTargetFormat = (
+  personalInfo: PersonalInfoData,
+  education: EducationEntry[],
+  experience: ExperienceEntry[],
+  skills: Skill[],
+  certifications: CertificationEntry[],
+  courses: CourseEntry[],
+  publications: PublicationEntry[],
+  interests: InterestEntry[]
+): OnboardingProfileData => {
+  // Use separate first name and last name fields
+  const firstName = personalInfo.firstName.trim();
+  const surname = personalInfo.lastName.trim();
+
+  // Transform links
+  const links = [];
+  if (personalInfo.website) {
+    links.push({ url: personalInfo.website, label: 'Website' });
+  }
+  if (personalInfo.linkedin) {
+    links.push({ url: personalInfo.linkedin, label: 'LinkedIn' });
+  }
+  if (personalInfo.github) {
+    links.push({ url: personalInfo.github, label: 'GitHub' });
+  }
+
+  // Transform skills
+  const transformedSkills = skills.map(skill => ({
+    label: skill.category,
+    skill: skill.name
+  }));
+
+  // Transform education
+  const transformedEducation = education.map(edu => ({
+    grade: edu.gpa || '',
+    degree: edu.degree,
+    school: edu.institution,
+    endDate: edu.endDate,
+    subject: edu.field,
+    startDate: edu.startDate,
+    description: edu.description || '',
+    location_city: edu.location.split(',')[0]?.trim() || '',
+    location_country: edu.location.split(',').slice(1).join(',').trim() || ''
+  }));
+
+  // Transform experience
+  const transformedExperience = experience.map(exp => ({
+    title: exp.position,
+    company: exp.company,
+    endDate: exp.endDate,
+    location: exp.location,
+    startDate: exp.startDate,
+    description: exp.description
+  }));
+
+  // Transform certifications
+  const transformedCertifications = certifications.map(cert => ({
+    name: cert.name || '',
+    organization: cert.issuer || '',
+    endDate: '', // Not available in CertificationEntry
+    issue_date: cert.issueDate || '',
+  }));
+
+  // Transform courses
+  const transformedCourses = courses.map(course => ({
+    courseTitle: course.title || '',
+    provider: course.provider || '',
+    startDate: course.startDate || '',
+    endDate: course.endDate || '',
+    duration: course.duration || '',
+    certificate: course.certificate || '',
+    description: course.description || '',
+    skillsLearned: course.skills || [],
+  }));
+
+  // Transform publications
+  const transformedPublications = publications.map(pub => ({
+    title: pub.title || '',
+    type: pub.type || '',
+    authors: Array.isArray(pub.authors) ? pub.authors : [pub.authors || ''],
+    publicationDate: pub.publicationDate || '',
+    journal: pub.journal || '',
+    doi: pub.doi || '',
+    publisher: pub.publisher || '',
+    url: pub.url || '',
+    abstract: pub.abstract || '',
+  }));
+
+  // Transform interests
+  const transformedInterests = interests.map(interest => ({
+    name: interest.name || '',
+    category: interest.category || '',
+    description: interest.description || '',
+  }));
+
+  return {
+    link: links,
+    skill: transformedSkills,
+    basics: {
+      email: personalInfo.email,
+      image: '', // Not currently supported in the form
+      surname: surname,
+      birthdate: '', // Not currently supported in the form
+      telephone: personalInfo.phone || '',
+      first_name: firstName,
+      description: personalInfo.summary || '',
+      nationality: '', // Not currently supported in the form
+      gender: '', // Not currently supported in the form
+      title_after: '', // Not currently supported in the form
+      adresse_city: personalInfo.adresse_city,
+      title_before: '', // Not currently supported in the form
+      adresse_street: personalInfo.adresse_street || '',
+      adresse_country: personalInfo.adresse_country || '',
+      adresse_postcode: personalInfo.adresse_postcode || ''
+    },
+    language: [], // Not currently supported in the form
+    education: transformedEducation,
+    experience: transformedExperience,
+    certifications: transformedCertifications,
+    courses: transformedCourses,
+    publications: transformedPublications,
+    interests: transformedInterests
+  };
+};
+
+// Helper function to transform target format to component data
+const transformFromTargetFormat = (targetData: OnboardingProfileData) => {
+  // Use separate first name and last name fields
+  const firstName = targetData.basics.first_name;
+  const lastName = targetData.basics.surname;
+  
+  // Find website, LinkedIn, and GitHub from links
+  const website = targetData.link.find(link => link.label === 'Website')?.url || '';
+  const linkedin = targetData.link.find(link => link.label === 'LinkedIn')?.url || '';
+  const github = targetData.link.find(link => link.label === 'GitHub')?.url || '';
+
+  const personalInfo: PersonalInfoData = {
+    firstName: firstName || '',
+    lastName: lastName || '',
+    email: targetData.basics.email || '',
+    phone: targetData.basics.telephone || '',
+    location: targetData.basics.adresse_city || '',
+    adresse_street: targetData.basics.adresse_street || '',
+    adresse_city: targetData.basics.adresse_city || '',
+    adresse_postcode: targetData.basics.adresse_postcode || '',
+    adresse_country: targetData.basics.adresse_country || '',
+    website: website,
+    linkedin: linkedin,
+    github: github,
+    summary: targetData.basics.description || '',
+  };
+
+  // Transform education back
+  const education: EducationEntry[] = targetData.education.map((edu, index) => ({
+    id: `edu-${index}`,
+    institution: edu.school,
+    degree: edu.degree,
+    field: edu.subject,
+    location: `${edu.location_city}, ${edu.location_country}`.replace(/^,\s*/, '').replace(/,\s*$/, ''),
+    startDate: edu.startDate,
+    endDate: edu.endDate,
+    current: false, // Not supported in target format
+    description: edu.description,
+    gpa: edu.grade,
+  }));
+
+  // Transform experience back
+  const experience: ExperienceEntry[] = targetData.experience.map((exp, index) => ({
+    id: `exp-${index}`,
+    company: exp.company,
+    position: exp.title,
+    location: exp.location,
+    startDate: exp.startDate,
+    endDate: exp.endDate,
+    current: false, // Not supported in target format
+    description: exp.description,
+    achievements: [], // Not supported in target format
+  }));
+
+  // Transform skills back
+  const skills: Skill[] = targetData.skill.map((skill, index) => ({
+    id: `skill-${index}`,
+    name: skill.skill,
+    category: skill.label as 'technical' | 'soft' | 'language' | 'tool',
+    level: 'intermediate', // Default level since not supported in target format
+  }));
+
+  // Transform certifications back
+  const certifications: CertificationEntry[] = targetData.certifications.map((cert, index) => ({
+    id: `cert-${index}`,
+    name: cert.name,
+    issuer: cert.organization,
+    issueDate: cert.issue_date,
+    description: '', // Not available in target format
+  }));
+
+  // Transform courses back
+  const courses: CourseEntry[] = targetData.courses.map((course, index) => ({
+    id: `course-${index}`,
+    title: course.courseTitle,
+    provider: course.provider,
+    startDate: course.startDate,
+    endDate: course.endDate,
+    duration: course.duration,
+    certificate: course.certificate,
+    description: course.description,
+    skills: course.skillsLearned,
+  }));
+
+  // Transform publications back
+  const publications: PublicationEntry[] = targetData.publications.map((pub, index) => ({
+    id: `pub-${index}`,
+    title: pub.title,
+    type: pub.type as any,
+    authors: Array.isArray(pub.authors) ? pub.authors.join(', ') : pub.authors,
+    publicationDate: pub.publicationDate,
+    journal: pub.journal,
+    doi: pub.doi,
+    publisher: pub.publisher,
+    url: pub.url,
+    abstract: pub.abstract,
+  }));
+
+  // Transform interests back
+  const interests: InterestEntry[] = targetData.interests.map((interest, index) => ({
+    id: `interest-${index}`,
+    name: interest.name,
+    category: interest.category as any,
+    description: interest.description,
+  }));
+
+  return {
+    personalInfo,
+    education,
+    experience,
+    skills,
+    certifications,
+    courses,
+    publications,
+    interests,
+  };
+};
 
 export function ProfileModal({
   isOpen,
   onClose,
   onComplete,
+  initialData,
 }: ProfileModalProps) {
   const [activeTab, setActiveTab] = useState("personal")
   const [showSkipConfirmation, setShowSkipConfirmation] = useState(false)
 
   // Profile data state
   const [personalInfo, setPersonalInfo] = useState<PersonalInfoData>({
-    fullName: "",
-    email: "",
+    firstName: initialData?.firstName || "",
+    lastName: initialData?.lastName || "",
+    email: initialData?.email || "",
     phone: "",
     location: "",
     adresse_street: "",
@@ -112,7 +365,94 @@ export function ProfileModal({
   const [publications, setPublications] = useState<PublicationEntry[]>([])
   const [interests, setInterests] = useState<InterestEntry[]>([])
 
+  // Load data from localStorage on component mount
+  useEffect(() => {
+    if (isOpen) {
+      const savedData = onboardingProfileStorage.load();
+      console.log('Loaded data from localStorage:', savedData);
+      
+      if (savedData) {
+        try {
+          // Check if data is in old format (with fullName) and migrate if needed
+          if (savedData.basics && !savedData.basics.first_name && !savedData.basics.surname) {
+            console.log('Migrating old data format...');
+            // Clear old data and start fresh
+            onboardingProfileStorage.clear();
+            return;
+          }
+          
+          const transformedData = transformFromTargetFormat(savedData as OnboardingProfileData);
+          console.log('Transformed data:', transformedData);
+          setPersonalInfo(transformedData.personalInfo);
+          setEducation(transformedData.education);
+          setExperience(transformedData.experience);
+          setSkills(transformedData.skills);
+          setCertifications(transformedData.certifications);
+          setCourses(transformedData.courses);
+          setPublications(transformedData.publications);
+          setInterests(transformedData.interests);
+        } catch (error) {
+          console.error('Error loading saved profile data:', error);
+        }
+      } else if (initialData) {
+        // If no saved data but we have initial data, use that
+        console.log('Using initial data:', initialData);
+        setPersonalInfo(prev => ({
+          ...prev,
+          firstName: initialData.firstName || prev.firstName,
+          lastName: initialData.lastName || prev.lastName,
+          email: initialData.email || prev.email,
+        }));
+      }
+
+      // Also try to load data from onboarding context
+      try {
+        const onboardingData = localStorage.getItem('onboarding_data');
+        if (onboardingData) {
+          const parsed = JSON.parse(onboardingData);
+          console.log('Found onboarding data:', parsed);
+          
+          if (parsed.profileData && parsed.profileData.personalInfo) {
+            console.log('Loading from onboarding profile data:', parsed.profileData);
+            const personalData = parsed.profileData.personalInfo;
+            console.log('Setting personal info:', personalData);
+            setPersonalInfo(personalData);
+            setEducation(parsed.profileData.education || []);
+            setExperience(parsed.profileData.experience || []);
+            setSkills(parsed.profileData.skills || []);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading onboarding data:', error);
+      }
+    }
+  }, [isOpen, initialData]);
+
+  // Debug effect to log when personalInfo changes
+  useEffect(() => {
+    console.log('personalInfo changed:', personalInfo);
+  }, [personalInfo]);
+
+  // Save data to localStorage whenever any data changes
+  useEffect(() => {
+    if (isOpen) {
+      const targetData = transformToTargetFormat(
+        personalInfo, 
+        education, 
+        experience, 
+        skills, 
+        certifications, 
+        courses, 
+        publications, 
+        interests
+      );
+      console.log('Saving data to localStorage:', targetData);
+      onboardingProfileStorage.save(targetData);
+    }
+  }, [personalInfo, education, experience, skills, certifications, courses, publications, interests, isOpen]);
+
   const handlePersonalInfoChange = (data: PersonalInfoData) => {
+    console.log('Personal info changed:', data);
     setPersonalInfo(data)
   }
 
@@ -145,17 +485,17 @@ export function ProfileModal({
   }
 
   const handleSave = () => {
-    const profileData = {
-      personalInfo,
-      education,
-      experience,
-      skills,
-      certifications,
-      courses,
-      publications,
-      interests,
-    }
-    onComplete(profileData)
+    const targetData = transformToTargetFormat(
+      personalInfo, 
+      education, 
+      experience, 
+      skills, 
+      certifications, 
+      courses, 
+      publications, 
+      interests
+    );
+    onComplete(targetData)
   }
 
   const handleSkip = () => {
@@ -241,9 +581,49 @@ export function ProfileModal({
         </div>
 
         <div className="flex justify-between mt-6 pt-4 border-t">
-          <Button variant="outline" onClick={handleSkip} className="text-gray-600 hover:text-gray-800">
-            Überspringen
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleSkip} className="text-gray-600 hover:text-gray-800">
+              Überspringen
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                // Try to load data from onboarding_data and set it manually
+                try {
+                  const onboardingData = localStorage.getItem('onboarding_data');
+                  if (onboardingData) {
+                    const parsed = JSON.parse(onboardingData);
+                    console.log('Manual load from onboarding_data:', parsed);
+                    
+                    if (parsed.profileData && parsed.profileData.personalInfo) {
+                      console.log('Manually setting personal info:', parsed.profileData.personalInfo);
+                      setPersonalInfo(parsed.profileData.personalInfo);
+                      setEducation(parsed.profileData.education || []);
+                      setExperience(parsed.profileData.experience || []);
+                      setSkills(parsed.profileData.skills || []);
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error in manual load:', error);
+                }
+              }} 
+              className="text-orange-600 hover:text-orange-800"
+            >
+              Load Data
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                console.log('Current personalInfo state:', personalInfo);
+                console.log('Current education state:', education);
+                console.log('Current experience state:', experience);
+                console.log('Current skills state:', skills);
+              }} 
+              className="text-green-600 hover:text-green-800"
+            >
+              Debug
+            </Button>
+          </div>
           <Button onClick={handleSave} className="bg-[#0F973D] hover:bg-[#0D7A32] text-white">
             Profil speichern
           </Button>

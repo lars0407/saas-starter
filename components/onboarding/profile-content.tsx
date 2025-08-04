@@ -10,7 +10,8 @@ import { Skills } from "../resume-sections/skills"
 
 // Types from profile-modal.tsx
 interface PersonalInfoData {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone?: string;
   location: string;
@@ -59,18 +60,23 @@ interface Skill {
 interface ProfileContentProps {
   onComplete: (profileData: any) => void
   onSkip: () => void
+  firstName?: string
+  lastName?: string
 }
 
 export function ProfileContent({
   onComplete,
   onSkip,
+  firstName,
+  lastName,
 }: ProfileContentProps) {
   const [activeTab, setActiveTab] = useState("personal")
   const [showSkipConfirmation, setShowSkipConfirmation] = useState(false)
 
   // Profile data state
   const [personalInfo, setPersonalInfo] = useState<PersonalInfoData>({
-    fullName: "",
+    firstName: firstName || "",
+    lastName: lastName || "",
     email: "",
     phone: "",
     location: "",
@@ -87,6 +93,46 @@ export function ProfileContent({
   const [education, setEducation] = useState<EducationEntry[]>([])
   const [experience, setExperience] = useState<ExperienceEntry[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
+
+  // Load data from localStorage on component mount
+  React.useEffect(() => {
+    try {
+      const onboardingData = localStorage.getItem('onboarding_data');
+      if (onboardingData) {
+        const parsed = JSON.parse(onboardingData);
+        console.log('Auto-loading from onboarding_data:', parsed);
+        
+        if (parsed.profileData && parsed.profileData.personalInfo) {
+          console.log('Auto-setting personal info:', parsed.profileData.personalInfo);
+          
+          // Ensure all fields are properly set, even if they're empty
+          const personalData = {
+            firstName: parsed.profileData.personalInfo.firstName || "",
+            lastName: parsed.profileData.personalInfo.lastName || "",
+            email: parsed.profileData.personalInfo.email || "",
+            phone: parsed.profileData.personalInfo.phone || "",
+            location: parsed.profileData.personalInfo.location || "",
+            adresse_street: parsed.profileData.personalInfo.adresse_street || "",
+            adresse_city: parsed.profileData.personalInfo.adresse_city || "",
+            adresse_postcode: parsed.profileData.personalInfo.adresse_postcode || "",
+            adresse_country: parsed.profileData.personalInfo.adresse_country || "",
+            website: parsed.profileData.personalInfo.website || "",
+            linkedin: parsed.profileData.personalInfo.linkedin || "",
+            github: parsed.profileData.personalInfo.github || "",
+            summary: parsed.profileData.personalInfo.summary || "",
+          };
+          
+          console.log('Auto-setting complete personal data:', personalData);
+          setPersonalInfo(personalData);
+          setEducation(parsed.profileData.education || []);
+          setExperience(parsed.profileData.experience || []);
+          setSkills(parsed.profileData.skills || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error in auto-load:', error);
+    }
+  }, []);
 
   const handlePersonalInfoChange = (data: PersonalInfoData) => {
     setPersonalInfo(data)
@@ -193,14 +239,14 @@ export function ProfileContent({
         </div>
       </Tabs>
 
-      <div className="flex justify-between pt-4 border-t flex-shrink-0 mt-4">
-        <Button variant="outline" onClick={handleSkip} className="text-gray-600 hover:text-gray-800">
-          Überspringen
-        </Button>
-        <Button onClick={handleSave} className="bg-[#0F973D] hover:bg-[#0D7A32] text-white">
-          Profil speichern
-        </Button>
-      </div>
+             <div className="flex justify-between pt-4 border-t flex-shrink-0 mt-4">
+         <Button variant="outline" onClick={handleSkip} className="text-gray-600 hover:text-gray-800">
+           Überspringen
+         </Button>
+         <Button onClick={handleSave} className="bg-[#0F973D] hover:bg-[#0D7A32] text-white">
+           Profil speichern
+         </Button>
+       </div>
 
       {/* Skip Confirmation Dialog */}
       <Dialog open={showSkipConfirmation} onOpenChange={handleSkipCancel}>

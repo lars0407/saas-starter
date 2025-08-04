@@ -10,7 +10,8 @@ import { User, Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react
 import { cn } from '@/lib/utils';
 
 interface PersonalInfoData {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone?: string;
   location: string;
@@ -46,8 +47,12 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
   const validate = (): boolean => {
     const newErrors: Partial<PersonalInfoData> = {};
 
-    if (!data.fullName.trim()) {
-      newErrors.fullName = 'Name ist erforderlich';
+    if (!data.firstName.trim()) {
+      newErrors.firstName = 'Vorname ist erforderlich';
+    }
+
+    if (!data.lastName.trim()) {
+      newErrors.lastName = 'Nachname ist erforderlich';
     }
 
     if (!data.email.trim()) {
@@ -78,24 +83,45 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
       <CardContent className="space-y-6">
         {/* Basic Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Full Name */}
+          {/* First Name */}
           <div className="space-y-2">
-            <Label htmlFor="fullName" className="text-sm font-medium">
-              Vollständiger Name 🏷️
+            <Label htmlFor="firstName" className="text-sm font-medium">
+              Vorname 🏷️
             </Label>
             <Input
-              id="fullName"
-              placeholder="z.B. Max Mustermann"
-              value={data.fullName}
-              onChange={(e) => handleChange('fullName', e.target.value)}
-                             className={cn(
-                 errors.fullName && "border-red-500",
-                 "focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
-               )}
+              id="firstName"
+              placeholder="z.B. Max"
+              value={data.firstName}
+              onChange={(e) => handleChange('firstName', e.target.value)}
+              className={cn(
+                errors.firstName && "border-red-500",
+                "focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+              )}
               disabled={!isEditing}
             />
-            {errors.fullName && (
-              <p className="text-sm text-red-500">{errors.fullName}</p>
+            {errors.firstName && (
+              <p className="text-sm text-red-500">{errors.firstName}</p>
+            )}
+          </div>
+
+          {/* Last Name */}
+          <div className="space-y-2">
+            <Label htmlFor="lastName" className="text-sm font-medium">
+              Nachname 🏷️
+            </Label>
+            <Input
+              id="lastName"
+              placeholder="z.B. Mustermann"
+              value={data.lastName}
+              onChange={(e) => handleChange('lastName', e.target.value)}
+              className={cn(
+                errors.lastName && "border-red-500",
+                "focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+              )}
+              disabled={!isEditing}
+            />
+            {errors.lastName && (
+              <p className="text-sm text-red-500">{errors.lastName}</p>
             )}
           </div>
 

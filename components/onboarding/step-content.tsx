@@ -75,6 +75,8 @@ export function StepContent({
       <ProfileContent
         onComplete={onProfileComplete || (() => {})}
         onSkip={onProfileSkip || (() => {})}
+        firstName={firstName}
+        lastName={lastName}
       />
     )
   }

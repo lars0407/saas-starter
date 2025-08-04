@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -49,6 +49,10 @@ export function OnboardingModal({
   const [jobType, setJobType] = useState<string>("")
   const [salaryExpectation, setSalaryExpectation] = useState<string>("")
 
+  // localStorage keys
+  const ONBOARDING_STEP_KEY = "onboarding_current_step"
+  const ONBOARDING_DATA_KEY = "onboarding_data"
+
   // Array of character expressions
   const characterExpressions = [
     "/images/characters/Job-Jäger Expressions.png",
@@ -58,6 +62,131 @@ export function OnboardingModal({
     "/images/characters/jobjaeger_love.png",
     "/images/characters/jobjaeger_shocked.png"
   ]
+
+  // Save current step to localStorage
+  const saveCurrentStep = (step: number) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(ONBOARDING_STEP_KEY, step.toString())
+      
+      // Save all onboarding data
+      const onboardingData = {
+        firstName,
+        lastName,
+        resumeData,
+        profileData,
+        jobSearchIntensity,
+        jobTitle,
+        workLocation,
+        jobType,
+        salaryExpectation,
+        characterIndex
+      }
+      localStorage.setItem(ONBOARDING_DATA_KEY, JSON.stringify(onboardingData))
+      
+      // Save search-specific data in separate object
+      const onboardingSearchData = {
+        job_search_activity: jobSearchIntensity || "I am actively looking for a job",
+        dream_job_title: jobTitle || "Frontend Developer",
+        work_location_preference: workLocation || "Remote / Home Office",
+        work_time_preference: jobType || "Full-time (40h/week)",
+        salary_expectation: {
+          type: "Monthly salary (gross)",
+          amount_eur: salaryExpectation ? parseInt(salaryExpectation) || 3500 : 3500
+        }
+      }
+      localStorage.setItem('onboarding_search', JSON.stringify(onboardingSearchData))
+    }
+  }
+
+  // Load saved step and data from localStorage
+  const loadSavedStep = () => {
+    if (typeof window !== 'undefined') {
+      const savedStep = localStorage.getItem(ONBOARDING_STEP_KEY)
+      const savedData = localStorage.getItem(ONBOARDING_DATA_KEY)
+      
+      if (savedStep) {
+        const step = parseInt(savedStep, 10)
+        if (step >= 1 && step <= 9) {
+          setCurrentStep(step)
+        }
+      }
+      
+      if (savedData) {
+        try {
+          const data = JSON.parse(savedData)
+          if (data.firstName) setFirstName(data.firstName)
+          if (data.lastName) setLastName(data.lastName)
+          if (data.resumeData) setResumeData(data.resumeData)
+          if (data.profileData) setProfileData(data.profileData)
+          if (data.jobSearchIntensity) setJobSearchIntensity(data.jobSearchIntensity)
+          if (data.jobTitle) setJobTitle(data.jobTitle)
+          if (data.workLocation) setWorkLocation(data.workLocation)
+          if (data.jobType) setJobType(data.jobType)
+          if (data.salaryExpectation) setSalaryExpectation(data.salaryExpectation)
+          if (data.characterIndex !== undefined) setCharacterIndex(data.characterIndex)
+        } catch (error) {
+          console.error('Error parsing saved onboarding data:', error)
+        }
+      }
+    }
+  }
+
+  // Load saved data when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log('Onboarding modal opened, loading saved data...')
+      loadSavedStep()
+      debugLocalStorage() // Debug current status
+    }
+  }, [isOpen])
+
+  // Save step whenever currentStep changes
+  useEffect(() => {
+    if (isOpen && currentStep > 1) {
+      saveCurrentStep(currentStep)
+    }
+  }, [currentStep, isOpen, firstName, lastName, resumeData, profileData, jobSearchIntensity, jobTitle, workLocation, jobType, salaryExpectation, characterIndex])
+
+  // Clear localStorage when onboarding is completed
+  const clearOnboardingData = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(ONBOARDING_STEP_KEY)
+      localStorage.removeItem(ONBOARDING_DATA_KEY)
+      localStorage.removeItem('onboarding_search')
+      console.log('Onboarding data cleared from localStorage')
+    }
+  }
+
+  // Debug function to check current localStorage status
+  const debugLocalStorage = () => {
+    if (typeof window !== 'undefined') {
+      const step = localStorage.getItem(ONBOARDING_STEP_KEY)
+      const data = localStorage.getItem(ONBOARDING_DATA_KEY)
+      const searchData = localStorage.getItem('onboarding_search')
+      console.log('Current localStorage status:', { 
+        step, 
+        data: data ? JSON.parse(data) : null,
+        searchData: searchData ? JSON.parse(searchData) : null
+      })
+    }
+  }
+
+  // For development: manually clear localStorage
+  // Uncomment and call this function if you need to reset onboarding
+  // const resetOnboarding = () => {
+  //   clearOnboardingData()
+  //   setCurrentStep(1)
+  //   setFirstName("Max")
+  //   setLastName("Mustermann")
+  //   setResumeData(null)
+  //   setProfileData(null)
+  //   setJobSearchIntensity("")
+  //   setJobTitle("")
+  //   setWorkLocation("")
+  //   setJobType("")
+  //   setSalaryExpectation("")
+  //   setCharacterIndex(0)
+  // }
 
   const handleContinue = () => {
     if (currentStep === 1) {
@@ -90,6 +219,7 @@ export function OnboardingModal({
       setCharacterIndex(1) // Change to different character expression
     } else if (currentStep === 8) {
       // Complete onboarding
+      clearOnboardingData() // Clear saved data
       onComplete(firstName, lastName, resumeData)
     }
   }
@@ -151,8 +281,16 @@ export function OnboardingModal({
     setResumeData(data)
   }
 
+  // Handle modal close
+  const handleModalClose = () => {
+    // Optionally clear data when modal is closed
+    // Uncomment the next line if you want to clear data when modal is closed
+    // clearOnboardingData()
+    onClose()
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleModalClose}>
       <DialogContent className={`mx-auto p-0 overflow-visible rounded-2xl shadow-2xl border-3 border-[#0F973D] ${currentStep === 3 ? 'max-w-4xl max-h-[90vh]' : currentStep === 4 || currentStep === 5 || currentStep === 6 || currentStep === 7 || currentStep === 8 || currentStep === 9 ? 'max-w-4xl' : 'max-w-md'}`} showCloseButton={false}>
         <VisuallyHidden>
           <DialogTitle>Onboarding - Name eingeben</DialogTitle>
