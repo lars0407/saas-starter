@@ -32,7 +32,7 @@ export function OnboardingModal({
   isOpen,
   onClose,
   onComplete,
-  speechText = "Hey, cool dich zu sehen! Wie heißt du?",
+  speechText = "Nice, dass du da bist! Lass uns gleich starten – wie heißt du?",
   characterSrc = "/images/characters/Job-Jäger Expressions.png", // Jobjäger character
   characterAlt = "Friendly character",
 }: OnboardingModalProps) {
@@ -61,27 +61,82 @@ export function OnboardingModal({
       const searchData = localStorage.getItem('onboarding_search')
       const parsedSearchData = searchData ? JSON.parse(searchData) : {}
       
-      // Prepare the request payload
+      // Get auth token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.')
+      }
+      
+      // Prepare the request payload with fallback structures
       const payload = {
-        profile_data: profileData || {},
-        search_profile: parsedSearchData,
+        profile_data: profileData || {
+          personalInfo: {},
+          education: [],
+          experience: [],
+          skills: []
+        },
+        search_profile: parsedSearchData || {
+          job_search_activity: "",
+          dream_job_title: "",
+          work_location_preference: "",
+          work_time_preference: "",
+          salary_expectation: {
+            type: "Monthly salary (gross)",
+            amount_eur: 0
+          }
+        },
         linkedin_url: profileData?.personalInfo?.linkedin || ""
       }
 
+      // Validate payload structure
+      if (!payload.profile_data || typeof payload.profile_data !== 'object') {
+        console.warn('Profile data is not an object:', payload.profile_data)
+      }
+      if (!payload.search_profile || typeof payload.search_profile !== 'object') {
+        console.warn('Search profile is not an object:', payload.search_profile)
+      }
+
       console.log('Sending onboarding data to API:', payload)
+      console.log('Profile data structure:', profileData)
+      console.log('Search data structure:', parsedSearchData)
+      
+      // Test with minimal payload to see if structure is the issue
+      const testPayload = {
+        profile_data: {},
+        search_profile: {},
+        linkedin_url: ""
+      }
+      console.log('Test payload:', testPayload)
 
       const response = await fetch('https://api.jobjaeger.de/api:cP4KlfKj/v3/onboarding7complete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Add authentication headers if needed
-          // 'Authorization': 'Bearer YOUR_TOKEN'
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       })
 
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please log in again.')
+        }
+        
+        // Try to get error details from response
+        let errorDetails = ''
+        try {
+          const errorResponse = await response.text()
+          errorDetails = errorResponse
+          console.error('API Error Response:', errorResponse)
+        } catch (e) {
+          errorDetails = 'Could not read error response'
+        }
+        
+        throw new Error(`API request failed: ${response.status} ${response.statusText}. Details: ${errorDetails}`)
       }
 
       const result = await response.json()
@@ -96,11 +151,13 @@ export function OnboardingModal({
   // Array of character expressions
   const characterExpressions = [
     "/images/characters/Job-Jäger Expressions.png",
-    "/images/characters/jobjaeger_facepalm.png",
-    "/images/characters/jobjaeger_peekaboo.png",
+    "/images/characters/jobjaeger-gruebelnd.png",
+    "/images/characters/jobjaeger-daumenhoch.png",
+    "/images/characters/jobjaeger-gruebelnd.png",
+    "/images/characters/jobjaeger-zielen.png",
     "/images/characters/jobjaeger_cheer.png",
-    "/images/characters/jobjaeger_love.png",
-    "/images/characters/jobjaeger_shocked.png"
+    "/images/characters/jobjaeger-zeitdruck.png",
+    "/images/characters/jobjaeger-gruebelnd.png"
   ]
 
   // Save current step to localStorage
@@ -180,6 +237,29 @@ export function OnboardingModal({
     }
   }, [isOpen])
 
+  // Ensure correct character for each step
+  useEffect(() => {
+    if (isOpen) {
+      if (currentStep === 1) {
+        setCharacterIndex(0) // Force character index 0 for step 1
+      } else if (currentStep === 2) {
+        setCharacterIndex(1) // Force character index 1 for step 2
+      } else if (currentStep === 3) {
+        setCharacterIndex(2) // Force character index 2 for step 3
+      } else if (currentStep === 4) {
+        setCharacterIndex(3) // Force character index 3 for step 4
+      } else if (currentStep === 5) {
+        setCharacterIndex(4) // Force character index 4 for step 5
+      } else if (currentStep === 6) {
+        setCharacterIndex(5) // Force character index 5 for step 6
+      } else if (currentStep === 7) {
+        setCharacterIndex(6) // Force character index 6 for step 7
+      } else if (currentStep === 8) {
+        setCharacterIndex(7) // Force character index 7 for step 8
+      }
+    }
+  }, [isOpen, currentStep])
+
   // Save step whenever currentStep changes
   useEffect(() => {
     if (isOpen && currentStep > 1) {
@@ -257,23 +337,6 @@ export function OnboardingModal({
       // Move to step 8 (salary expectation)
       setCurrentStep(8)
       setCharacterIndex(1) // Change to different character expression
-    } else if (currentStep === 8) {
-      // Save data to API and move to completion step
-      try {
-        setIsLoading(true)
-        setApiError("") // Clear any previous errors
-        await saveOnboardingToAPI()
-        console.log('Onboarding data saved to API successfully')
-        setCurrentStep(9) // Move to completion step
-        setCharacterIndex(5) // Show success character expression
-      } catch (error) {
-        console.error('Failed to save onboarding data to API:', error)
-        setApiError('Fehler beim Speichern der Daten. Das Onboarding wird trotzdem abgeschlossen.')
-        setCurrentStep(9) // Move to completion step even if API fails
-        setCharacterIndex(5) // Show success character expression
-      } finally {
-        setIsLoading(false)
-      }
     }
   }
 
@@ -322,10 +385,37 @@ export function OnboardingModal({
     setCurrentStep(8) // Move to salary expectation step
   }
 
-  const handleSalaryExpectationComplete = (salary: string) => {
+  const handleSalaryExpectationComplete = async (salary: string) => {
     console.log('OnboardingModal: handleSalaryExpectationComplete called with:', salary)
     setSalaryExpectation(salary)
-    setCurrentStep(9) // Move to completion step
+    
+    // Save data to API before moving to completion step
+    try {
+      setIsLoading(true)
+      setApiError("") // Clear any previous errors
+      await saveOnboardingToAPI()
+      console.log('Onboarding data saved to API successfully')
+      setCurrentStep(9) // Move to completion step
+      setCharacterIndex(5) // Show success character expression
+    } catch (error) {
+      console.error('Failed to save onboarding data to API:', error)
+      
+      // More specific error handling
+      let errorMessage = 'Fehler beim Speichern der Daten. Das Onboarding wird trotzdem abgeschlossen.'
+      if (error instanceof Error) {
+        if (error.message.includes('Authentication failed') || error.message.includes('No authentication token')) {
+          errorMessage = 'Nicht angemeldet. Bitte melden Sie sich erneut an.'
+        } else if (error.message.includes('401')) {
+          errorMessage = 'Sitzung abgelaufen. Bitte melden Sie sich erneut an.'
+        }
+      }
+      
+      setApiError(errorMessage)
+      setCurrentStep(9) // Move to completion step even if API fails
+      setCharacterIndex(5) // Show success character expression
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleFirstNameChange = (value: string) => {
@@ -361,17 +451,17 @@ export function OnboardingModal({
           {/* Speech Bubble */}
           <div className="absolute -top-22 right-36 z-10">
             <SpeechBubble text={
-              currentStep === 1 ? "Hey, cool dich zu sehen! Wie heißt du?" : 
-              currentStep === 2 ? "Super! Jetzt lass uns deinen Lebenslauf hochladen!" :
-              currentStep === 3 ? "Perfekt! Jetzt erstellen wir dein Profil!" :
-              currentStep === 4 ? "Nice! Wie aktiv suchst du gerade nach einem Job?" :
-              currentStep === 5 ? "Cool! Was ist dein Dream Job?" :
-              currentStep === 6 ? "Nice! Wo willst du arbeiten?" :
-              currentStep === 7 ? "Perfekt! Wie viel Zeit hast du?" :
-              currentStep === 8 ? "Awesome! Was ist dein Gehaltswunsch?" :
-              currentStep === 9 ? "Perfekt! Dein Profil ist bereit!" :
               isLoading ? "Einen Moment bitte, ich analysiere deine Daten..." :
-              "Perfekt! Dein Profil ist bereit!"
+              currentStep === 1 ? "Nice, dass du da bist! Lass uns gleich starten – wie heißt du?" : 
+              currentStep === 2 ? "Next Step! Wie willst du deinen Lebenslauf hinzufügen?" :
+              currentStep === 3 ? "Fast geschafft! Lass uns dein Profil aufpolieren 💼" :
+              currentStep === 4 ? "Wie sehr bist du im Job-Hunt-Modus? 🔍" :
+              currentStep === 5 ? "Dein Zieljob? Sag's uns – wir finden ihn! 💫" :
+              currentStep === 6 ? "Wo fühlst du dich am produktivsten? 🏠🏢" :
+              currentStep === 7 ? "Wie viel willst du reinhauen? ⏰" :
+              currentStep === 8 ? "Let's talk Money 💸 Was stellst du dir vor?" :
+              currentStep === 9 ? "Boom! Dein Profil ist am Start 🎯" :
+              "Boom! Dein Profil ist am Start 🎯"
             } />
           </div>
 
