@@ -1,7 +1,8 @@
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { User, GraduationCap, Briefcase, Zap } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { User, GraduationCap, Briefcase, Zap, AlertTriangle } from "lucide-react"
 import { PersonalInfo } from "../resume-sections/personal-info"
 import { Education } from "../resume-sections/education"
 import { Experience } from "../resume-sections/experience"
@@ -65,6 +66,7 @@ export function ProfileContent({
   onSkip,
 }: ProfileContentProps) {
   const [activeTab, setActiveTab] = useState("personal")
+  const [showSkipConfirmation, setShowSkipConfirmation] = useState(false)
 
   // Profile data state
   const [personalInfo, setPersonalInfo] = useState<PersonalInfoData>({
@@ -110,6 +112,19 @@ export function ProfileContent({
       skills,
     }
     onComplete(profileData)
+  }
+
+  const handleSkip = () => {
+    setShowSkipConfirmation(true)
+  }
+
+  const handleSkipConfirm = () => {
+    setShowSkipConfirmation(false)
+    onComplete({ method: 'skipped' })
+  }
+
+  const handleSkipCancel = () => {
+    setShowSkipConfirmation(false)
   }
 
   return (
@@ -179,13 +194,58 @@ export function ProfileContent({
       </Tabs>
 
       <div className="flex justify-between pt-4 border-t flex-shrink-0 mt-4">
-        <Button variant="outline" onClick={onSkip} className="text-gray-600 hover:text-gray-800">
+        <Button variant="outline" onClick={handleSkip} className="text-gray-600 hover:text-gray-800">
           Überspringen
         </Button>
         <Button onClick={handleSave} className="bg-[#0F973D] hover:bg-[#0D7A32] text-white">
           Profil speichern
         </Button>
       </div>
+
+      {/* Skip Confirmation Dialog */}
+      <Dialog open={showSkipConfirmation} onOpenChange={handleSkipCancel}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-yellow-600" />
+              </div>
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                Moment mal! 🤔
+              </DialogTitle>
+            </div>
+            <div className="text-gray-600 text-left">
+              <div className="mb-4">
+                <strong>Hey, bevor du das überspringst:</strong>
+              </div>
+              <div className="mb-3">
+                Dein Profil ist <span className="font-semibold text-[#0F973D]">super wichtig</span> für unsere KI! 🤖✨
+              </div>
+              <div className="mb-3">
+                <strong>Warum?</strong> Ohne deine Infos kann die KI:
+              </div>
+              <ul className="list-disc list-inside space-y-1 mb-4 text-sm">
+                <li>❌ Keine personalisierten Job-Vorschläge machen</li>
+                <li>❌ Deine Skills nicht richtig einschätzen</li>
+                <li>❌ Passende Anschreiben generieren</li>
+                <li>❌ Deine Erfahrung berücksichtigen</li>
+              </ul>
+              <div className="text-sm text-gray-500">
+                <strong>Pro-Tipp:</strong> Nimm dir 2-3 Minuten Zeit - es lohnt sich! 💪
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="flex gap-3 mt-6">
+            <Button variant="outline" onClick={handleSkipCancel} className="flex-1">
+              Zurück zum Profil
+            </Button>
+            <Button onClick={handleSkipConfirm} variant="destructive" className="flex-1">
+              Trotzdem überspringen
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 
