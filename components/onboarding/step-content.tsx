@@ -4,6 +4,11 @@ import { ResumeUploadForm } from "./resume-upload-form"
 import { LoadingStep } from "./loading-step"
 import { CompletionStep } from "./completion-step"
 import { ProfileContent } from "./profile-content"
+import { JobSearchIntensity } from "./job-search-intensity"
+import { JobTitleStep } from "./job-title-step"
+import { WorkLocationStep } from "./work-location-step"
+import { JobTypeStep } from "./job-type-step"
+import { SalaryExpectationStep } from "./salary-expectation-step"
 import { Button } from "@/components/ui/button"
 
 interface StepContentProps {
@@ -13,8 +18,13 @@ interface StepContentProps {
   onFirstNameChange: (value: string) => void
   onLastNameChange: (value: string) => void
   onResumeDataChange?: (data: any) => void
+  onJobSearchIntensityComplete?: (intensity: string) => void
   onProfileComplete?: (data: any) => void
   onProfileSkip?: () => void
+  onJobTitleComplete?: (title: string) => void
+  onWorkLocationComplete?: (location: string) => void
+  onJobTypeComplete?: (type: string) => void
+  onSalaryExpectationComplete?: (salary: string) => void
   resumeData?: any
   isLoading?: boolean
 }
@@ -26,8 +36,13 @@ export function StepContent({
   onFirstNameChange,
   onLastNameChange,
   onResumeDataChange,
+  onJobSearchIntensityComplete,
   onProfileComplete,
   onProfileSkip,
+  onJobTitleComplete,
+  onWorkLocationComplete,
+  onJobTypeComplete,
+  onSalaryExpectationComplete,
   resumeData,
   isLoading,
 }: StepContentProps) {
@@ -64,13 +79,58 @@ export function StepContent({
     )
   }
 
-  // Step 4: Loading state
+  // Step 4: Job search intensity
+  if (step === 4) {
+    return (
+      <JobSearchIntensity
+        onComplete={onJobSearchIntensityComplete || (() => {})}
+      />
+    )
+  }
+
+  // Step 5: Job title
+  if (step === 5) {
+    return (
+      <JobTitleStep
+        onComplete={onJobTitleComplete || (() => {})}
+      />
+    )
+  }
+
+  // Step 6: Work location
+  if (step === 6) {
+    return (
+      <WorkLocationStep
+        onComplete={onWorkLocationComplete || (() => {})}
+      />
+    )
+  }
+
+  // Step 7: Job type
+  if (step === 7) {
+    return (
+      <JobTypeStep
+        onComplete={onJobTypeComplete || (() => {})}
+      />
+    )
+  }
+
+  // Step 8: Salary expectation
+  if (step === 8) {
+    return (
+      <SalaryExpectationStep
+        onComplete={onSalaryExpectationComplete || (() => {})}
+      />
+    )
+  }
+
+  // Step 9: Loading state
   if (isLoading) {
     return <LoadingStep />
   }
 
-  // Step 5: Completion
-  if (step === 4) {
+  // Step 10: Completion
+  if (step === 9) {
     return <CompletionStep firstName={firstName} lastName={lastName} />
   }
 
