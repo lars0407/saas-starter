@@ -14,6 +14,7 @@ import { SpeechBubble } from "./speech-bubble"
 import { CharacterImage } from "./character-image"
 import { StepContent } from "./step-content"
 
+
 interface OnboardingModalProps {
   isOpen: boolean
   onClose: () => void
@@ -37,6 +38,7 @@ export function OnboardingModal({
   const [characterIndex, setCharacterIndex] = useState(0)
   const [resumeData, setResumeData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [profileData, setProfileData] = useState<any>(null)
 
   // Array of character expressions
   const characterExpressions = [
@@ -54,6 +56,10 @@ export function OnboardingModal({
       setCurrentStep(2)
       setCharacterIndex(1) // Change to different character expression
     } else if (currentStep === 2) {
+      // Move to step 3 (profile creation)
+      setCurrentStep(3)
+      setCharacterIndex(2) // Change to different character expression
+    } else if (currentStep === 3) {
       // Complete onboarding
       onComplete(firstName, lastName, resumeData)
     }
@@ -67,7 +73,12 @@ export function OnboardingModal({
     await new Promise(resolve => setTimeout(resolve, 3000))
     
     setIsLoading(false)
-    setCurrentStep(3) // Move to completion step
+    setCurrentStep(4) // Move to completion step
+  }
+
+  const handleProfileModalComplete = (data: any) => {
+    setProfileData(data)
+    setCurrentStep(4) // Move to completion step
   }
 
   const handleFirstNameChange = (value: string) => {
@@ -84,7 +95,7 @@ export function OnboardingModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto p-0 overflow-visible rounded-2xl shadow-2xl border-3 border-[#0F973D]" showCloseButton={false}>
+      <DialogContent className={`mx-auto p-0 overflow-visible rounded-2xl shadow-2xl border-3 border-[#0F973D] ${currentStep === 3 ? 'max-w-4xl max-h-[90vh]' : 'max-w-md'}`} showCloseButton={false}>
         <VisuallyHidden>
           <DialogTitle>Onboarding - Name eingeben</DialogTitle>
         </VisuallyHidden>
@@ -95,6 +106,7 @@ export function OnboardingModal({
             <SpeechBubble text={
               currentStep === 1 ? "Hey, cool dich zu sehen! Wie heißt du?" : 
               currentStep === 2 ? "Super! Jetzt lass uns deinen Lebenslauf hochladen!" :
+              currentStep === 3 ? "Perfekt! Jetzt erstellen wir dein Profil!" :
               isLoading ? "Einen Moment bitte, ich analysiere deine Daten..." :
               "Perfekt! Dein Profil ist bereit!"
             } />
@@ -120,6 +132,11 @@ export function OnboardingModal({
               onFirstNameChange={handleFirstNameChange}
               onLastNameChange={handleLastNameChange}
               onResumeDataChange={handleResumeProcessing}
+              onProfileComplete={handleProfileModalComplete}
+              onProfileSkip={() => {
+                setProfileData({ method: 'skipped' })
+                setCurrentStep(4)
+              }}
               resumeData={resumeData}
               isLoading={isLoading}
             />
@@ -127,18 +144,20 @@ export function OnboardingModal({
 
           {/* Action Button */}
           <div className="flex justify-center">
-                      {!isLoading && (
-            <Button
-              onClick={handleContinue}
-              className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
-            >
-              {currentStep === 1 ? `weiter als ${firstName || "Max"}` : 
-               currentStep === 2 ? "Fertig" : "Onboarding abschließen"}
-            </Button>
-          )}
+            {!isLoading && currentStep !== 3 && (
+              <Button
+                onClick={handleContinue}
+                className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
+              >
+                {currentStep === 1 ? `weiter als ${firstName || "Max"}` : 
+                 currentStep === 2 ? "Weiter" : "Onboarding abschließen"}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
+      
+
     </Dialog>
   )
 } 

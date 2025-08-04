@@ -3,6 +3,8 @@ import { OnboardingForm } from "./onboarding-form"
 import { ResumeUploadForm } from "./resume-upload-form"
 import { LoadingStep } from "./loading-step"
 import { CompletionStep } from "./completion-step"
+import { ProfileContent } from "./profile-content"
+import { Button } from "@/components/ui/button"
 
 interface StepContentProps {
   step: number
@@ -11,6 +13,8 @@ interface StepContentProps {
   onFirstNameChange: (value: string) => void
   onLastNameChange: (value: string) => void
   onResumeDataChange?: (data: any) => void
+  onProfileComplete?: (data: any) => void
+  onProfileSkip?: () => void
   resumeData?: any
   isLoading?: boolean
 }
@@ -22,6 +26,8 @@ export function StepContent({
   onFirstNameChange,
   onLastNameChange,
   onResumeDataChange,
+  onProfileComplete,
+  onProfileSkip,
   resumeData,
   isLoading,
 }: StepContentProps) {
@@ -48,13 +54,23 @@ export function StepContent({
     )
   }
 
-  // Step 3: Loading state
+  // Step 3: Profile creation
+  if (step === 3) {
+    return (
+      <ProfileContent
+        onComplete={onProfileComplete || (() => {})}
+        onSkip={onProfileSkip || (() => {})}
+      />
+    )
+  }
+
+  // Step 4: Loading state
   if (isLoading) {
     return <LoadingStep />
   }
 
-  // Step 4: Completion
-  if (step === 3) {
+  // Step 5: Completion
+  if (step === 4) {
     return <CompletionStep firstName={firstName} lastName={lastName} />
   }
 

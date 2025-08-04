@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Upload, Linkedin, FileText, Plus } from "lucide-react"
-import { ProfileModal } from "./profile-modal"
+
 
 interface ResumeUploadFormProps {
   onResumeDataChange?: (data: any) => void
@@ -20,7 +20,6 @@ export function ResumeUploadForm({
   const [uploadMethod, setUploadMethod] = useState<'file' | 'linkedin' | 'manual' | null>(null)
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [manualContent, setManualContent] = useState('')
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -43,12 +42,7 @@ export function ResumeUploadForm({
 
   const handleManualOptionClick = () => {
     setUploadMethod('manual')
-    setIsProfileModalOpen(true)
-  }
-
-  const handleProfileModalComplete = (profileData: any) => {
-    setIsProfileModalOpen(false)
-    onResumeDataChange?.({ method: 'manual', profileData })
+    // This will be handled by the parent component now
   }
 
   return (
@@ -152,12 +146,7 @@ export function ResumeUploadForm({
         </Card>
       </div>
 
-      {/* Profile Modal */}
-      <ProfileModal
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-        onComplete={handleProfileModalComplete}
-      />
+
     </div>
   )
 } 
