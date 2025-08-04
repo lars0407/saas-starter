@@ -48,10 +48,50 @@ export function OnboardingModal({
   const [workLocation, setWorkLocation] = useState<string>("")
   const [jobType, setJobType] = useState<string>("")
   const [salaryExpectation, setSalaryExpectation] = useState<string>("")
+  const [apiError, setApiError] = useState<string>("")
 
   // localStorage keys
   const ONBOARDING_STEP_KEY = "onboarding_current_step"
   const ONBOARDING_DATA_KEY = "onboarding_data"
+
+  // API function to save onboarding data
+  const saveOnboardingToAPI = async () => {
+    try {
+      // Get the search data from localStorage
+      const searchData = localStorage.getItem('onboarding_search')
+      const parsedSearchData = searchData ? JSON.parse(searchData) : {}
+      
+      // Prepare the request payload
+      const payload = {
+        profile_data: profileData || {},
+        search_profile: parsedSearchData,
+        linkedin_url: profileData?.personalInfo?.linkedin || ""
+      }
+
+      console.log('Sending onboarding data to API:', payload)
+
+      const response = await fetch('https://api.jobjaeger.de/api:cP4KlfKj/v3/onboarding7complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add authentication headers if needed
+          // 'Authorization': 'Bearer YOUR_TOKEN'
+        },
+        body: JSON.stringify(payload)
+      })
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log('Onboarding data saved successfully:', result)
+      return result
+    } catch (error) {
+      console.error('Error saving onboarding data to API:', error)
+      throw error
+    }
+  }
 
   // Array of character expressions
   const characterExpressions = [
@@ -188,7 +228,7 @@ export function OnboardingModal({
   //   setCharacterIndex(0)
   // }
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (currentStep === 1) {
       // Move to step 2 (resume upload)
       setCurrentStep(2)
@@ -218,10 +258,29 @@ export function OnboardingModal({
       setCurrentStep(8)
       setCharacterIndex(1) // Change to different character expression
     } else if (currentStep === 8) {
-      // Complete onboarding
-      clearOnboardingData() // Clear saved data
-      onComplete(firstName, lastName, resumeData)
+      // Save data to API and move to completion step
+      try {
+        setIsLoading(true)
+        setApiError("") // Clear any previous errors
+        await saveOnboardingToAPI()
+        console.log('Onboarding data saved to API successfully')
+        setCurrentStep(9) // Move to completion step
+        setCharacterIndex(5) // Show success character expression
+      } catch (error) {
+        console.error('Failed to save onboarding data to API:', error)
+        setApiError('Fehler beim Speichern der Daten. Das Onboarding wird trotzdem abgeschlossen.')
+        setCurrentStep(9) // Move to completion step even if API fails
+        setCharacterIndex(5) // Show success character expression
+      } finally {
+        setIsLoading(false)
+      }
     }
+  }
+
+  // Handle final completion
+  const handleStartNow = () => {
+    clearOnboardingData() // Clear saved data
+    onComplete(firstName, lastName, resumeData)
   }
 
   const handleResumeProcessing = async (data: any) => {
@@ -283,9 +342,11 @@ export function OnboardingModal({
 
   // Handle modal close
   const handleModalClose = () => {
-    // Optionally clear data when modal is closed
-    // Uncomment the next line if you want to clear data when modal is closed
-    // clearOnboardingData()
+    // Prevent closing during onboarding process
+    if (currentStep < 9) {
+      return // Don't allow closing until completion
+    }
+    // Only allow closing after step 9 (completion)
     onClose()
   }
 
@@ -308,6 +369,7 @@ export function OnboardingModal({
               currentStep === 6 ? "Nice! Wo willst du arbeiten?" :
               currentStep === 7 ? "Perfekt! Wie viel Zeit hast du?" :
               currentStep === 8 ? "Awesome! Was ist dein Gehaltswunsch?" :
+              currentStep === 9 ? "Perfekt! Dein Profil ist bereit!" :
               isLoading ? "Einen Moment bitte, ich analysiere deine Daten..." :
               "Perfekt! Dein Profil ist bereit!"
             } />
@@ -357,6 +419,14 @@ export function OnboardingModal({
               >
                 {currentStep === 1 ? `weiter als ${firstName || "Max"}` : 
                  currentStep === 2 ? "Weiter" : "Onboarding abschließen"}
+              </Button>
+            )}
+            {!isLoading && currentStep === 9 && (
+              <Button
+                onClick={handleStartNow}
+                className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
+              >
+                Jetzt starten
               </Button>
             )}
           </div>
