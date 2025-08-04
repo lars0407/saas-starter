@@ -1,5 +1,5 @@
 /**
- * TinyMCE version 8.0.1 (2025-07-28)
+ * TinyMCE version 7.9.1 (2025-05-29)
  */
 
 (function () {
@@ -3500,8 +3500,7 @@
                     {
                         type: 'textarea',
                         name: 'code',
-                        label: 'Code view',
-                        spellcheck: false,
+                        label: 'Code view'
                     }
                 ]
             },
