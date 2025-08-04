@@ -136,6 +136,7 @@ export function Interests({ data, onChange, isEditing }: InterestsProps) {
                 value={newInterest.name}
                 onChange={(e) => setNewInterest({ ...newInterest, name: e.target.value })}
                 placeholder="z.B. Fotografie, Programmierung, Yoga"
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
             <div className="space-y-2">
@@ -144,7 +145,7 @@ export function Interests({ data, onChange, isEditing }: InterestsProps) {
                 id="interest-category"
                 value={newInterest.category}
                 onChange={(e) => setNewInterest({ ...newInterest, category: e.target.value as InterestEntry['category'] })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               >
                 <option value="hobby">Hobby</option>
                 <option value="sport">Sport</option>
@@ -231,6 +232,7 @@ function InterestEditCard({ interest, isEditing, onEdit, onSave, onDelete }: Int
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
             <div className="space-y-2">
@@ -238,7 +240,7 @@ function InterestEditCard({ interest, isEditing, onEdit, onSave, onDelete }: Int
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value as InterestEntry['category'] })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               >
                 <option value="hobby">Hobby</option>
                 <option value="sport">Sport</option>

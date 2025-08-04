@@ -202,6 +202,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                       value={entry.institution}
                       onChange={(e) => updateEducation(entry.id, 'institution', e.target.value)}
                       disabled={!isEditing}
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                     />
                   </div>
 
@@ -216,6 +217,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                       value={entry.degree}
                       onChange={(e) => updateEducation(entry.id, 'degree', e.target.value)}
                       disabled={!isEditing}
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                     />
                   </div>
 
@@ -230,6 +232,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                       value={entry.field}
                       onChange={(e) => updateEducation(entry.id, 'field', e.target.value)}
                       disabled={!isEditing}
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                     />
                   </div>
 
@@ -245,6 +248,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                       value={entry.location}
                       onChange={(e) => updateEducation(entry.id, 'location', e.target.value)}
                       disabled={!isEditing}
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                     />
                   </div>
 
@@ -259,6 +263,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                       value={entry.gpa || ''}
                       onChange={(e) => updateEducation(entry.id, 'gpa', e.target.value)}
                       disabled={!isEditing}
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                     />
                     <p className="text-xs text-muted-foreground">
                       Optional - nur wenn du stolz drauf bist 😉
@@ -279,7 +284,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                       value={entry.startDate}
                       onChange={(e) => updateEducation(entry.id, 'startDate', e.target.value)}
                       disabled={!isEditing}
-                      className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                       min="1900-01"
                       max="2100-12"
                     />
@@ -299,7 +304,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                       value={entry.endDate}
                       onChange={(e) => updateEducation(entry.id, 'endDate', e.target.value)}
                       disabled={!isEditing || entry.current}
-                      className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                       min="1900-01"
                       max="2100-12"
                     />

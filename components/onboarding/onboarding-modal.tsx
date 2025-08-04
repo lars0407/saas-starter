@@ -116,21 +116,25 @@ export function OnboardingModal({
   }
 
   const handleJobTitleComplete = (title: string) => {
+    console.log('OnboardingModal: handleJobTitleComplete called with:', title)
     setJobTitle(title)
-    setCurrentStep(5) // Move to work location step
+    setCurrentStep(6) // Move to work location step
   }
 
   const handleWorkLocationComplete = (location: string) => {
+    console.log('OnboardingModal: handleWorkLocationComplete called with:', location)
     setWorkLocation(location)
-    setCurrentStep(6) // Move to job type step
+    setCurrentStep(7) // Move to job type step
   }
 
   const handleJobTypeComplete = (type: string) => {
+    console.log('OnboardingModal: handleJobTypeComplete called with:', type)
     setJobType(type)
-    setCurrentStep(7) // Move to salary expectation step
+    setCurrentStep(8) // Move to salary expectation step
   }
 
   const handleSalaryExpectationComplete = (salary: string) => {
+    console.log('OnboardingModal: handleSalaryExpectationComplete called with:', salary)
     setSalaryExpectation(salary)
     setCurrentStep(9) // Move to completion step
   }

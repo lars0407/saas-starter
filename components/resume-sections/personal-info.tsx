@@ -88,10 +88,10 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
               placeholder="z.B. Max Mustermann"
               value={data.fullName}
               onChange={(e) => handleChange('fullName', e.target.value)}
-              className={cn(
-                errors.fullName && "border-red-500",
-                "focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
-              )}
+                             className={cn(
+                 errors.fullName && "border-red-500",
+                 "focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+               )}
               disabled={!isEditing}
             />
             {errors.fullName && (
@@ -110,10 +110,10 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
               placeholder="max.mustermann@email.com"
               value={data.email}
               onChange={(e) => handleChange('email', e.target.value)}
-              className={cn(
-                errors.email && "border-red-500",
-                "focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
-              )}
+                             className={cn(
+                 errors.email && "border-red-500",
+                 "focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+               )}
               disabled={!isEditing}
             />
             {errors.email && (
@@ -126,15 +126,15 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
             <Label htmlFor="phone" className="text-sm font-medium">
               Telefonnummer 📱
             </Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="+49 123 456789"
-              value={data.phone || ''}
-              onChange={(e) => handleChange('phone', e.target.value)}
-              className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
-              disabled={!isEditing}
-            />
+                         <Input
+               id="phone"
+               type="tel"
+               placeholder="+49 123 456789"
+               value={data.phone || ''}
+               onChange={(e) => handleChange('phone', e.target.value)}
+               className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+               disabled={!isEditing}
+             />
             <p className="text-xs text-muted-foreground">
               Optional - für direkten Kontakt
             </p>
@@ -150,14 +150,14 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
               <Label htmlFor="adresse_street" className="text-sm font-medium">
                 Straße & Hausnummer
               </Label>
-              <Input
-                id="adresse_street"
-                placeholder="z.B. Musterstraße 123"
-                value={data.adresse_street || ''}
-                onChange={(e) => handleChange('adresse_street', e.target.value)}
-                className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
-                disabled={!isEditing}
-              />
+                             <Input
+                 id="adresse_street"
+                 placeholder="z.B. Musterstraße 123"
+                 value={data.adresse_street || ''}
+                 onChange={(e) => handleChange('adresse_street', e.target.value)}
+                 className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+                 disabled={!isEditing}
+               />
               <p className="text-xs text-muted-foreground">
                 Optional - für vollständige Adresse
               </p>
@@ -173,10 +173,10 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
                 placeholder="z.B. Berlin"
                 value={data.adresse_city}
                 onChange={(e) => handleChange('adresse_city', e.target.value)}
-                className={cn(
-                  errors.adresse_city && "border-red-500",
-                  "focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
-                )}
+                                             className={cn(
+                 errors.adresse_city && "border-red-500",
+                 "focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+               )}
                 disabled={!isEditing}
               />
               {errors.adresse_city && (
@@ -189,14 +189,14 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
               <Label htmlFor="adresse_postcode" className="text-sm font-medium">
                 Postleitzahl
               </Label>
-              <Input
-                id="adresse_postcode"
-                placeholder="z.B. 10115"
-                value={data.adresse_postcode || ''}
-                onChange={(e) => handleChange('adresse_postcode', e.target.value)}
-                className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
-                disabled={!isEditing}
-              />
+                             <Input
+                 id="adresse_postcode"
+                 placeholder="z.B. 10115"
+                 value={data.adresse_postcode || ''}
+                 onChange={(e) => handleChange('adresse_postcode', e.target.value)}
+                 className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+                 disabled={!isEditing}
+               />
               <p className="text-xs text-muted-foreground">
                 Optional - für vollständige Adresse
               </p>
@@ -207,14 +207,14 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
               <Label htmlFor="adresse_country" className="text-sm font-medium">
                 Land
               </Label>
-              <Input
-                id="adresse_country"
-                placeholder="z.B. Deutschland"
-                value={data.adresse_country || ''}
-                onChange={(e) => handleChange('adresse_country', e.target.value)}
-                className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
-                disabled={!isEditing}
-              />
+                             <Input
+                 id="adresse_country"
+                 placeholder="z.B. Deutschland"
+                 value={data.adresse_country || ''}
+                 onChange={(e) => handleChange('adresse_country', e.target.value)}
+                 className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+                 disabled={!isEditing}
+               />
               <p className="text-xs text-muted-foreground">
                 Optional - Standard: Deutschland
               </p>
@@ -232,15 +232,15 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
                 <Globe className="h-3 w-3" />
                 Website
               </Label>
-              <Input
-                id="website"
-                type="url"
-                placeholder="https://..."
-                value={data.website || ''}
-                onChange={(e) => handleChange('website', e.target.value)}
-                className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
-                disabled={!isEditing}
-              />
+                             <Input
+                 id="website"
+                 type="url"
+                 placeholder="https://..."
+                 value={data.website || ''}
+                 onChange={(e) => handleChange('website', e.target.value)}
+                 className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+                 disabled={!isEditing}
+               />
             </div>
 
             {/* LinkedIn */}
@@ -249,14 +249,15 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
                 <Linkedin className="h-3 w-3" />
                 LinkedIn
               </Label>
-              <Input
-                id="linkedin"
-                type="url"
-                placeholder="https://linkedin.com/in/..."
-                value={data.linkedin || ''}
-                onChange={(e) => handleChange('linkedin', e.target.value)}
-                disabled={!isEditing}
-              />
+                             <Input
+                 id="linkedin"
+                 type="url"
+                 placeholder="https://linkedin.com/in/..."
+                 value={data.linkedin || ''}
+                 onChange={(e) => handleChange('linkedin', e.target.value)}
+                 className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+                 disabled={!isEditing}
+               />
             </div>
 
             {/* GitHub */}
@@ -265,14 +266,15 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
                 <Github className="h-3 w-3" />
                 GitHub
               </Label>
-              <Input
-                id="github"
-                type="url"
-                placeholder="https://github.com/..."
-                value={data.github || ''}
-                onChange={(e) => handleChange('github', e.target.value)}
-                disabled={!isEditing}
-              />
+                             <Input
+                 id="github"
+                 type="url"
+                 placeholder="https://github.com/..."
+                 value={data.github || ''}
+                 onChange={(e) => handleChange('github', e.target.value)}
+                 className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+                 disabled={!isEditing}
+               />
             </div>
           </div>
         </div>

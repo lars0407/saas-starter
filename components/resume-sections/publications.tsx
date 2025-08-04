@@ -196,6 +196,7 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
                 value={newPublication.title}
                 onChange={(e) => setNewPublication({ ...newPublication, title: e.target.value })}
                 placeholder="Titel der Publikation"
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
             <div className="space-y-2">
@@ -204,7 +205,7 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
                 id="pub-type"
                 value={newPublication.type}
                 onChange={(e) => setNewPublication({ ...newPublication, type: e.target.value as PublicationEntry['type'] })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               >
                 <option value="article">Artikel</option>
                 <option value="book">Buch</option>
@@ -224,6 +225,7 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
                 value={newPublication.authors}
                 onChange={(e) => setNewPublication({ ...newPublication, authors: e.target.value })}
                 placeholder="Autoren (durch Kommas getrennt)"
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
             <div className="space-y-2">
@@ -233,6 +235,7 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
                 type="date"
                 value={newPublication.publicationDate}
                 onChange={(e) => setNewPublication({ ...newPublication, publicationDate: e.target.value })}
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
           </div>
@@ -245,6 +248,7 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
                 value={newPublication.journal}
                 onChange={(e) => setNewPublication({ ...newPublication, journal: e.target.value })}
                 placeholder="Name des Journals"
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
             <div className="space-y-2">
@@ -254,6 +258,7 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
                 value={newPublication.publisher}
                 onChange={(e) => setNewPublication({ ...newPublication, publisher: e.target.value })}
                 placeholder="Name des Verlags"
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
           </div>
@@ -266,6 +271,7 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
                 value={newPublication.doi}
                 onChange={(e) => setNewPublication({ ...newPublication, doi: e.target.value })}
                 placeholder="10.1000/xyz123"
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
             <div className="space-y-2">
@@ -276,6 +282,7 @@ export function Publications({ data, onChange, isEditing }: PublicationsProps) {
                 value={newPublication.url}
                 onChange={(e) => setNewPublication({ ...newPublication, url: e.target.value })}
                 placeholder="https://..."
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
           </div>
@@ -351,6 +358,7 @@ function PublicationEditCard({ publication, isEditing, onEdit, onSave, onDelete 
               <Input
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
             <div className="space-y-2">
@@ -358,7 +366,7 @@ function PublicationEditCard({ publication, isEditing, onEdit, onSave, onDelete 
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as PublicationEntry['type'] })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               >
                 <option value="article">Artikel</option>
                 <option value="book">Buch</option>
@@ -376,6 +384,7 @@ function PublicationEditCard({ publication, isEditing, onEdit, onSave, onDelete 
               <Input
                 value={formData.authors}
                 onChange={(e) => setFormData({ ...formData, authors: e.target.value })}
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
             <div className="space-y-2">
@@ -384,6 +393,7 @@ function PublicationEditCard({ publication, isEditing, onEdit, onSave, onDelete 
                 type="date"
                 value={formData.publicationDate}
                 onChange={(e) => setFormData({ ...formData, publicationDate: e.target.value })}
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
           </div>
@@ -394,6 +404,7 @@ function PublicationEditCard({ publication, isEditing, onEdit, onSave, onDelete 
               <Input
                 value={formData.journal || ''}
                 onChange={(e) => setFormData({ ...formData, journal: e.target.value || undefined })}
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
             <div className="space-y-2">
@@ -401,6 +412,7 @@ function PublicationEditCard({ publication, isEditing, onEdit, onSave, onDelete 
               <Input
                 value={formData.publisher || ''}
                 onChange={(e) => setFormData({ ...formData, publisher: e.target.value || undefined })}
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
           </div>
@@ -411,6 +423,7 @@ function PublicationEditCard({ publication, isEditing, onEdit, onSave, onDelete 
               <Input
                 value={formData.doi || ''}
                 onChange={(e) => setFormData({ ...formData, doi: e.target.value || undefined })}
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
             <div className="space-y-2">
@@ -419,6 +432,7 @@ function PublicationEditCard({ publication, isEditing, onEdit, onSave, onDelete 
                 type="url"
                 value={formData.url || ''}
                 onChange={(e) => setFormData({ ...formData, url: e.target.value || undefined })}
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
           </div>

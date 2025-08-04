@@ -276,7 +276,7 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
                               placeholder="Skill Name"
                               value={skill.name}
                               onChange={(e) => updateSkill(skill.id, 'name', e.target.value)}
-                              className="text-xs"
+                              className="text-xs focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                             />
                             <Select
                               value={skill.level}
@@ -318,7 +318,7 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
                   placeholder="z.B. React, Teamführung"
                   value={newSkill.name || ''}
                   onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
-                  className="text-sm"
+                  className="text-sm focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                   onKeyPress={(e) => e.key === 'Enter' && addSkill()}
                 />
               </div>

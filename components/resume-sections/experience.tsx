@@ -230,6 +230,7 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
                       value={entry.company}
                       onChange={(e) => updateExperience(entry.id, 'company', e.target.value)}
                       disabled={!isEditing}
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                     />
                   </div>
 
@@ -244,6 +245,7 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
                       value={entry.position}
                       onChange={(e) => updateExperience(entry.id, 'position', e.target.value)}
                       disabled={!isEditing}
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                     />
                   </div>
 
@@ -259,6 +261,7 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
                       value={entry.location}
                       onChange={(e) => updateExperience(entry.id, 'location', e.target.value)}
                       disabled={!isEditing}
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                     />
                   </div>
 
@@ -280,7 +283,7 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
                       value={entry.startDate}
                       onChange={(e) => updateExperience(entry.id, 'startDate', e.target.value)}
                       disabled={!isEditing}
-                      className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                       min="1900-01"
                       max="2100-12"
                     />
@@ -300,7 +303,7 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
                       value={entry.endDate}
                       onChange={(e) => updateExperience(entry.id, 'endDate', e.target.value)}
                       disabled={!isEditing || entry.current}
-                      className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20"
+                      className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                       min="1900-01"
                       max="2100-12"
                     />

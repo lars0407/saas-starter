@@ -11,9 +11,8 @@ export function JobTypeStep({ onComplete }: JobTypeStepProps) {
   const [selectedJobType, setSelectedJobType] = useState<string>("")
 
   const handleContinue = () => {
-    if (selectedJobType) {
-      onComplete(selectedJobType)
-    }
+    console.log('JobTypeStep: handleContinue called with:', selectedJobType)
+    onComplete(selectedJobType || 'flexible') // Default to flexible if nothing selected
   }
 
   return (
@@ -109,8 +108,7 @@ export function JobTypeStep({ onComplete }: JobTypeStepProps) {
       <div className="flex justify-center pt-4">
         <Button 
           onClick={handleContinue}
-          disabled={!selectedJobType}
-          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
         >
           Weiter
         </Button>

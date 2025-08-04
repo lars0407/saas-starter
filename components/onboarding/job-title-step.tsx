@@ -12,9 +12,8 @@ export function JobTitleStep({ onComplete }: JobTitleStepProps) {
   const [jobTitle, setJobTitle] = useState<string>("")
 
   const handleContinue = () => {
-    if (jobTitle.trim()) {
-      onComplete(jobTitle.trim())
-    }
+    console.log('JobTitleStep: handleContinue called with:', jobTitle.trim())
+    onComplete(jobTitle.trim())
   }
 
   return (
@@ -38,14 +37,14 @@ export function JobTitleStep({ onComplete }: JobTitleStepProps) {
           <Label htmlFor="jobTitle" className="text-sm font-medium text-gray-700">
             Job-Titel
           </Label>
-          <Input
-            id="jobTitle"
-            type="text"
-            placeholder="z.B. Frontend Developer, Marketing Manager, UX Designer..."
-            value={jobTitle}
-            onChange={(e) => setJobTitle(e.target.value)}
-            className="mt-1"
-          />
+                     <Input
+             id="jobTitle"
+             type="text"
+             placeholder="z.B. Frontend Developer, Marketing Manager, UX Designer..."
+             value={jobTitle}
+             onChange={(e) => setJobTitle(e.target.value)}
+             className="mt-1 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+           />
         </div>
         
         <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
@@ -57,8 +56,7 @@ export function JobTitleStep({ onComplete }: JobTitleStepProps) {
       <div className="flex justify-center pt-4">
         <Button 
           onClick={handleContinue}
-          disabled={!jobTitle.trim()}
-          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
         >
           Weiter
         </Button>

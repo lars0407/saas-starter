@@ -112,7 +112,7 @@ export function ResumeUploadForm({
                   placeholder="https://linkedin.com/in/dein-profil"
                   value={linkedinUrl}
                   onChange={(e) => setLinkedinUrl(e.target.value)}
-                  className="w-full focus:border-[#0F973D] focus:ring-[#0F973D] focus-visible:border-[#0F973D] focus-visible:ring-[#0F973D]/50"
+                  className="w-full focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                 />
                 <Button 
                   onClick={handleLinkedinSubmit}

@@ -11,9 +11,8 @@ export function WorkLocationStep({ onComplete }: WorkLocationStepProps) {
   const [selectedLocation, setSelectedLocation] = useState<string>("")
 
   const handleContinue = () => {
-    if (selectedLocation) {
-      onComplete(selectedLocation)
-    }
+    console.log('WorkLocationStep: handleContinue called with:', selectedLocation)
+    onComplete(selectedLocation || 'flexible') // Default to flexible if nothing selected
   }
 
   return (
@@ -133,8 +132,7 @@ export function WorkLocationStep({ onComplete }: WorkLocationStepProps) {
       <div className="flex justify-center pt-4">
         <Button 
           onClick={handleContinue}
-          disabled={!selectedLocation}
-          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
         >
           Weiter
         </Button>

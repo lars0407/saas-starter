@@ -14,9 +14,9 @@ export function SalaryExpectationStep({ onComplete }: SalaryExpectationStepProps
   const [salaryAmount, setSalaryAmount] = useState<string>("")
 
   const handleContinue = () => {
-    if (salaryType && salaryAmount) {
-      onComplete(`${salaryType}: ${salaryAmount}`)
-    }
+    console.log('SalaryExpectationStep: handleContinue called with:', salaryType, salaryAmount)
+    const salary = salaryType && salaryAmount ? `${salaryType}: ${salaryAmount}` : 'flexible: negotiable'
+    onComplete(salary)
   }
 
   return (
@@ -78,14 +78,14 @@ export function SalaryExpectationStep({ onComplete }: SalaryExpectationStepProps
             <Label htmlFor="salaryAmount" className="text-sm font-medium text-gray-700">
               {salaryType === 'yearly' ? 'Jahresgehalt' : 'Monatsgehalt'} in €
             </Label>
-            <Input
-              id="salaryAmount"
-              type="number"
-              placeholder={salaryType === 'yearly' ? 'z.B. 45000' : 'z.B. 3500'}
-              value={salaryAmount}
-              onChange={(e) => setSalaryAmount(e.target.value)}
-              className="mt-1"
-            />
+                         <Input
+               id="salaryAmount"
+               type="number"
+               placeholder={salaryType === 'yearly' ? 'z.B. 45000' : 'z.B. 3500'}
+               value={salaryAmount}
+               onChange={(e) => setSalaryAmount(e.target.value)}
+               className="mt-1 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+             />
           </div>
         )}
         
@@ -98,8 +98,7 @@ export function SalaryExpectationStep({ onComplete }: SalaryExpectationStepProps
       <div className="flex justify-center pt-4">
         <Button 
           onClick={handleContinue}
-          disabled={!salaryType || !salaryAmount}
-          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
         >
           Weiter
         </Button>

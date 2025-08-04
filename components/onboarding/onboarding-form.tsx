@@ -27,7 +27,7 @@ export function OnboardingForm({
           value={firstName}
           onChange={(e) => onFirstNameChange(e.target.value)}
           placeholder="Max"
-          className="w-full focus:border-[#0F973D] focus:ring-[#0F973D] focus-visible:border-[#0F973D] focus-visible:ring-[#0F973D]/50"
+          className="w-full focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
         />
       </div>
       
@@ -41,7 +41,7 @@ export function OnboardingForm({
           value={lastName}
           onChange={(e) => onLastNameChange(e.target.value)}
           placeholder="Mustermann"
-          className="w-full focus:border-[#0F973D] focus:ring-[#0F973D] focus-visible:border-[#0F973D] focus-visible:ring-[#0F973D]/50"
+          className="w-full focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
         />
       </div>
     </div>
