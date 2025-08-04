@@ -376,7 +376,15 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   };
 
   const updatePersonalInfo = (data: any) => {
-    setResumeData(prev => ({ ...prev, personalInfo: data }));
+    // Convert firstName + lastName back to fullName format
+    const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
+    setResumeData(prev => ({ 
+      ...prev, 
+      personalInfo: {
+        ...data,
+        fullName: fullName
+      }
+    }));
   };
 
   const updateEducation = (data: any[]) => {
@@ -706,7 +714,11 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
         <div className="flex-1 overflow-y-auto space-y-6 pr-2 min-h-0">
           {/* Personal Info Section */}
           <PersonalInfo
-            data={resumeData.personalInfo}
+            data={{
+              ...resumeData.personalInfo,
+              firstName: resumeData.personalInfo.fullName.split(' ')[0] || '',
+              lastName: resumeData.personalInfo.fullName.split(' ').slice(1).join(' ') || ''
+            }}
             onChange={updatePersonalInfo}
           />
           
