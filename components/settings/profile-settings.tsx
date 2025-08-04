@@ -437,8 +437,13 @@ export function ProfileSettings() {
     }
   }
 
-  const handlePersonalInfoChange = (data: PersonalInfoData) => {
-    setPersonalInfo(data)
+  const handlePersonalInfoChange = (data: any) => {
+    // Convert firstName + lastName back to fullName format
+    const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
+    setPersonalInfo({
+      ...data,
+      fullName: fullName
+    })
     setHasChanges(true)
   }
 
@@ -611,7 +616,11 @@ export function ProfileSettings() {
           </CardHeader>
           <CardContent>
             <PersonalInfo 
-              data={personalInfo} 
+              data={{
+                ...personalInfo,
+                firstName: personalInfo.fullName.split(' ')[0] || '',
+                lastName: personalInfo.fullName.split(' ').slice(1).join(' ') || ''
+              }}
               onChange={handlePersonalInfoChange} 
               isEditing={true} 
             />
