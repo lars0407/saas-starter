@@ -3,7 +3,7 @@
 import { JobCardData, JobColumn as JobColumnType } from '@/lib/types';
 import { JobCard } from './job-card';
 import { JobCardSkeleton } from './job-card-skeleton';
-import { EmptyState } from './empty-state';
+import { EmptyState } from '@/components/empty-state';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';

@@ -92,17 +92,17 @@ const data = {
         },
         {
           title: "Jobsuche",
-          url: "/dashboard",
+          url: "/dashboard/job-search",
           icon: SquareTerminal,
           isActive: true,
           items: [
             {
               title: "Klassisch",
-              url: "/dashboard",
+              url: "/dashboard/job-search",
             },
             {
               title: "KI Suche",
-              url: "/dashboard/security",
+              url: "/dashboard/ai-job-search",
             },
             {
               title: "Empfehlungen",

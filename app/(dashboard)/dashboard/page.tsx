@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { JobtrackerBoard } from "@/components/jobtracker-board"
+import { JobtrackerBoard } from "@/components/job-search"
 
 export default function Page() {
   return (
