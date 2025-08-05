@@ -54,105 +54,6 @@ export function OnboardingModal({
   const ONBOARDING_STEP_KEY = "onboarding_current_step"
   const ONBOARDING_DATA_KEY = "onboarding_data"
 
-  // Function to transform profile data to the required JSON format
-  const transformProfileDataToJSONFormat = (data: any) => {
-    if (!data) return {
-      link: [],
-      skill: [],
-      basics: {},
-      courses: [],
-      language: [],
-      education: [],
-      interests: [],
-      experience: [],
-      publications: [],
-      certifications: []
-    }
-    
-    // Transform basics
-    const basics = data.basics ? {
-      email: data.basics.email || "",
-      image: data.basics.image || "",
-      gender: data.basics.gender || "",
-      surname: data.basics.lastName || "",
-      birthdate: data.basics.birthdate || "",
-      telephone: data.basics.phone || "",
-      first_name: data.basics.firstName || "",
-      description: data.basics.summary || "",
-      nationality: data.basics.nationality || "",
-      title_after: data.basics.title_after || "",
-      adresse_city: data.basics.adresse_city || "",
-      title_before: data.basics.title_before || "",
-      adresse_street: data.basics.adresse_street || "",
-      adresse_country: data.basics.adresse_country || "",
-      adresse_postcode: data.basics.adresse_postcode || ""
-    } : {}
-    
-    // Transform links
-    const links = []
-    if (data.basics?.website) {
-      links.push({ url: data.basics.website, label: "website" })
-    }
-    if (data.basics?.linkedin) {
-      links.push({ url: data.basics.linkedin, label: "linkedin" })
-    }
-    if (data.basics?.github) {
-      links.push({ url: data.basics.github, label: "github" })
-    }
-    
-    // Transform education
-    const education = Array.isArray(data.education) ? data.education.map((item: any) => {
-      const { id, ...itemWithoutId } = item
-      return {
-        grade: itemWithoutId.gpa || "",
-        degree: itemWithoutId.degree || "",
-        school: itemWithoutId.institution || "",
-        endDate: itemWithoutId.endDate || "",
-        subject: itemWithoutId.field || "",
-        startDate: itemWithoutId.startDate || "",
-        description: itemWithoutId.description || "",
-        location_city: itemWithoutId.location || "",
-        location_country: ""
-      }
-    }) : []
-    
-    // Transform experience
-    const experience = Array.isArray(data.experience) ? data.experience.map((item: any) => {
-      const { id, ...itemWithoutId } = item
-      return {
-        title: itemWithoutId.position || "",
-        company: itemWithoutId.company || "",
-        endDate: itemWithoutId.endDate || "",
-        location: itemWithoutId.location || "",
-        startDate: itemWithoutId.startDate || "",
-        description: itemWithoutId.description || "",
-        achievements: Array.isArray(itemWithoutId.achievements) ? itemWithoutId.achievements : []
-      }
-    }) : []
-    
-    // Transform skills
-    const skills = Array.isArray(data.skills) ? data.skills.map((item: any) => {
-      const { id, ...itemWithoutId } = item
-      return {
-        label: itemWithoutId.category || "technical",
-        skill: itemWithoutId.name || ""
-      }
-    }) : []
-    
-    return {
-      link: links,
-      skill: skills,
-      basics: basics,
-      courses: [],
-      language: [],
-      education: education,
-      interests: [],
-      experience: experience,
-      publications: [],
-      certifications: []
-    }
-  }
-
   // API function to save onboarding data
   const saveOnboardingToAPI = async () => {
     try {
@@ -170,12 +71,14 @@ export function OnboardingModal({
         throw new Error('No authentication token found. Please log in again.')
       }
       
-      // Transform profile data to the required JSON format
-      const transformedProfileData = transformProfileDataToJSONFormat(profileData)
-      
       // Prepare the request payload with fallback structures
       const payload = {
-        profile_data: transformedProfileData,
+        profile_data: profileData || {
+          personalInfo: {},
+          education: [],
+          experience: [],
+          skills: []
+        },
         search_profile: parsedSearchData || {
           job_search_activity: "",
           dream_job_title: "",
@@ -186,7 +89,7 @@ export function OnboardingModal({
             amount_eur: 0
           }
         },
-        linkedin_url: profileData?.basics?.linkedin || ""
+        linkedin_url: profileData?.personalInfo?.linkedin || ""
       }
 
       // Validate payload structure
@@ -460,15 +363,7 @@ export function OnboardingModal({
   }
 
   const handleProfileModalComplete = (data: any) => {
-    // Transform personalInfo to basics for consistent data structure
-    const transformedData = data && data.personalInfo ? {
-      basics: data.personalInfo,
-      education: data.education || [],
-      experience: data.experience || [],
-      skills: data.skills || []
-    } : data
-    
-    setProfileData(transformedData)
+    setProfileData(data)
     setCurrentStep(4) // Move to job search intensity step
   }
 
