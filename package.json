@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "postinstall": "node ./postinstall.js",
-    "vercel-build": "npm rebuild && npm run build"
+    "vercel-build": "npm install --force && npm rebuild --force && npm run build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
