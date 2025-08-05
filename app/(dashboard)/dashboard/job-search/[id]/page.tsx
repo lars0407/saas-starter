@@ -17,6 +17,9 @@ import {
 import { JobDetailComponent } from "@/components/job-search"
 
 export default function JobDetailPage() {
+  const params = useParams();
+  const jobId = parseInt(params.id as string, 10);
+
   return (
     <>
       <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
@@ -48,7 +51,7 @@ export default function JobDetailPage() {
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <JobDetailComponent />
+        <JobDetailComponent jobId={jobId} />
       </div>
     </>
   )
