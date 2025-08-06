@@ -157,9 +157,41 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
     }
   }
 
-  const handleAddToTracker = () => {
-    // In a real app, you'd add the job to the tracker
-    console.log('Adding job to tracker:', job?.id)
+  const handleAddToTracker = async () => {
+    if (!job?.id) return
+    
+    try {
+      const response = await fetch("/api/job_tracker/favourite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          job_id: job.id
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        if (errorData.code === "ERROR_CODE_UNAUTHORIZED") {
+          alert('Bitte melden Sie sich an, um Jobs zum Jobtracker hinzuzufügen.')
+          return
+        }
+        throw new Error("Fehler beim Speichern des Jobs")
+      }
+
+      const data = await response.json()
+      console.log('Job tracker response:', data)
+
+      // Show success message based on API response
+      if (data.message) {
+        // You can add a toast notification here if you have a toast system
+        console.log('Job tracker:', data.message)
+      }
+    } catch (error) {
+      console.error('Error adding job to tracker:', error)
+      // You can add error handling here (toast notification, etc.)
+    }
   }
 
   const toggleDescription = () => {

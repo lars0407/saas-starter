@@ -192,16 +192,50 @@ export function JobSearchComponent() {
     setFilters(initialFilters)
   }
 
-  const toggleSavedJob = (jobId: number) => {
-    setSavedJobs(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(jobId)) {
-        newSet.delete(jobId)
-      } else {
-        newSet.add(jobId)
+  const toggleSavedJob = async (jobId: number) => {
+    try {
+      const response = await fetch("/api/job_tracker/favourite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          job_id: jobId
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        if (errorData.code === "ERROR_CODE_UNAUTHORIZED") {
+          alert('Bitte melden Sie sich an, um Jobs zu speichern.')
+          return
+        }
+        throw new Error("Fehler beim Speichern des Jobs")
       }
-      return newSet
-    })
+
+      const data = await response.json()
+      console.log('Job tracker response:', data)
+
+      // Update local state based on API response
+      setSavedJobs(prev => {
+        const newSet = new Set(prev)
+        if (newSet.has(jobId)) {
+          newSet.delete(jobId)
+        } else {
+          newSet.add(jobId)
+        }
+        return newSet
+      })
+
+      // Show success message based on API response
+      if (data.message) {
+        // You can add a toast notification here if you have a toast system
+        console.log('Job tracker:', data.message)
+      }
+    } catch (error) {
+      console.error('Error toggling saved job:', error)
+      // You can add error handling here (toast notification, etc.)
+    }
   }
 
   const handleJobClick = (jobId: number) => {
