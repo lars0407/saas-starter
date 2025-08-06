@@ -231,41 +231,46 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
             </div>
           </div>
 
-          {/* Job Meta */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">{job.job_employement_type}</p>
-                <p className="text-xs text-muted-foreground">Beschäftigungstyp</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">{job.salary}</p>
-                <p className="text-xs text-muted-foreground">Gehalt</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">{job.seniority}</p>
-                <p className="text-xs text-muted-foreground">Level</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">{job.applicants_number}</p>
-                <p className="text-xs text-muted-foreground">Bewerber</p>
-              </div>
-            </div>
-          </div>
+          {/* Job Meta - Removed Level and Applicants sections */}
 
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mb-6">
-            <Badge variant="secondary">{job.remote_work}</Badge>
+            {job.job_employement_type && job.job_employement_type !== 'null' && job.job_employement_type !== 'Not Applicable' && (
+              <Badge variant="outline">
+                {job.job_employement_type === 'Full-time' ? 'Vollzeit' :
+                 job.job_employement_type === 'FULL_TIME' ? 'Vollzeit' :
+                 job.job_employement_type === 'Part-time' ? 'Teilzeit' :
+                 job.job_employement_type === 'Contract' ? 'Vertrag' :
+                 job.job_employement_type === 'Internship' ? 'Praktikum' :
+                 job.job_employement_type}
+              </Badge>
+            )}
+            {job.salary && job.salary !== 'null' && job.salary !== 'Not Applicable' && (
+              <Badge variant="outline">{job.salary}</Badge>
+            )}
+            {job.seniority && job.seniority !== 'null' && job.seniority !== 'Not Applicable' && (
+              <Badge variant="outline">
+                {job.seniority === 'Entry level' ? 'Berufseinstieg' :
+                 job.seniority === 'Junior' ? 'Berufseinstieg' :
+                 job.seniority === 'Internship' ? 'Praktikum' :
+                 job.seniority === 'Mid-Senior Level' ? 'Management' :
+                 job.seniority === 'Associate' ? 'Berufserfahren' :
+                 job.seniority === 'Director' ? 'Direktor' :
+                 job.seniority === 'Management' ? 'Management' :
+                 job.seniority}
+              </Badge>
+            )}
+            {job.working_hours && job.working_hours !== 'null' && job.working_hours !== 'Not Applicable' && (
+              <Badge variant="outline">{job.working_hours}</Badge>
+            )}
+            {job.remote_work && job.remote_work !== 'null' && job.remote_work !== 'Not Applicable' && (
+              <Badge variant="secondary">
+                {job.remote_work === 'Remote' ? 'Vollständig Remote' :
+                 job.remote_work === 'Hybrid' ? 'Hybrid' :
+                 job.remote_work === 'On-site' ? 'Vor Ort' :
+                 job.remote_work}
+              </Badge>
+            )}
             <Badge variant="outline">{job.company?.company_size} Mitarbeiter</Badge>
             <Badge variant="outline">{formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet</Badge>
           </div>

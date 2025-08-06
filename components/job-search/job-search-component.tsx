@@ -477,27 +477,53 @@ export function JobSearchComponent() {
                         </Button>
                     </div>
 
-                    {/* Job Meta */}
-                      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                          {job.job_city}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {job.job_employement_type}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3" />
-                        {job.salary}
-                      </div>
-                    </div>
+                                           {/* Job Meta */}
+                       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                         <div className="flex items-center gap-1">
+                           <MapPin className="h-3 w-3" />
+                           {job.job_city}
+                         </div>
+                       </div>
 
-                    {/* Tags */}
-                      <div className="flex flex-wrap gap-1">
-                        <Badge variant="secondary" className="text-xs">{job.remote_work}</Badge>
-                        <Badge variant="outline" className="text-xs">{job.seniority}</Badge>
-                    </div>
+                                           {/* Tags */}
+                       <div className="flex flex-wrap gap-1">
+                         {job.job_employement_type && job.job_employement_type !== 'null' && job.job_employement_type !== 'Not Applicable' && (
+                           <Badge variant="outline" className="text-xs">
+                             {job.job_employement_type === 'Full-time' ? 'Vollzeit' :
+                              job.job_employement_type === 'FULL_TIME' ? 'Vollzeit' :
+                              job.job_employement_type === 'Part-time' ? 'Teilzeit' :
+                              job.job_employement_type === 'Contract' ? 'Vertrag' :
+                              job.job_employement_type === 'Internship' ? 'Praktikum' :
+                              job.job_employement_type}
+                           </Badge>
+                         )}
+                         {job.salary && job.salary !== 'null' && job.salary !== 'Not Applicable' && (
+                           <Badge variant="outline" className="text-xs">{job.salary}</Badge>
+                         )}
+                         {job.seniority && job.seniority !== 'null' && job.seniority !== 'Not Applicable' && (
+                           <Badge variant="outline" className="text-xs">
+                             {job.seniority === 'Entry level' ? 'Berufseinstieg' :
+                              job.seniority === 'Junior' ? 'Berufseinstieg' :
+                              job.seniority === 'Internship' ? 'Praktikum' :
+                              job.seniority === 'Mid-Senior Level' ? 'Management' :
+                              job.seniority === 'Associate' ? 'Berufserfahren' :
+                              job.seniority === 'Director' ? 'Direktor' :
+                              job.seniority === 'Management' ? 'Management' :
+                              job.seniority}
+                           </Badge>
+                         )}
+                         {job.working_hours && job.working_hours !== 'null' && job.working_hours !== 'Not Applicable' && (
+                           <Badge variant="outline" className="text-xs">{job.working_hours}</Badge>
+                         )}
+                         {job.remote_work && job.remote_work !== 'null' && job.remote_work !== 'Not Applicable' && (
+                           <Badge variant="secondary" className="text-xs">
+                             {job.remote_work === 'Remote' ? 'Vollständig Remote' :
+                              job.remote_work === 'Hybrid' ? 'Hybrid' :
+                              job.remote_work === 'On-site' ? 'Vor Ort' :
+                              job.remote_work}
+                           </Badge>
+                         )}
+                       </div>
 
                                              {/* Posted Date */}
                        <div className="text-xs text-muted-foreground">
