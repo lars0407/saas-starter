@@ -46,6 +46,8 @@ export function JobSearchComponent() {
   const [page, setPage] = useState(1)
   const [hasMoreJobs, setHasMoreJobs] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [isNearBottom, setIsNearBottom] = useState(false)
+  const [observerTarget, setObserverTarget] = useState<HTMLDivElement | null>(null)
 
   // Fetch jobs from Xano API
   const fetchJobs = async (isLoadMore = false) => {
@@ -136,6 +138,41 @@ export function JobSearchComponent() {
     }
   }, [jobs, selectedJobId])
 
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!observerTarget || loadingMore || !hasMoreJobs || jobs.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !loadingMore && hasMoreJobs && !isNearBottom && jobs.length > 0) {
+            console.log('Observer triggered - loading more jobs')
+            setIsNearBottom(true)
+            fetchJobs(true)
+          }
+        })
+      },
+      {
+        root: document.querySelector('.job-list-container'),
+        rootMargin: '100px', // Trigger 100px before reaching the target
+        threshold: 0.1
+      }
+    )
+
+    observer.observe(observerTarget)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [observerTarget, loadingMore, hasMoreJobs, isNearBottom, jobs.length])
+
+  // Reset near bottom state when new jobs are loaded
+  useEffect(() => {
+    if (!loadingMore) {
+      setIsNearBottom(false)
+    }
+  }, [loadingMore])
+
   const handleFilterChange = (key: keyof JobSearchFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))
   }
@@ -144,11 +181,7 @@ export function JobSearchComponent() {
     fetchJobs(false)
   }
 
-  const handleLoadMore = () => {
-    if (!loadingMore && hasMoreJobs) {
-      fetchJobs(true)
-    }
-  }
+  // handleLoadMore is no longer needed with infinite scroll
 
   const clearFilters = () => {
     setFilters(initialFilters)
@@ -361,7 +394,7 @@ export function JobSearchComponent() {
           </Select>
       </div>
 
-          <div className="flex-1 overflow-y-auto space-y-4">
+                     <div className="flex-1 overflow-y-auto space-y-4 job-list-container">
         {loading ? (
           // Loading skeletons
           Array.from({ length: 3 }).map((_, index) => (
@@ -491,19 +524,21 @@ export function JobSearchComponent() {
           </Card>
         )}
 
-      {/* Load More */}
-           {jobs.length > 0 && !loading && !error && (
-             <div className="text-center pt-4">
-               <Button 
-                 variant="outline" 
-                 size="sm" 
-                 disabled={loadingMore || !hasMoreJobs}
-                 onClick={handleLoadMore}
-               >
-                 {loadingMore ? "Lade mehr..." : "Mehr Jobs laden"}
-          </Button>
-        </div>
-      )}
+                            {/* Intersection Observer Target */}
+            <div 
+              ref={setObserverTarget}
+              className="h-4 w-full"
+            />
+            
+            {/* Loading indicator for infinite scroll */}
+            {loadingMore && (
+              <div className="text-center pt-4">
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#0F973D]"></div>
+                  Lade weitere Jobs...
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
