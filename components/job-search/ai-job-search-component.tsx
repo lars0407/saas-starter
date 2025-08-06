@@ -57,6 +57,54 @@ export function AIJobSearchComponent() {
     fetchJobFavourites()
   }, [])
 
+  // Auto-search with "KI" on page load
+  useEffect(() => {
+    if (jobs.length === 0) {
+      // Send "KI" to the AI search endpoint without setting it in the input field
+      const performInitialSearch = async () => {
+        setLoading(true)
+        setError(null)
+        
+        try {
+          const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v2/job/ai/search", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              prompt: "KI",
+              offset: 0,
+            }),
+          })
+          
+          if (!response.ok) throw new Error("Fehler beim Laden der Jobs.")
+          const data = await response.json()
+          
+          // Extract jobs from the results array and ensure proper data structure
+          const newJobs = data.results ? data.results.map((result: any) => {
+            const jobData = result.payload.data
+            return {
+              ...jobData,
+              id: typeof jobData.id === 'string' ? parseInt(jobData.id) : jobData.id
+            }
+          }) : []
+          
+          setJobs(newJobs)
+          setPage(2)
+          setTotalJobs(newJobs.length)
+          setHasMoreJobs(newJobs.length > 0)
+        } catch (err: any) {
+          setError(err.message || "Unbekannter Fehler")
+          setJobs([])
+        } finally {
+          setLoading(false)
+        }
+      }
+      
+      performInitialSearch()
+    }
+  }, [])
+
   // Fetch job favourites from API
   const fetchJobFavourites = async () => {
     try {
@@ -389,12 +437,12 @@ export function AIJobSearchComponent() {
             </div>
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
-                <Textarea
-                  placeholder="Beschreibe deinen Traumjob in natürlicher Sprache... (z.B. 'Ich suche einen Remote-Job als Frontend-Entwickler mit React-Erfahrung in Berlin')"
-                  value={aiQuery}
-                  onChange={(e) => setAiQuery(e.target.value)}
-                  className="min-h-[80px] resize-none"
-                />
+                                 <Textarea
+                   placeholder="Beschreibe deinen Traumjob in natürlicher Sprache... (z.B. 'Ich suche einen Remote-Job als Frontend-Entwickler mit React-Erfahrung in Berlin')"
+                   value={aiQuery}
+                   onChange={(e) => setAiQuery(e.target.value)}
+                   className="min-h-[80px] resize-none focus:border-[#0F973D] focus:ring-[#0F973D]"
+                 />
               </div>
               <div className="flex flex-col gap-2">
                 <Button 
