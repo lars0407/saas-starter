@@ -63,6 +63,18 @@ export function JobSearchComponent() {
       })
       if (!response.ok) throw new Error("Fehler beim Laden der Jobs.")
       const data = await response.json()
+      
+      // Debug: Log the first job to see the structure
+      if (data.items && data.items.length > 0) {
+        console.log('First job data:', data.items[0])
+        console.log('Date fields available:', {
+          created_at: data.items[0].created_at,
+          job_posted: data.items[0].job_posted,
+          posted_date: data.items[0].posted_date,
+          date: data.items[0].date
+        })
+      }
+      
       setJobs(data.items || [])
     } catch (err: any) {
       setError(err.message || "Unbekannter Fehler")
@@ -113,14 +125,46 @@ export function JobSearchComponent() {
   }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    // Handle empty or invalid date strings
+    if (!dateString || dateString === 'null' || dateString === 'undefined') {
+      console.log('Empty date string:', dateString)
+      return "Datum unbekannt"
+    }
+
+    console.log('Processing date string:', dateString)
+    
+    let date: Date
+    
+    // Check if it's a timestamp (numeric string or number)
+    if (!isNaN(Number(dateString))) {
+      // Convert timestamp to milliseconds (if it's in seconds, multiply by 1000)
+      const timestamp = Number(dateString)
+      date = new Date(timestamp > 1000000000000 ? timestamp : timestamp * 1000)
+    } else {
+      // Try to parse as regular date string
+      date = new Date(dateString)
+    }
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date string:', dateString)
+      return "Datum unbekannt"
+    }
+
     const now = new Date()
     const diffTime = Math.abs(now.getTime() - date.getTime())
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
     if (diffDays === 1) return "Heute"
     if (diffDays === 2) return "Gestern"
     if (diffDays <= 7) return `vor ${diffDays - 1} Tagen`
-    return date.toLocaleDateString('de-DE')
+    
+    // For older jobs, show the full German date
+    return date.toLocaleDateString('de-DE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
   }
 
   const selectedJob = jobs.find(job => job.id === selectedJobId)
@@ -378,7 +422,7 @@ export function JobSearchComponent() {
 
                       {/* Posted Date */}
                       <div className="text-xs text-muted-foreground">
-                        Vor {formatDate(job.created_at)} gepostet
+                        Vor {formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet
                       </div>
                     </div>
                   </div>

@@ -68,7 +68,28 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
   }, [jobId, propJob])
 
   const formatDate = (dateString: string) => {
+    // Handle empty or invalid date strings
+    if (!dateString || dateString === 'null' || dateString === 'undefined') {
+      return "Datum unbekannt"
+    }
+
     const date = new Date(dateString)
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date string:', dateString)
+      return "Datum unbekannt"
+    }
+
+    const now = new Date()
+    const diffTime = Math.abs(now.getTime() - date.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays === 1) return "Heute"
+    if (diffDays === 2) return "Gestern"
+    if (diffDays <= 7) return `vor ${diffDays - 1} Tagen`
+    
+    // For older jobs, show the full German date
     return date.toLocaleDateString('de-DE', {
       year: 'numeric',
       month: 'long',

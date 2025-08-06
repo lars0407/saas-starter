@@ -32,6 +32,8 @@ export interface Job {
   job_expiration?: boolean;
   job_identifier: number;
   job_posted?: string;
+  posted_date?: string;
+  date?: string;
   apply_link: string;
   applicants_number: string;
   working_hours: string;
