@@ -18,7 +18,9 @@ import {
   Linkedin,
   Star,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -37,6 +39,7 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
   const [loading, setLoading] = useState(!propJob)
   const [saved, setSaved] = useState(false)
   const [applied, setApplied] = useState(false)
+  const [showFullDescription, setShowFullDescription] = useState(false)
 
   useEffect(() => {
     // If we have a job prop, use it directly
@@ -153,6 +156,10 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
     console.log('Adding job to tracker:', job?.id)
   }
 
+  const toggleDescription = () => {
+    setShowFullDescription(!showFullDescription)
+  }
+
   if (loading) {
     return (
       <Card>
@@ -260,7 +267,7 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
           <div className="flex flex-wrap gap-2 mb-6">
             <Badge variant="secondary">{job.remote_work}</Badge>
             <Badge variant="outline">{job.company?.company_size} Mitarbeiter</Badge>
-            <Badge variant="outline">Vor {formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet</Badge>
+            <Badge variant="outline">{formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet</Badge>
           </div>
 
           {/* Action Buttons */}
@@ -295,12 +302,13 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
           <CardTitle>Jobbeschreibung</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div>
-            <h3 className="font-semibold mb-2">Über die Position</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              {job.description?.description_original || "Keine Beschreibung verfügbar."}
-            </p>
-          </div>
+          {job.description?.description_original && (
+            <div>
+              <p className="text-muted-foreground leading-relaxed">
+                {job.description.description_original}
+              </p>
+            </div>
+          )}
 
           <Separator />
 
@@ -352,12 +360,47 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
               <p className="text-muted-foreground mb-2">{job.company?.short_description}</p>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>Gegründet: {job.company?.founded}</span>
-                <span>Größe: {job.company?.company_size}</span>
+                <span>Mitarbeiter: {job.company?.company_size}</span>
               </div>
             </div>
           </div>
           
-          <p className="text-muted-foreground mb-4">{job.company?.about}</p>
+                     {job.company?.about && (
+             <div className="mb-4">
+               <div className="text-muted-foreground">
+                 {showFullDescription ? (
+                   <p>{job.company.about}</p>
+                 ) : (
+                   <p>
+                     {job.company.about.length > 150 
+                       ? `${job.company.about.substring(0, 150)}...` 
+                       : job.company.about
+                     }
+                   </p>
+                 )}
+               </div>
+               {job.company.about.length > 150 && (
+                 <Button
+                   variant="ghost"
+                   size="sm"
+                   onClick={toggleDescription}
+                   className="mt-2 p-0 h-auto text-[#0F973D] hover:text-[#0F973D]/80"
+                 >
+                   {showFullDescription ? (
+                     <>
+                       Weniger anzeigen
+                       <ChevronUp className="h-4 w-4 ml-1" />
+                     </>
+                   ) : (
+                     <>
+                       Mehr anzeigen
+                       <ChevronDown className="h-4 w-4 ml-1" />
+                     </>
+                   )}
+                 </Button>
+               )}
+             </div>
+           )}
           
           <div className="flex flex-wrap gap-2">
             {job.company?.employer_website && (
