@@ -441,7 +441,12 @@ export function AIJobSearchComponent() {
                    placeholder="Beschreibe deinen Traumjob in natürlicher Sprache... (z.B. 'Ich suche einen Remote-Job als Frontend-Entwickler mit React-Erfahrung in Berlin')"
                    value={aiQuery}
                    onChange={(e) => setAiQuery(e.target.value)}
-                   className="min-h-[80px] resize-none focus:border-[#0F973D] focus:ring-[#0F973D]"
+                   className="min-h-[80px] resize-none border-gray-300 focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-50 focus:outline-none"
+                   style={{ 
+                     '--tw-ring-color': '#0F973D',
+                     '--tw-border-opacity': '1',
+                     '--tw-border-color': '#0F973D'
+                   } as React.CSSProperties}
                  />
               </div>
               <div className="flex flex-col gap-2">
