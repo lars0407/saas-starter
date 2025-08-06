@@ -260,7 +260,7 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
           <div className="flex flex-wrap gap-2 mb-6">
             <Badge variant="secondary">{job.remote_work}</Badge>
             <Badge variant="outline">{job.company?.company_size} Mitarbeiter</Badge>
-            <Badge variant="outline">Vor {formatDate(job.created_at)} gepostet</Badge>
+            <Badge variant="outline">Vor {formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet</Badge>
           </div>
 
           {/* Action Buttons */}
