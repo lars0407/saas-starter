@@ -499,10 +499,10 @@ export function JobSearchComponent() {
                         <Badge variant="outline" className="text-xs">{job.seniority}</Badge>
                     </div>
 
-                      {/* Posted Date */}
-                      <div className="text-xs text-muted-foreground">
-                        Vor {formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet
-                    </div>
+                                             {/* Posted Date */}
+                       <div className="text-xs text-muted-foreground">
+                         {formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet
+                       </div>
                   </div>
                 </div>
               </CardContent>
