@@ -125,7 +125,19 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
+              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                {job.company?.employer_logo ? (
+                  <img
+                    src={job.company.employer_logo}
+                    alt={`${job.company.employer_name} logo`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Hide the image and show the fallback icon on error
+                      e.currentTarget.style.display = 'none'
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                    }}
+                  />
+                ) : null}
                 <Building2 className="h-8 w-8 text-muted-foreground" />
               </div>
               <div>
@@ -266,7 +278,19 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
         </CardHeader>
         <CardContent>
           <div className="flex items-start gap-4 mb-4">
-            <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+              {job.company?.employer_logo ? (
+                <img
+                  src={job.company.employer_logo}
+                  alt={`${job.company.employer_name} logo`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Hide the image and show the fallback icon on error
+                    e.currentTarget.style.display = 'none'
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                  }}
+                />
+              ) : null}
               <Building2 className="h-6 w-6 text-muted-foreground" />
             </div>
             <div>

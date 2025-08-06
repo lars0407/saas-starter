@@ -312,10 +312,22 @@ export function JobSearchComponent() {
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    {/* Company Logo */}
-                    <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Building2 className="h-5 w-5 text-muted-foreground" />
-                    </div>
+                     {/* Company Logo */}
+                     <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                       {job.company?.employer_logo ? (
+                         <img
+                           src={job.company.employer_logo}
+                           alt={`${job.company.employer_name} logo`}
+                           className="w-full h-full object-cover"
+                           onError={(e) => {
+                             // Hide the image and show the fallback icon on error
+                             e.currentTarget.style.display = 'none'
+                             e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                           }}
+                         />
+                       ) : null}
+                       <Building2 className="h-5 w-5 text-muted-foreground" />
+                     </div>
 
                     {/* Job Details */}
                     <div className="flex-1 space-y-2 min-w-0">
