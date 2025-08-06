@@ -106,7 +106,7 @@ const data = {
             },
             {
               title: "Empfehlungen",
-              url: "/dashboard/activity",
+              url: "/dashboard/job-recommendations",
             },
           ],
         },

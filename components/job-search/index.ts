@@ -1,5 +1,6 @@
 export { JobSearchComponent } from './job-search-component';
 export { AIJobSearchComponent } from './ai-job-search-component';
+export { JobRecommendationsComponent } from './job-recommendations-component';
 export { JobDetailComponent } from './job-detail-component';
 export { JobtrackerBoard } from './jobtracker-board';
 export { JobCard } from './job-card';
