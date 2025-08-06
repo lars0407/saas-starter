@@ -70,10 +70,23 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
   const formatDate = (dateString: string) => {
     // Handle empty or invalid date strings
     if (!dateString || dateString === 'null' || dateString === 'undefined') {
+      console.log('Empty date string:', dateString)
       return "Datum unbekannt"
     }
 
-    const date = new Date(dateString)
+    console.log('Processing date string:', dateString)
+    
+    let date: Date
+    
+    // Check if it's a timestamp (numeric string or number)
+    if (!isNaN(Number(dateString))) {
+      // Convert timestamp to milliseconds (if it's in seconds, multiply by 1000)
+      const timestamp = Number(dateString)
+      date = new Date(timestamp > 1000000000000 ? timestamp : timestamp * 1000)
+    } else {
+      // Try to parse as regular date string
+      date = new Date(dateString)
+    }
     
     // Check if the date is valid
     if (isNaN(date.getTime())) {
