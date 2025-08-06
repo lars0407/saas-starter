@@ -32,7 +32,8 @@ export default function SignUpPage() {
     try {
       const { authToken } = await signUpWithXano("", email, password)
       document.cookie = `token=${authToken}; path=/; max-age=86400; secure; samesite=strict`
-      router.push("/dashboard")
+      // Redirect to verification page with email parameter
+      router.push(`/verify?email=${encodeURIComponent(email)}`)
     } catch (err: any) {
       setError(err.response?.data?.message || "Registrierung fehlgeschlagen")
     } finally {

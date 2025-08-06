@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { verifyEmail } from "@/lib/xano"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,7 +21,17 @@ export default function VerifyPage() {
   const [verificationCode, setVerificationCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [email, setEmail] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Get email from URL parameters
+    const emailParam = searchParams.get('email')
+    if (emailParam) {
+      setEmail(decodeURIComponent(emailParam))
+    }
+  }, [searchParams])
 
   const handleVerification = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,17 +39,25 @@ export default function VerifyPage() {
     setError("")
 
     try {
-      // Simulate API call for verification
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // For demo purposes, accept any 6-character code
-      if (verificationCode.length === 6) {
-        router.push("/dashboard")
-      } else {
-        setError("Bitte geben Sie einen 6-stelligen Code ein")
+      if (!email) {
+        setError("E-Mail-Adresse nicht gefunden. Bitte registrieren Sie sich erneut.")
+        return
       }
+
+      // Convert verification code to number
+      const code = parseInt(verificationCode)
+      if (isNaN(code)) {
+        setError("Bitte geben Sie einen gültigen 6-stelligen Code ein")
+        return
+      }
+
+      // Call Xano API for verification
+      await verifyEmail(email, code)
+      
+      // If verification successful, redirect to dashboard
+      router.push("/dashboard")
     } catch (err: any) {
-      setError("Verifikation fehlgeschlagen. Bitte versuchen Sie es erneut.")
+      setError(err.response?.data?.message || "Verifikation fehlgeschlagen. Bitte versuchen Sie es erneut.")
     } finally {
       setLoading(false)
     }
@@ -61,7 +80,13 @@ export default function VerifyPage() {
             <CardHeader className="text-center">
               <CardTitle className="text-xl">Account bestätigen</CardTitle>
               <CardDescription>
-                Wir haben einen 6-stelligen Code an Ihre E-Mail gesendet
+                {email ? (
+                  <>
+                    Wir haben einen 6-stelligen Code an <strong>{email}</strong> gesendet
+                  </>
+                ) : (
+                  "Wir haben einen 6-stelligen Code an Ihre E-Mail gesendet"
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>

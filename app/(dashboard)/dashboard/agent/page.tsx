@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { 
-  PaperPlane, 
+  Send, 
   RefreshCw, 
   Download, 
   FileText, 

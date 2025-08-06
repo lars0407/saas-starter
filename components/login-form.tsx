@@ -31,9 +31,18 @@ export function LoginForm({
     setError("")
 
     try {
-      const { authToken } = await loginWithXano(email, password)
+      const response = await loginWithXano(email, password)
+      const { authToken } = response
       document.cookie = `token=${authToken}; path=/; max-age=86400; secure; samesite=strict`
-      router.push("/dashboard")
+      
+      // Check if onboarding is not ready
+      if (response.message === "Onboarding not ready") {
+        // Redirect to job search with onboarding parameter
+        router.push("/dashboard/job-search?onboarding=true")
+      } else {
+        // Normal login flow
+        router.push("/dashboard")
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || "Login fehlgeschlagen")
     } finally {
