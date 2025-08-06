@@ -37,7 +37,7 @@ interface JobDetailComponentProps {
 export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentProps) {
   const [job, setJob] = useState<Job | null>(propJob || null)
   const [loading, setLoading] = useState(!propJob)
-  const [saved, setSaved] = useState(false)
+  const [savedJobs, setSavedJobs] = useState<Set<number>>(new Set())
   const [applied, setApplied] = useState(false)
   const [showFullDescription, setShowFullDescription] = useState(false)
 
@@ -146,9 +146,44 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
     )
   }
 
-  const handleSave = () => {
-    setSaved(!saved)
+  // Fetch job favourites from API
+  const fetchJobFavourites = async () => {
+    try {
+      const response = await fetch("/api/job_tracker/favourites")
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        if (errorData.code === "ERROR_CODE_UNAUTHORIZED") {
+          console.log('User not authenticated, skipping job favourites')
+          return
+        }
+        throw new Error("Fehler beim Laden der Jobtracker-Liste")
+      }
+
+      const data = await response.json()
+      console.log('Full job favourites response:', data)
+      
+      if (data.job_tracker_list?.items?.ids && Array.isArray(data.job_tracker_list.items.ids)) {
+        const jobIds = data.job_tracker_list.items.ids
+        setSavedJobs(new Set(jobIds))
+        console.log('Loaded saved job IDs:', jobIds)
+        console.log('Saved jobs set:', new Set(jobIds))
+      } else {
+        console.log('No job favourites found or invalid response structure:', data)
+        console.log('Available keys:', Object.keys(data))
+        if (data.job_tracker_list) {
+          console.log('job_tracker_list keys:', Object.keys(data.job_tracker_list))
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching job favourites:', error)
+    }
   }
+
+  // Load job favourites on component mount
+  useEffect(() => {
+    fetchJobFavourites()
+  }, [])
 
   const handleApply = () => {
     // In a real app, you'd redirect to the application page
@@ -182,6 +217,9 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
 
       const data = await response.json()
       console.log('Job tracker response:', data)
+
+      // Refresh the job favourites list to get the updated state
+      await fetchJobFavourites()
 
       // Show success message based on API response
       if (data.message) {
@@ -258,8 +296,8 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleSave}
-                className={cn(saved && "text-[#0F973D]")}
+                onClick={handleAddToTracker}
+                className={cn(savedJobs.has(job.id) && "text-[#0F973D]")}
               >
                 <Bookmark className="h-4 w-4" />
               </Button>

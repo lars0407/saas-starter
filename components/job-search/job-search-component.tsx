@@ -49,10 +49,48 @@ export function JobSearchComponent() {
   const [isNearBottom, setIsNearBottom] = useState(false)
   const [observerTarget, setObserverTarget] = useState<HTMLDivElement | null>(null)
 
-  // Load initial jobs on component mount
+  // Load initial jobs and job favourites on component mount
   useEffect(() => {
-    fetchJobs(false)
+    const loadInitialData = async () => {
+      await fetchJobFavourites() // Load favourites first
+      await fetchJobs(false) // Then load jobs
+    }
+    loadInitialData()
   }, [])
+
+  // Fetch job favourites from API
+  const fetchJobFavourites = async () => {
+    try {
+      const response = await fetch("/api/job_tracker/favourites")
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        if (errorData.code === "ERROR_CODE_UNAUTHORIZED") {
+          console.log('User not authenticated, skipping job favourites')
+          return
+        }
+        throw new Error("Fehler beim Laden der Jobtracker-Liste")
+      }
+
+      const data = await response.json()
+      console.log('Full job favourites response:', data)
+      
+      if (data.job_tracker_list?.items?.ids && Array.isArray(data.job_tracker_list.items.ids)) {
+        const jobIds = data.job_tracker_list.items.ids
+        setSavedJobs(new Set(jobIds))
+        console.log('Loaded saved job IDs:', jobIds)
+        console.log('Saved jobs set:', new Set(jobIds))
+      } else {
+        console.log('No job favourites found or invalid response structure:', data)
+        console.log('Available keys:', Object.keys(data))
+        if (data.job_tracker_list) {
+          console.log('job_tracker_list keys:', Object.keys(data.job_tracker_list))
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching job favourites:', error)
+    }
+  }
 
   // Fetch jobs from Xano API
   const fetchJobs = async (isLoadMore = false) => {
@@ -216,16 +254,8 @@ export function JobSearchComponent() {
       const data = await response.json()
       console.log('Job tracker response:', data)
 
-      // Update local state based on API response
-      setSavedJobs(prev => {
-        const newSet = new Set(prev)
-        if (newSet.has(jobId)) {
-          newSet.delete(jobId)
-        } else {
-          newSet.add(jobId)
-        }
-        return newSet
-      })
+      // Refresh the job favourites list to get the updated state
+      await fetchJobFavourites()
 
       // Show success message based on API response
       if (data.message) {

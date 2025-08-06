@@ -1,32 +1,48 @@
-import { Metadata } from "next"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { AIJobSearchComponent } from "@/components/job-search"
+'use client';
 
-export const metadata: Metadata = {
-  title: "KI Jobsuche",
-  description: "Intelligente Jobsuche mit KI-Unterstützung",
-}
+import { useState, useEffect } from 'react';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import {
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
+import { AIJobSearchComponent } from "@/components/job-search/ai-job-search-component"
 
 export default function AIJobSearchPage() {
   return (
-    <div className="flex flex-col gap-4 p-4 pt-0">
-      <div className="flex items-center gap-2">
-        <SidebarTrigger className="-ml-1" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem className="hidden md:block">
-              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator className="hidden md:block" />
-            <BreadcrumbItem>
-              <BreadcrumbPage>KI Jobsuche</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+    <>
+      <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <div className="flex items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator
+            orientation="vertical"
+            className="mr-2 data-[orientation=vertical]:h-4"
+          />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink href="/dashboard">
+                  Dashboard
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>KI Suche</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </header>
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <AIJobSearchComponent />
       </div>
-      
-      <AIJobSearchComponent />
-    </div>
+    </>
   )
 } 
