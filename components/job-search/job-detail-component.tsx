@@ -113,8 +113,15 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
     })
   }
 
-  const formatListItems = (htmlString: string) => {
-    if (!htmlString) return null
+  const formatListItems = (htmlString: string, sectionName: string) => {
+    if (!htmlString || htmlString === 'null' || htmlString === 'undefined') {
+      return (
+                 <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
+           <AlertCircle className="h-4 w-4" />
+           <span className="text-sm font-medium">Keine {sectionName} angegeben</span>
+         </div>
+      )
+    }
     
     // Extract list items from HTML string
     const listItemRegex = /<li>(.*?)<\/li>/g
@@ -319,21 +326,21 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
 
           <div>
             <h3 className="font-semibold mb-2">Verantwortlichkeiten</h3>
-            {formatListItems(job.description?.description_responsibilities || "Keine Informationen verfügbar.")}
+            {formatListItems(job.description?.description_responsibilities, "Verantwortlichkeiten")}
           </div>
 
           <Separator />
 
           <div>
             <h3 className="font-semibold mb-2">Qualifikationen</h3>
-            {formatListItems(job.description?.description_qualification || "Keine Informationen verfügbar.")}
+            {formatListItems(job.description?.description_qualification, "Qualifikationen")}
           </div>
 
           <Separator />
 
           <div>
-            <h3 className="font-semibold mb-2">Vorteile</h3>
-            {formatListItems(job.description?.description_benefits || "Keine Informationen verfügbar.")}
+            <h3 className="font-semibold mb-2">Benefits</h3>
+            {formatListItems(job.description?.description_benefits, "Benefits")}
           </div>
         </CardContent>
       </Card>
