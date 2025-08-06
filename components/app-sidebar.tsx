@@ -22,7 +22,6 @@ import { OnboardingModal } from '@/components/onboarding'
 import { Sparkles } from 'lucide-react'
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 import { Button } from "@/components/ui/button"
@@ -198,23 +197,6 @@ const data = {
       ],
     },
   ],
-  projects: [
-    {
-      name: "Profile Management",
-      url: "/dashboard/settings",
-      icon: Frame,
-    },
-    {
-      name: "Security Settings",
-      url: "/dashboard/security",
-      icon: PieChart,
-    },
-    {
-      name: "Activity Log",
-      url: "/dashboard/activity",
-      icon: Map,
-    },
-  ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -243,7 +225,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       
       {/* Onboarding Button - Outside SidebarContent */}
