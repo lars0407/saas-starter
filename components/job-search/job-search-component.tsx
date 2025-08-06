@@ -42,6 +42,7 @@ export function JobSearchComponent() {
   const [showFilters, setShowFilters] = useState(false)
   const [savedJobs, setSavedJobs] = useState<Set<number>>(new Set())
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null)
+  const [totalJobs, setTotalJobs] = useState<number>(0)
 
   // Fetch jobs from Xano API
   const fetchJobs = async () => {
@@ -53,29 +54,29 @@ export function JobSearchComponent() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          offset: 0,
-          search_term: filters.keyword,
-          location: filters.location,
-          max_publish: 10,
-          // Add more filter mappings if supported by API
-        }),
+                 body: JSON.stringify({
+           offset: 0,
+           search_term: filters.keyword,
+           location: filters.location,
+           // Add more filter mappings if supported by API
+         }),
       })
       if (!response.ok) throw new Error("Fehler beim Laden der Jobs.")
       const data = await response.json()
       
-      // Debug: Log the first job to see the structure
-      if (data.items && data.items.length > 0) {
-        console.log('First job data:', data.items[0])
-        console.log('Date fields available:', {
-          created_at: data.items[0].created_at,
-          job_posted: data.items[0].job_posted,
-          posted_date: data.items[0].posted_date,
-          date: data.items[0].date
-        })
-      }
-      
-      setJobs(data.items || [])
+             // Debug: Log the first job to see the structure
+       if (data.items && data.items.length > 0) {
+         console.log('First job data:', data.items[0])
+         console.log('Date fields available:', {
+           created_at: data.items[0].created_at,
+           job_posted: data.items[0].job_posted,
+           posted_date: data.items[0].posted_date,
+           date: data.items[0].date
+         })
+       }
+       
+       setJobs(data.items || [])
+       setTotalJobs(data.itemsTotal || 0)
     } catch (err: any) {
       setError(err.message || "Unbekannter Fehler")
       setJobs([])
@@ -299,10 +300,10 @@ export function JobSearchComponent() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
         {/* Left Column - Job List */}
         <div className="lg:col-span-1 flex flex-col space-y-4 min-h-0">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              {loading ? "Lade Jobs..." : `${jobs.length} Jobs gefunden`}
-            </h2>
+                     <div className="flex items-center justify-between">
+             <h2 className="text-lg font-semibold">
+               {loading ? "Lade Jobs..." : `${jobs.length} von ${totalJobs.toLocaleString('de-DE')} Jobs gefunden`}
+             </h2>
             <Select>
               <SelectTrigger className="w-32 focus:border-[#0F973D] focus:ring-[#0F973D]">
                 <SelectValue placeholder="Sortieren" />
