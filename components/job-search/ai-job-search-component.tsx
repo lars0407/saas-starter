@@ -39,7 +39,7 @@ export function AIJobSearchComponent() {
   const [filters, setFilters] = useState<AIJobSearchFilters>(initialFilters)
   const [aiQuery, setAiQuery] = useState("")
   const [jobs, setJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [savedJobs, setSavedJobs] = useState<Set<number>>(new Set())
@@ -52,19 +52,31 @@ export function AIJobSearchComponent() {
   const [observerTarget, setObserverTarget] = useState<HTMLDivElement | null>(null)
   const [aiProcessing, setAiProcessing] = useState(false)
 
-  // Load initial jobs and job favourites on component mount
+  // Load job favourites on component mount
   useEffect(() => {
-    const loadInitialData = async () => {
-      await fetchJobFavourites() // Load favourites first
-      await fetchJobs(false) // Then load jobs
-    }
-    loadInitialData()
+    fetchJobFavourites()
   }, [])
 
   // Fetch job favourites from API
   const fetchJobFavourites = async () => {
     try {
-      const response = await fetch("/api/job_tracker/favourites")
+      // Get auth token from cookies (same as other parts of the app)
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        console.log('No auth token found, skipping job favourites')
+        return
+      }
+
+      const response = await fetch("/api/job_tracker/favourites", {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      })
       
       if (!response.ok) {
         const errorData = await response.json()
@@ -95,7 +107,7 @@ export function AIJobSearchComponent() {
     }
   }
 
-  // Fetch jobs from Xano API
+  // Fetch jobs from Xano AI API
   const fetchJobs = async (isLoadMore = false) => {
     if (isLoadMore) {
       setLoadingMore(true)
@@ -104,51 +116,60 @@ export function AIJobSearchComponent() {
     }
     setError(null)
     
-    const currentPage = isLoadMore ? page : 1
+    const currentOffset = isLoadMore ? (page - 1) * 25 : 0
     
-    console.log('API Request:', {
+    console.log('AI API Request:', {
       isLoadMore,
-      currentPage,
+      currentOffset,
       page,
-      search_term: filters.keyword,
-      location: filters.location
+      prompt: aiQuery
     })
     
     try {
-      const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v2/job/search", {
+      const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v2/job/ai/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          page: currentPage,
-          search_term: filters.keyword,
-          location: filters.location,
-          // Add more filter mappings if supported by API
+          prompt: aiQuery,
+          offset: currentOffset,
         }),
       })
       if (!response.ok) throw new Error("Fehler beim Laden der Jobs.")
       const data = await response.json()
       
+      // Debug: Log the response structure
+      console.log('AI API Response structure:', data)
+      
+      // Extract jobs from the results array and ensure proper data structure
+      const newJobs = data.results ? data.results.map((result: any) => {
+        const jobData = result.payload.data
+        // Ensure job ID is a number for consistency with the Job interface
+        return {
+          ...jobData,
+          id: typeof jobData.id === 'string' ? parseInt(jobData.id) : jobData.id
+        }
+      }) : []
+      
       // Debug: Log the first job to see the structure
-      if (data.items && data.items.length > 0) {
-        console.log('First job data:', data.items[0])
+      if (newJobs.length > 0) {
+        console.log('First job data:', newJobs[0])
         console.log('Date fields available:', {
-          created_at: data.items[0].created_at,
-          job_posted: data.items[0].job_posted,
-          posted_date: data.items[0].posted_date,
-          date: data.items[0].date
+          created_at: newJobs[0].created_at,
+          job_posted: newJobs[0].job_posted,
+          posted_date: newJobs[0].posted_date,
+          date: newJobs[0].date
         })
       }
       
-      const newJobs = data.items || []
-      
-      console.log('API Response:', {
+      console.log('AI API Response:', {
         newJobsCount: newJobs.length,
-        totalJobs: data.itemsTotal,
+        totalJobs: newJobs.length, // AI search doesn't return total count
         isLoadMore,
-        currentPage,
-        jobIds: newJobs.map((job: Job) => job.id).slice(0, 5) // Show first 5 job IDs
+        currentOffset,
+        jobIds: newJobs.map((job: Job) => job.id).slice(0, 5), // Show first 5 job IDs
+        firstJobTitle: newJobs.length > 0 ? newJobs[0].title : 'No jobs'
       })
       
       if (isLoadMore) {
@@ -159,8 +180,8 @@ export function AIJobSearchComponent() {
         setPage(2)
       }
       
-      setTotalJobs(data.itemsTotal || 0)
-      setHasMoreJobs(newJobs.length === 25)
+      setTotalJobs(newJobs.length) // AI search doesn't return total count, use current results count
+      setHasMoreJobs(newJobs.length > 0) // AI search might return fewer results, so check if we got any results
     } catch (err: any) {
       setError(err.message || "Unbekannter Fehler")
       if (!isLoadMore) {
@@ -172,10 +193,8 @@ export function AIJobSearchComponent() {
     }
   }
 
-  useEffect(() => {
-    fetchJobs(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.keyword, filters.location]) // Only trigger on main search fields for now
+  // Don't auto-fetch jobs on component mount for AI search
+  // Jobs will only be fetched when user performs an AI search
 
   // Select first job when jobs are loaded
   useEffect(() => {
@@ -234,13 +253,10 @@ export function AIJobSearchComponent() {
     setError(null)
     
     try {
-      // Simulate AI processing
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Reset pagination for new search
+      setPage(1)
       
-      // For now, we'll use the AI query as the keyword search
-      setFilters(prev => ({ ...prev, keyword: aiQuery }))
-      
-      // Fetch jobs with the AI-processed query
+      // Fetch jobs with the AI query
       await fetchJobs(false)
     } catch (error) {
       setError("Fehler bei der KI-Verarbeitung")
@@ -256,10 +272,22 @@ export function AIJobSearchComponent() {
 
   const toggleSavedJob = async (jobId: number) => {
     try {
+      // Get auth token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        alert('Bitte melden Sie sich an, um Jobs zu speichern.')
+        return
+      }
+
       const response = await fetch("/api/job_tracker/favourite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
           job_id: jobId

@@ -149,7 +149,23 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
   // Fetch job favourites from API
   const fetchJobFavourites = async () => {
     try {
-      const response = await fetch("/api/job_tracker/favourites")
+      // Get auth token from cookies (same as other parts of the app)
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        console.log('No auth token found, skipping job favourites')
+        return
+      }
+
+      const response = await fetch("/api/job_tracker/favourites", {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      })
       
       if (!response.ok) {
         const errorData = await response.json()
@@ -196,10 +212,22 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
     if (!job?.id) return
     
     try {
+      // Get auth token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        alert('Bitte melden Sie sich an, um Jobs zum Jobtracker hinzuzufügen.')
+        return
+      }
+
       const response = await fetch("/api/job_tracker/favourite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
           job_id: job.id
