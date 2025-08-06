@@ -110,6 +110,32 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
     })
   }
 
+  const formatListItems = (htmlString: string) => {
+    if (!htmlString) return null
+    
+    // Extract list items from HTML string
+    const listItemRegex = /<li>(.*?)<\/li>/g
+    const items: string[] = []
+    let match
+    
+    while ((match = listItemRegex.exec(htmlString)) !== null) {
+      items.push(match[1].trim())
+    }
+    
+    if (items.length === 0) {
+      // If no list items found, return the original text
+      return <div className="text-muted-foreground">{htmlString}</div>
+    }
+    
+    return (
+      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+        {items.map((item, index) => (
+          <li key={index} className="leading-relaxed">{item}</li>
+        ))}
+      </ul>
+    )
+  }
+
   const handleSave = () => {
     setSaved(!saved)
   }
@@ -280,27 +306,21 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
 
           <div>
             <h3 className="font-semibold mb-2">Verantwortlichkeiten</h3>
-            <div className="text-muted-foreground whitespace-pre-line">
-              {job.description?.description_responsibilities || "Keine Informationen verfügbar."}
-            </div>
+            {formatListItems(job.description?.description_responsibilities || "Keine Informationen verfügbar.")}
           </div>
 
           <Separator />
 
           <div>
             <h3 className="font-semibold mb-2">Qualifikationen</h3>
-            <div className="text-muted-foreground whitespace-pre-line">
-              {job.description?.description_qualification || "Keine Informationen verfügbar."}
-            </div>
+            {formatListItems(job.description?.description_qualification || "Keine Informationen verfügbar.")}
           </div>
 
           <Separator />
 
           <div>
             <h3 className="font-semibold mb-2">Vorteile</h3>
-            <div className="text-muted-foreground whitespace-pre-line">
-              {job.description?.description_benefits || "Keine Informationen verfügbar."}
-            </div>
+            {formatListItems(job.description?.description_benefits || "Keine Informationen verfügbar.")}
           </div>
         </CardContent>
       </Card>
