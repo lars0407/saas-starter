@@ -33,221 +33,49 @@ const initialFilters: JobSearchFilters = {
   companySize: "all",
 }
 
-// Mock job data - replace with actual API call
-const mockJobs: Job[] = [
-  {
-    id: 1,
-    created_at: "2024-01-15T10:00:00Z",
-    company_id: 1,
-    title: "Senior Frontend Developer",
-    job_city: "Berlin",
-    job_state: "Berlin",
-    job_country: "Germany",
-    job_employement_type: "Full-time",
-    salary: "€65,000 - €85,000",
-    seniority: "Senior",
-    job_origin: "LinkedIn",
-    job_identifier: 12345,
-    apply_link: "https://example.com/apply",
-    applicants_number: "45",
-    working_hours: "40",
-    remote_work: "Hybrid",
-    source: "LinkedIn",
-    auto_apply: false,
-    recruitment_agency: false,
-    description: {
-      description_original: "We are looking for a Senior Frontend Developer...",
-      description_responsibilities: "Develop and maintain web applications...",
-      description_qualification: "5+ years of experience with React...",
-      description_benefits: "Competitive salary, flexible working hours...",
-    },
-    job_geopoint: "52.5200,13.4050",
-    recruiter: {
-      recruiter_name: "Sarah Johnson",
-      recruiter_title: "Senior Recruiter",
-      recruiter_url: "https://linkedin.com/in/sarah-johnson",
-    },
-    company: {
-      id: 1,
-      created_at: "2024-01-01T00:00:00Z",
-      employer_name: "TechCorp GmbH",
-      employer_logo: "/images/techcorp-logo.png",
-      employer_website: "https://techcorp.com",
-      employer_company_type: "Technology",
-      employer_linkedin: "https://linkedin.com/company/techcorp",
-      company_identifier: 1001,
-      about: "Leading technology company in Berlin",
-      short_description: "Innovative tech solutions",
-      founded: "2015",
-      company_size: "100-500",
-    },
-  },
-  {
-    id: 2,
-    created_at: "2024-01-14T14:30:00Z",
-    company_id: 2,
-    title: "UX/UI Designer",
-    job_city: "München",
-    job_state: "Bayern",
-    job_country: "Germany",
-    job_employement_type: "Full-time",
-    salary: "€55,000 - €75,000",
-    seniority: "Mid-level",
-    job_origin: "Indeed",
-    job_identifier: 12346,
-    apply_link: "https://example.com/apply-ux",
-    applicants_number: "32",
-    working_hours: "40",
-    remote_work: "Remote",
-    source: "Indeed",
-    auto_apply: false,
-    recruitment_agency: false,
-    description: {
-      description_original: "We are seeking a talented UX/UI Designer...",
-      description_responsibilities: "Design user interfaces and experiences...",
-      description_qualification: "3+ years of experience in UX/UI design...",
-      description_benefits: "Creative environment, professional development...",
-    },
-    job_geopoint: "48.1351,11.5820",
-    recruiter: {
-      recruiter_name: "Michael Schmidt",
-      recruiter_title: "HR Manager",
-      recruiter_url: "https://linkedin.com/in/michael-schmidt",
-    },
-    company: {
-      id: 2,
-      created_at: "2024-01-01T00:00:00Z",
-      employer_name: "DesignStudio AG",
-      employer_logo: "/images/designstudio-logo.png",
-      employer_website: "https://designstudio.com",
-      employer_company_type: "Design",
-      employer_linkedin: "https://linkedin.com/company/designstudio",
-      company_identifier: 1002,
-      about: "Creative design agency in Munich",
-      short_description: "Beautiful digital experiences",
-      founded: "2018",
-      company_size: "50-100",
-    },
-  },
-  {
-    id: 3,
-    created_at: "2024-01-13T09:15:00Z",
-    company_id: 3,
-    title: "Backend Developer",
-    job_city: "Hamburg",
-    job_state: "Hamburg",
-    job_country: "Germany",
-    job_employement_type: "Full-time",
-    salary: "€70,000 - €90,000",
-    seniority: "Senior",
-    job_origin: "Glassdoor",
-    job_identifier: 12347,
-    apply_link: "https://example.com/apply-backend",
-    applicants_number: "28",
-    working_hours: "40",
-    remote_work: "On-site",
-    source: "Glassdoor",
-    auto_apply: false,
-    recruitment_agency: false,
-    description: {
-      description_original: "Join our backend development team...",
-      description_responsibilities: "Build scalable backend services...",
-      description_qualification: "5+ years of experience with Node.js...",
-      description_benefits: "Great team, modern tech stack...",
-    },
-    job_geopoint: "53.5511,9.9937",
-    recruiter: {
-      recruiter_name: "Anna Weber",
-      recruiter_title: "Tech Recruiter",
-      recruiter_url: "https://linkedin.com/in/anna-weber",
-    },
-    company: {
-      id: 3,
-      created_at: "2024-01-01T00:00:00Z",
-      employer_name: "HamburgTech Solutions",
-      employer_logo: "/images/hamburgtech-logo.png",
-      employer_website: "https://hamburgtech.com",
-      employer_company_type: "Technology",
-      employer_linkedin: "https://linkedin.com/company/hamburgtech",
-      company_identifier: 1003,
-      about: "Technology solutions provider in Hamburg",
-      short_description: "Innovative tech solutions",
-      founded: "2016",
-      company_size: "200-500",
-    },
-  },
-]
-
 export function JobSearchComponent() {
   const router = useRouter()
   const [filters, setFilters] = useState<JobSearchFilters>(initialFilters)
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [savedJobs, setSavedJobs] = useState<Set<number>>(new Set())
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null)
 
-  useEffect(() => {
-    // Filter mock jobs based on current filters
-    const filterJobs = () => {
-      setLoading(true)
-      
-      let filteredJobs = mockJobs
-
-      // Filter by keyword
-      if (filters.keyword) {
-        const keyword = filters.keyword.toLowerCase()
-        filteredJobs = filteredJobs.filter(job => 
-          job.title.toLowerCase().includes(keyword) ||
-          job.company.employer_name.toLowerCase().includes(keyword) ||
-          job.description.description_original.toLowerCase().includes(keyword)
-        )
-      }
-
-      // Filter by location
-      if (filters.location) {
-        const location = filters.location.toLowerCase()
-        filteredJobs = filteredJobs.filter(job => 
-          job.job_city.toLowerCase().includes(location) ||
-          job.job_state.toLowerCase().includes(location) ||
-          job.remote_work.toLowerCase().includes(location)
-        )
-      }
-
-             // Filter by job type
-       if (filters.jobType && filters.jobType !== "all") {
-         filteredJobs = filteredJobs.filter(job => 
-           job.job_employement_type === filters.jobType
-         )
-       }
-
-       // Filter by experience level
-       if (filters.experienceLevel && filters.experienceLevel !== "all") {
-         filteredJobs = filteredJobs.filter(job => 
-           job.seniority === filters.experienceLevel
-         )
-       }
-
-       // Filter by remote work
-       if (filters.remoteWork && filters.remoteWork !== "all") {
-         filteredJobs = filteredJobs.filter(job => 
-           job.remote_work === filters.remoteWork
-         )
-       }
-
-       // Filter by company size
-       if (filters.companySize && filters.companySize !== "all") {
-         filteredJobs = filteredJobs.filter(job => 
-           job.company.company_size === filters.companySize
-         )
-       }
-
-      setJobs(filteredJobs)
+  // Fetch jobs from Xano API
+  const fetchJobs = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v2/job/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          offset: 0,
+          search_term: filters.keyword,
+          location: filters.location,
+          max_publish: 10,
+          // Add more filter mappings if supported by API
+        }),
+      })
+      if (!response.ok) throw new Error("Fehler beim Laden der Jobs.")
+      const data = await response.json()
+      setJobs(data.items || [])
+    } catch (err: any) {
+      setError(err.message || "Unbekannter Fehler")
+      setJobs([])
+    } finally {
       setLoading(false)
     }
+  }
 
-    filterJobs()
-  }, [filters])
+  useEffect(() => {
+    fetchJobs()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.keyword, filters.location]) // Only trigger on main search fields for now
 
   // Select first job when jobs are loaded
   useEffect(() => {
@@ -261,8 +89,7 @@ export function JobSearchComponent() {
   }
 
   const handleSearch = () => {
-    // Trigger search with current filters
-    // This will trigger the useEffect that fetches jobs
+    fetchJobs()
   }
 
   const clearFilters = () => {
@@ -290,7 +117,6 @@ export function JobSearchComponent() {
     const now = new Date()
     const diffTime = Math.abs(now.getTime() - date.getTime())
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
     if (diffDays === 1) return "Heute"
     if (diffDays === 2) return "Gestern"
     if (diffDays <= 7) return `vor ${diffDays - 1} Tagen`
@@ -364,13 +190,13 @@ export function JobSearchComponent() {
                   <SelectTrigger>
                     <SelectValue placeholder="Alle Typen" />
                   </SelectTrigger>
-                                     <SelectContent>
-                     <SelectItem value="all">Alle Typen</SelectItem>
-                     <SelectItem value="Full-time">Vollzeit</SelectItem>
-                     <SelectItem value="Part-time">Teilzeit</SelectItem>
-                     <SelectItem value="Contract">Vertrag</SelectItem>
-                     <SelectItem value="Internship">Praktikum</SelectItem>
-                   </SelectContent>
+                  <SelectContent>
+                    <SelectItem value="all">Alle Typen</SelectItem>
+                    <SelectItem value="Full-time">Vollzeit</SelectItem>
+                    <SelectItem value="Part-time">Teilzeit</SelectItem>
+                    <SelectItem value="Contract">Vertrag</SelectItem>
+                    <SelectItem value="Internship">Praktikum</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
 
@@ -380,12 +206,12 @@ export function JobSearchComponent() {
                   <SelectTrigger>
                     <SelectValue placeholder="Alle Level" />
                   </SelectTrigger>
-                                     <SelectContent>
-                     <SelectItem value="all">Alle Level</SelectItem>
-                     <SelectItem value="Entry">Anfänger</SelectItem>
-                     <SelectItem value="Mid-level">Mittel</SelectItem>
-                     <SelectItem value="Senior">Senior</SelectItem>
-                   </SelectContent>
+                  <SelectContent>
+                    <SelectItem value="all">Alle Level</SelectItem>
+                    <SelectItem value="Entry">Anfänger</SelectItem>
+                    <SelectItem value="Mid-level">Mittel</SelectItem>
+                    <SelectItem value="Senior">Senior</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
 
@@ -395,12 +221,12 @@ export function JobSearchComponent() {
                   <SelectTrigger>
                     <SelectValue placeholder="Alle Optionen" />
                   </SelectTrigger>
-                                     <SelectContent>
-                     <SelectItem value="all">Alle Optionen</SelectItem>
-                     <SelectItem value="Remote">Vollständig Remote</SelectItem>
-                     <SelectItem value="Hybrid">Hybrid</SelectItem>
-                     <SelectItem value="On-site">Vor Ort</SelectItem>
-                   </SelectContent>
+                  <SelectContent>
+                    <SelectItem value="all">Alle Optionen</SelectItem>
+                    <SelectItem value="Remote">Vollständig Remote</SelectItem>
+                    <SelectItem value="Hybrid">Hybrid</SelectItem>
+                    <SelectItem value="On-site">Vor Ort</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
 
@@ -410,14 +236,14 @@ export function JobSearchComponent() {
                   <SelectTrigger>
                     <SelectValue placeholder="Alle Größen" />
                   </SelectTrigger>
-                                     <SelectContent>
-                     <SelectItem value="all">Alle Größen</SelectItem>
-                     <SelectItem value="1-10">1-10 Mitarbeiter</SelectItem>
-                     <SelectItem value="11-50">11-50 Mitarbeiter</SelectItem>
-                     <SelectItem value="51-200">51-200 Mitarbeiter</SelectItem>
-                     <SelectItem value="201-500">201-500 Mitarbeiter</SelectItem>
-                     <SelectItem value="500+">500+ Mitarbeiter</SelectItem>
-                   </SelectContent>
+                  <SelectContent>
+                    <SelectItem value="all">Alle Größen</SelectItem>
+                    <SelectItem value="1-10">1-10 Mitarbeiter</SelectItem>
+                    <SelectItem value="11-50">11-50 Mitarbeiter</SelectItem>
+                    <SelectItem value="51-200">51-200 Mitarbeiter</SelectItem>
+                    <SelectItem value="201-500">201-500 Mitarbeiter</SelectItem>
+                    <SelectItem value="500+">500+ Mitarbeiter</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
             </div>
@@ -462,18 +288,28 @@ export function JobSearchComponent() {
                 </CardContent>
               </Card>
             ))
+          ) : error ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <h3 className="text-base font-semibold mb-2">Fehler beim Laden der Jobs</h3>
+                <p className="text-sm text-muted-foreground mb-4">{error}</p>
+                <Button onClick={fetchJobs} variant="outline" size="sm">
+                  Erneut versuchen
+                </Button>
+              </CardContent>
+            </Card>
           ) : jobs.length > 0 ? (
             jobs.map((job) => (
-                             <Card 
-                 key={job.id} 
-                 className={cn(
-                   "hover:shadow-md transition-all cursor-pointer border-2",
-                   selectedJobId === job.id 
-                     ? "border-[#0F973D] shadow-md" 
-                     : "border-gray-200 hover:border-gray-300"
-                 )}
-                 onClick={() => handleJobClick(job.id)}
-               >
+              <Card 
+                key={job.id} 
+                className={cn(
+                  "hover:shadow-md transition-all cursor-pointer border-2",
+                  selectedJobId === job.id 
+                    ? "border-[#0F973D] shadow-md" 
+                    : "border-gray-200 hover:border-gray-300"
+                )}
+                onClick={() => handleJobClick(job.id)}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     {/* Company Logo */}
@@ -488,7 +324,7 @@ export function JobSearchComponent() {
                           <h3 className="font-semibold text-base hover:text-[#0F973D] truncate">
                             {job.title}
                           </h3>
-                          <p className="text-sm text-muted-foreground truncate">{job.company.employer_name}</p>
+                          <p className="text-sm text-muted-foreground truncate">{job.company?.employer_name}</p>
                         </div>
                         <Button
                           variant="ghost"
@@ -553,37 +389,36 @@ export function JobSearchComponent() {
             </Card>
           )}
 
-                     {/* Load More */}
-           {jobs.length > 0 && (
-             <div className="text-center pt-4">
-               <Button variant="outline" size="sm">
-                 Mehr Jobs laden
-               </Button>
-             </div>
-           )}
+          {/* Load More */}
+          {jobs.length > 0 && !loading && !error && (
+            <div className="text-center pt-4">
+              <Button variant="outline" size="sm" disabled>
+                Mehr Jobs laden
+              </Button>
+            </div>
+          )}
           </div>
         </div>
 
         {/* Right Column - Job Details */}
         <div className="lg:col-span-2 flex flex-col space-y-4 min-h-0">
           <h2 className="text-lg font-semibold">Job Details</h2>
-          
           <div className="flex-1 overflow-y-auto">
             {selectedJob ? (
               <div>
-                <JobDetailComponent jobId={selectedJob.id} />
+                <JobDetailComponent job={selectedJob} />
               </div>
             ) : (
             <Card>
               <CardContent className="p-8 text-center">
                 <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Wähle einen Job aus</h3>
-                                 <p className="text-muted-foreground">
-                   Klicke auf einen Job in der Liste links, um die Details anzuzeigen.
-                 </p>
-               </CardContent>
-             </Card>
-           )}
+                <p className="text-muted-foreground">
+                  Klicke auf einen Job in der Liste links, um die Details anzuzeigen.
+                </p>
+              </CardContent>
+            </Card>
+          )}
           </div>
         </div>
       </div>
