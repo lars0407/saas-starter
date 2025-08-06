@@ -43,50 +43,89 @@ export function JobSearchComponent() {
   const [savedJobs, setSavedJobs] = useState<Set<number>>(new Set())
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null)
   const [totalJobs, setTotalJobs] = useState<number>(0)
+  const [page, setPage] = useState(1)
+  const [hasMoreJobs, setHasMoreJobs] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
 
   // Fetch jobs from Xano API
-  const fetchJobs = async () => {
-    setLoading(true)
+  const fetchJobs = async (isLoadMore = false) => {
+    if (isLoadMore) {
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+    }
     setError(null)
+    
+    const currentPage = isLoadMore ? page : 1
+    
+    console.log('API Request:', {
+      isLoadMore,
+      currentPage,
+      page,
+      search_term: filters.keyword,
+      location: filters.location
+    })
+    
     try {
       const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v2/job/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-                 body: JSON.stringify({
-           offset: 0,
-           search_term: filters.keyword,
-           location: filters.location,
-           // Add more filter mappings if supported by API
-         }),
+        body: JSON.stringify({
+          page: currentPage,
+          search_term: filters.keyword,
+          location: filters.location,
+          // Add more filter mappings if supported by API
+        }),
       })
       if (!response.ok) throw new Error("Fehler beim Laden der Jobs.")
       const data = await response.json()
       
-             // Debug: Log the first job to see the structure
-       if (data.items && data.items.length > 0) {
-         console.log('First job data:', data.items[0])
-         console.log('Date fields available:', {
-           created_at: data.items[0].created_at,
-           job_posted: data.items[0].job_posted,
-           posted_date: data.items[0].posted_date,
-           date: data.items[0].date
-         })
-       }
-       
-       setJobs(data.items || [])
-       setTotalJobs(data.itemsTotal || 0)
+      // Debug: Log the first job to see the structure
+      if (data.items && data.items.length > 0) {
+        console.log('First job data:', data.items[0])
+        console.log('Date fields available:', {
+          created_at: data.items[0].created_at,
+          job_posted: data.items[0].job_posted,
+          posted_date: data.items[0].posted_date,
+          date: data.items[0].date
+        })
+      }
+      
+      const newJobs = data.items || []
+      
+      console.log('API Response:', {
+        newJobsCount: newJobs.length,
+        totalJobs: data.itemsTotal,
+        isLoadMore,
+        currentPage,
+        jobIds: newJobs.map((job: Job) => job.id).slice(0, 5) // Show first 5 job IDs
+      })
+      
+      if (isLoadMore) {
+        setJobs(prev => [...prev, ...newJobs])
+        setPage(prev => prev + 1)
+      } else {
+        setJobs(newJobs)
+        setPage(2)
+      }
+      
+      setTotalJobs(data.itemsTotal || 0)
+      setHasMoreJobs(newJobs.length === 25)
     } catch (err: any) {
       setError(err.message || "Unbekannter Fehler")
-      setJobs([])
-    } finally {
-      setLoading(false)
+      if (!isLoadMore) {
+        setJobs([])
+      }
+      } finally {
+        setLoading(false)
+      setLoadingMore(false)
     }
   }
 
   useEffect(() => {
-    fetchJobs()
+    fetchJobs(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.keyword, filters.location]) // Only trigger on main search fields for now
 
@@ -102,7 +141,13 @@ export function JobSearchComponent() {
   }
 
   const handleSearch = () => {
-    fetchJobs()
+    fetchJobs(false)
+  }
+
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMoreJobs) {
+      fetchJobs(true)
+    }
   }
 
   const clearFilters = () => {
@@ -300,39 +345,39 @@ export function JobSearchComponent() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
         {/* Left Column - Job List */}
         <div className="lg:col-span-1 flex flex-col space-y-4 min-h-0">
-                     <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
              <h2 className="text-lg font-semibold">
                {loading ? "Lade Jobs..." : `${jobs.length} von ${totalJobs.toLocaleString('de-DE')} Jobs gefunden`}
              </h2>
             <Select>
               <SelectTrigger className="w-32 focus:border-[#0F973D] focus:ring-[#0F973D]">
                 <SelectValue placeholder="Sortieren" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="relevance">Relevanz</SelectItem>
-                <SelectItem value="date">Datum</SelectItem>
-                <SelectItem value="salary">Gehalt</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="relevance">Relevanz</SelectItem>
+              <SelectItem value="date">Datum</SelectItem>
+              <SelectItem value="salary">Gehalt</SelectItem>
+            </SelectContent>
+          </Select>
+      </div>
 
           <div className="flex-1 overflow-y-auto space-y-4">
-            {loading ? (
-              // Loading skeletons
-              Array.from({ length: 3 }).map((_, index) => (
-              <Card key={index} className="animate-pulse">
+        {loading ? (
+          // Loading skeletons
+          Array.from({ length: 3 }).map((_, index) => (
+            <Card key={index} className="animate-pulse">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-muted rounded-lg"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-muted rounded w-3/4"></div>
-                      <div className="h-3 bg-muted rounded w-1/2"></div>
-                      <div className="h-3 bg-muted rounded w-1/4"></div>
-                    </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                    <div className="h-3 bg-muted rounded w-1/4"></div>
                   </div>
-                </CardContent>
-              </Card>
-            ))
+                </div>
+              </CardContent>
+            </Card>
+          ))
           ) : error ? (
             <Card>
               <CardContent className="p-8 text-center">
@@ -343,21 +388,21 @@ export function JobSearchComponent() {
                 </Button>
               </CardContent>
             </Card>
-          ) : jobs.length > 0 ? (
-            jobs.map((job) => (
-              <Card 
-                key={job.id} 
-                className={cn(
-                  "hover:shadow-md transition-all cursor-pointer border-2",
-                  selectedJobId === job.id 
-                    ? "border-[#0F973D] shadow-md" 
-                    : "border-gray-200 hover:border-gray-300"
-                )}
-                onClick={() => handleJobClick(job.id)}
-              >
+        ) : jobs.length > 0 ? (
+                         jobs.map((job, index) => (
+               <Card 
+                 key={`${job.id}-${index}`}
+                 className={cn(
+                   "hover:shadow-md transition-all cursor-pointer border-2",
+                   selectedJobId === job.id 
+                     ? "border-[#0F973D] shadow-md" 
+                     : "border-gray-200 hover:border-gray-300"
+                 )}
+                 onClick={() => handleJobClick(job.id)}
+               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                     {/* Company Logo */}
+                  {/* Company Logo */}
                      <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                        {job.company?.employer_logo ? (
                          <img
@@ -372,17 +417,17 @@ export function JobSearchComponent() {
                          />
                        ) : null}
                        <Building2 className="h-5 w-5 text-muted-foreground" />
-                     </div>
+                  </div>
 
-                    {/* Job Details */}
+                  {/* Job Details */}
                     <div className="flex-1 space-y-2 min-w-0">
-                      <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between">
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold text-base hover:text-[#0F973D] truncate">
-                            {job.title}
-                          </h3>
+                          {job.title}
+                        </h3>
                           <p className="text-sm text-muted-foreground truncate">{job.company?.employer_name}</p>
-                        </div>
+                      </div>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -397,63 +442,68 @@ export function JobSearchComponent() {
                         >
                           <Bookmark className="h-3 w-3" />
                         </Button>
-                      </div>
+                    </div>
 
-                      {/* Job Meta */}
+                    {/* Job Meta */}
                       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
                           {job.job_city}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {job.job_employement_type}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          {job.salary}
-                        </div>
                       </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {job.job_employement_type}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="h-3 w-3" />
+                        {job.salary}
+                      </div>
+                    </div>
 
-                      {/* Tags */}
+                    {/* Tags */}
                       <div className="flex flex-wrap gap-1">
                         <Badge variant="secondary" className="text-xs">{job.remote_work}</Badge>
                         <Badge variant="outline" className="text-xs">{job.seniority}</Badge>
-                      </div>
+                    </div>
 
                       {/* Posted Date */}
                       <div className="text-xs text-muted-foreground">
                         Vor {formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet
-                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            // Empty state
-            <Card>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          // Empty state
+          <Card>
               <CardContent className="p-8 text-center">
                 <Search className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
                 <h3 className="text-base font-semibold mb-2">Keine Jobs gefunden</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Versuche deine Suchkriterien zu ändern oder erweitere deine Suche.
-                </p>
+                Versuche deine Suchkriterien zu ändern oder erweitere deine Suche.
+              </p>
                 <Button onClick={clearFilters} variant="outline" size="sm">
-                  Filter zurücksetzen
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Load More */}
-          {jobs.length > 0 && !loading && !error && (
-            <div className="text-center pt-4">
-              <Button variant="outline" size="sm" disabled>
-                Mehr Jobs laden
+                Filter zurücksetzen
               </Button>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+        )}
+
+      {/* Load More */}
+           {jobs.length > 0 && !loading && !error && (
+             <div className="text-center pt-4">
+               <Button 
+                 variant="outline" 
+                 size="sm" 
+                 disabled={loadingMore || !hasMoreJobs}
+                 onClick={handleLoadMore}
+               >
+                 {loadingMore ? "Lade mehr..." : "Mehr Jobs laden"}
+          </Button>
+        </div>
+      )}
           </div>
         </div>
 
