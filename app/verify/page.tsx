@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { verifyEmail } from "@/lib/xano"
 import { cn } from "@/lib/utils"
@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { JobjaegerLogo } from "@/components/jobjaeger-logo"
 
-export default function VerifyPage() {
+function VerifyForm() {
   const [verificationCode, setVerificationCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -143,5 +143,30 @@ export default function VerifyPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+        <div className="flex w-full max-w-sm flex-col gap-6">
+          <div className="flex justify-center">
+            <JobjaegerLogo />
+          </div>
+          <div className="flex flex-col gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <p className="text-muted-foreground">Laden...</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerifyForm />
+    </Suspense>
   )
 } 

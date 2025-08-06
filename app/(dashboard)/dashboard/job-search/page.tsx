@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Breadcrumb,
@@ -17,7 +17,7 @@ import {
 import { JobSearchComponent } from "@/components/job-search"
 import { OnboardingModal } from '@/components/onboarding'
 
-export default function JobSearchPage() {
+function JobSearchContent() {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const searchParams = useSearchParams();
 
@@ -73,5 +73,19 @@ export default function JobSearchPage() {
         characterAlt="Friendly onboarding character"
       />
     </>
+  )
+}
+
+export default function JobSearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Laden...</p>
+        </div>
+      </div>
+    }>
+      <JobSearchContent />
+    </Suspense>
   )
 } 
