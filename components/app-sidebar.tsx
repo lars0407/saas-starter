@@ -164,6 +164,10 @@ const data = {
           title: "Übersicht",
           url: "/dashboard/profile",
         },
+        {
+          title: "Suchprofil",
+          url: "/dashboard/search-profile",
+        },
       ],
     },
     {
