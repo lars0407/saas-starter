@@ -37,7 +37,7 @@ export function JobSearchComponent() {
   const router = useRouter()
   const [filters, setFilters] = useState<JobSearchFilters>(initialFilters)
   const [jobs, setJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [savedJobs, setSavedJobs] = useState<Set<number>>(new Set())
@@ -48,6 +48,11 @@ export function JobSearchComponent() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [isNearBottom, setIsNearBottom] = useState(false)
   const [observerTarget, setObserverTarget] = useState<HTMLDivElement | null>(null)
+
+  // Load initial jobs on component mount
+  useEffect(() => {
+    fetchJobs(false)
+  }, [])
 
   // Fetch jobs from Xano API
   const fetchJobs = async (isLoadMore = false) => {
@@ -421,7 +426,7 @@ export function JobSearchComponent() {
                 </Button>
               </CardContent>
             </Card>
-        ) : jobs.length > 0 ? (
+        ) : !loading && jobs.length > 0 ? (
                          jobs.map((job, index) => (
                <Card 
                  key={`${job.id}-${index}`}
@@ -534,7 +539,7 @@ export function JobSearchComponent() {
               </CardContent>
             </Card>
           ))
-        ) : (
+        ) : !loading ? (
           // Empty state
           <Card>
               <CardContent className="p-8 text-center">
@@ -548,7 +553,7 @@ export function JobSearchComponent() {
               </Button>
             </CardContent>
           </Card>
-        )}
+        ) : null}
 
                             {/* Intersection Observer Target */}
             <div 
@@ -572,7 +577,120 @@ export function JobSearchComponent() {
         <div className="lg:col-span-2 flex flex-col space-y-4 min-h-0">
           <h2 className="text-lg font-semibold">Job Details</h2>
           <div className="flex-1 overflow-y-auto">
-            {selectedJob ? (
+            {loading ? (
+              // Loading skeleton for job details - represents actual JobDetailComponent structure
+              <div className="space-y-6">
+                {/* Job Header Skeleton */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 bg-muted rounded-lg"></div>
+                        <div className="space-y-2">
+                          <div className="h-8 bg-muted rounded w-64"></div>
+                          <div className="h-5 bg-muted rounded w-48"></div>
+                          <div className="h-4 bg-muted rounded w-32"></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-muted rounded"></div>
+                        <div className="w-8 h-8 bg-muted rounded"></div>
+                      </div>
+                    </div>
+                    
+                    {/* Tags Skeleton */}
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      <div className="h-6 bg-muted rounded-full w-16"></div>
+                      <div className="h-6 bg-muted rounded-full w-20"></div>
+                      <div className="h-6 bg-muted rounded-full w-24"></div>
+                      <div className="h-6 bg-muted rounded-full w-18"></div>
+                      <div className="h-6 bg-muted rounded-full w-22"></div>
+                    </div>
+                    
+                    {/* Action Buttons Skeleton */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="h-10 bg-muted rounded flex-1"></div>
+                      <div className="h-10 bg-muted rounded w-48"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Job Description Skeleton */}
+                <Card>
+                  <CardHeader>
+                    <div className="h-6 bg-muted rounded w-32"></div>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-3">
+                      <div className="h-4 bg-muted rounded w-full"></div>
+                      <div className="h-4 bg-muted rounded w-5/6"></div>
+                      <div className="h-4 bg-muted rounded w-4/6"></div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-3">
+                      <div className="h-5 bg-muted rounded w-40"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-muted rounded w-full"></div>
+                        <div className="h-4 bg-muted rounded w-5/6"></div>
+                        <div className="h-4 bg-muted rounded w-4/6"></div>
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-3">
+                      <div className="h-5 bg-muted rounded w-32"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-muted rounded w-full"></div>
+                        <div className="h-4 bg-muted rounded w-5/6"></div>
+                        <div className="h-4 bg-muted rounded w-4/6"></div>
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-3">
+                      <div className="h-5 bg-muted rounded w-24"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-muted rounded w-full"></div>
+                        <div className="h-4 bg-muted rounded w-5/6"></div>
+                        <div className="h-4 bg-muted rounded w-4/6"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Company Information Skeleton */}
+                <Card>
+                  <CardHeader>
+                    <div className="h-6 bg-muted rounded w-48"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-12 h-12 bg-muted rounded-lg"></div>
+                      <div className="space-y-2">
+                        <div className="h-6 bg-muted rounded w-40"></div>
+                        <div className="h-4 bg-muted rounded w-64"></div>
+                        <div className="h-4 bg-muted rounded w-32"></div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="h-4 bg-muted rounded w-full"></div>
+                      <div className="h-4 bg-muted rounded w-5/6"></div>
+                      <div className="h-4 bg-muted rounded w-4/6"></div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <div className="h-8 bg-muted rounded w-20"></div>
+                      <div className="h-8 bg-muted rounded w-24"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : selectedJob ? (
               <div>
                 <JobDetailComponent job={selectedJob} />
               </div>

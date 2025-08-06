@@ -151,7 +151,6 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
   }
 
   const handleApply = () => {
-    setApplied(true)
     // In a real app, you'd redirect to the application page
     if (job?.apply_link) {
       window.open(job.apply_link, '_blank')
@@ -284,23 +283,13 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button 
-              onClick={handleApply}
-              className="bg-[#0F973D] hover:bg-[#0F973D]/90 flex-1"
-              disabled={applied}
-            >
-              {applied ? (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Bewerbung gesendet
-                </>
-              ) : (
-                <>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Jetzt bewerben
-                </>
-              )}
-            </Button>
+                         <Button 
+               onClick={handleApply}
+               className="bg-[#0F973D] hover:bg-[#0F973D]/90 flex-1"
+             >
+               <ExternalLink className="h-4 w-4 mr-2" />
+               Jetzt bewerben
+             </Button>
             <Button variant="outline" onClick={handleAddToTracker}>
               Zum Jobtracker hinzufügen
             </Button>
