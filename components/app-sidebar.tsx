@@ -87,6 +87,10 @@ const data = {
               title: "Übersicht",
               url: "/dashboard/agent",
             },
+            {
+              title: "Agent Chat",
+              url: "/dashboard/agent-chat",
+            },
           ],
         },
         {
