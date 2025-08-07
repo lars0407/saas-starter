@@ -29,6 +29,7 @@ export function NavMain({
     items?: {
       title: string
       url: string
+      external?: boolean
     }[]
   }[]
 }) {
@@ -56,7 +57,11 @@ export function NavMain({
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
                       <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
+                        <a 
+                          href={subItem.url}
+                          target={subItem.external ? "_blank" : undefined}
+                          rel={subItem.external ? "noopener noreferrer" : undefined}
+                        >
                           <span>{subItem.title}</span>
                         </a>
                       </SidebarMenuSubButton>

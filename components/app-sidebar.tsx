@@ -155,6 +155,18 @@ const data = {
       ],
     },
     {
+      title: "Recherche",
+      url: "#",
+      icon: Map,
+      items: [
+        {
+          title: "Gehalt",
+          url: "https://web.arbeitsagentur.de/entgeltatlas/",
+          external: true,
+        },
+      ],
+    },
+    {
       title: "Profil",
       url: "/dashboard/profile",
       icon: User,
