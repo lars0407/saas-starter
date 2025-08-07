@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { verifyEmail } from "@/lib/xano"
+import { verifyEmail, resendVerificationCode } from "@/lib/xano"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,7 +20,9 @@ import { JobjaegerLogo } from "@/components/jobjaeger-logo"
 function VerifyForm() {
   const [verificationCode, setVerificationCode] = useState("")
   const [loading, setLoading] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const [email, setEmail] = useState("")
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -54,8 +56,13 @@ function VerifyForm() {
       // Call Xano API for verification
       await verifyEmail(email, code)
       
-      // If verification successful, redirect to dashboard
-      router.push("/dashboard")
+      // Show success message before redirecting
+      setSuccess("Account erfolgreich bestätigt! Sie werden zur Anmeldung weitergeleitet...")
+      
+      // If verification successful, redirect to login after a short delay
+      setTimeout(() => {
+        router.push("/sign-in")
+      }, 2000)
     } catch (err: any) {
       setError(err.response?.data?.message || "Verifikation fehlgeschlagen. Bitte versuchen Sie es erneut.")
     } finally {
@@ -67,6 +74,26 @@ function VerifyForm() {
     const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6)
     setVerificationCode(value)
     setError("")
+  }
+
+  const handleResendCode = async () => {
+    if (!email) {
+      setError("E-Mail-Adresse nicht gefunden. Bitte registrieren Sie sich erneut.")
+      return
+    }
+
+    setResendLoading(true)
+    setError("")
+    setSuccess("")
+
+    try {
+      await resendVerificationCode(email)
+      setSuccess("Neuer Code wurde an Ihre E-Mail gesendet.")
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Fehler beim Senden des Codes. Bitte versuchen Sie es erneut.")
+    } finally {
+      setResendLoading(false)
+    }
   }
 
   return (
@@ -113,6 +140,11 @@ function VerifyForm() {
                       <p className="text-red-600 text-sm text-center">{error}</p>
                     </div>
                   )}
+                  {success && (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-green-600 text-sm text-center">{success}</p>
+                    </div>
+                  )}
                   <Button 
                     type="submit" 
                     className="w-full bg-[#0F973D] hover:bg-[#0F973D]/90 text-white" 
@@ -124,8 +156,13 @@ function VerifyForm() {
               </form>
               <div className="mt-6 text-center text-sm">
                 <p className="text-muted-foreground mb-2">Keine E-Mail erhalten?</p>
-                <Button variant="outline" className="w-full">
-                  Code erneut senden
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={handleResendCode}
+                  disabled={resendLoading}
+                >
+                  {resendLoading ? "Code wird gesendet..." : "Code erneut senden"}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">

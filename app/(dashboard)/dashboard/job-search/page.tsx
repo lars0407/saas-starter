@@ -16,9 +16,11 @@ import {
 } from "@/components/ui/sidebar"
 import { JobSearchComponent } from "@/components/job-search"
 import { OnboardingModal } from '@/components/onboarding'
+import { getCurrentUser } from '@/lib/xano'
 
 function JobSearchContent() {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [userChecked, setUserChecked] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -32,6 +34,40 @@ function JobSearchContent() {
       window.history.replaceState({}, '', url.toString());
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const checkUserOnboarding = async () => {
+      try {
+        // Get token from cookies
+        const token = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('token='))
+          ?.split('=')[1];
+
+        if (!token) {
+          console.log('No token found');
+          return;
+        }
+
+        // Get user data
+        const user = await getCurrentUser(token);
+        
+        // Check if onboarding is not completed
+        if (user.onboarding && user.onboarding !== 'success') {
+          setOnboardingOpen(true);
+        }
+      } catch (error) {
+        console.error('Error checking user onboarding status:', error);
+      } finally {
+        setUserChecked(true);
+      }
+    };
+
+    // Only check once when component mounts
+    if (!userChecked) {
+      checkUserOnboarding();
+    }
+  }, [userChecked]);
 
   return (
     <>
@@ -67,6 +103,8 @@ function JobSearchContent() {
         onComplete={(firstName, lastName) => {
           console.log(`Onboarding completed for ${firstName} ${lastName}`)
           setOnboardingOpen(false)
+          // Redirect to dashboard after onboarding completion
+          window.location.href = '/dashboard'
         }}
         speechText="Hey, cool dich zu sehen! Wie heißt du?"
         characterSrc="/images/characters/Job-Jäger Expressions.png"

@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+
 export function LoginForm({
   className,
   ...props
@@ -35,14 +36,8 @@ export function LoginForm({
       const { authToken } = response
       document.cookie = `token=${authToken}; path=/; max-age=86400; secure; samesite=strict`
       
-      // Check if onboarding is not ready
-      if (response.message === "Onboarding not ready") {
-        // Redirect to job search with onboarding parameter
-        router.push("/dashboard/job-search?onboarding=true")
-      } else {
-        // Normal login flow
-        router.push("/dashboard")
-      }
+      // Always redirect to job search page
+      router.push("/dashboard/job-search")
     } catch (err: any) {
       setError(err.response?.data?.message || "Login fehlgeschlagen")
     } finally {
