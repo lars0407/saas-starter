@@ -80,6 +80,11 @@
     font-family: "Manrope", Arial, Helvetica, sans-serif;
   }
   
+  /* Hide Crisp chat launcher */
+  .crisp-client .cc-1xry { 
+    display: none !important; 
+  }
+  
   .line-clamp-1 {
     overflow: hidden;
     display: -webkit-box;

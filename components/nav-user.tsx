@@ -10,6 +10,7 @@ import {
   Settings,
   Activity,
   MessageSquare,
+  HelpCircle,
 } from "lucide-react"
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -157,6 +158,21 @@ export function NavUser({
               >
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Feedback
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  if (typeof window === "undefined" || !window.$crisp) return;
+                  window.$crisp.push(["do", "chat:show"]);
+                  window.$crisp.push(["do", "chat:open"]);
+                  
+                  // Listen for when the chat is closed and hide the bubble
+                  window.$crisp.push(["on", "chat:closed", () => {
+                    window.$crisp.push(["do", "chat:hide"]);
+                  }]);
+                }}
+              >
+                <HelpCircle className="mr-2 h-4 w-4" />
+                Support
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

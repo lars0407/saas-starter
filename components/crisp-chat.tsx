@@ -21,6 +21,12 @@ export function CrispChat() {
     script.async = true;
     document.head.appendChild(script);
 
+    // Hide launcher after the widget script attaches
+    script.addEventListener("load", () => {
+      // Hide the bubble
+      window.$crisp.push(["do", "chat:hide"]);
+    });
+
     // Cleanup function
     return () => {
       // Remove the script when component unmounts
