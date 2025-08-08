@@ -12,6 +12,7 @@ interface CoverLetterFormProps {
   onGenerate: () => void;
   onSave: () => void;
   onFormDataChange: (data: CoverLetterData) => void;
+  onContentGenerated?: (content: string) => void;
   isLoading: boolean;
   isGenerating: boolean;
   initialData: CoverLetterData;
@@ -52,7 +53,7 @@ interface CoverLetterData {
   contentDate?: string;
 }
 
-export function CoverLetterForm({ onSubmit, onGenerate, onSave, onFormDataChange, isLoading, isGenerating, initialData }: CoverLetterFormProps) {
+export function CoverLetterForm({ onSubmit, onGenerate, onSave, onFormDataChange, onContentGenerated, isLoading, isGenerating, initialData }: CoverLetterFormProps) {
   const isInitialMount = useRef(true);
   const [formData, setFormData] = useState<CoverLetterData>({
     ...initialData,
@@ -203,6 +204,7 @@ export function CoverLetterForm({ onSubmit, onGenerate, onSave, onFormDataChange
         isEditing={!isLoading}
         onGenerateWithAI={onGenerate}
         isGenerating={isGenerating}
+        onContentGenerated={onContentGenerated}
       />
 
       {/* Content Section */}

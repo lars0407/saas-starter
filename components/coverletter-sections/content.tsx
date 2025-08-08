@@ -25,6 +25,18 @@ export function Content({ data, onChange, isEditing }: ContentProps) {
     setFormData(data);
   }, [data]);
 
+  // Update editor content when formData changes
+  useEffect(() => {
+    if (editorRef.current && formData.customContent) {
+      const currentContent = editorRef.current.getContent();
+      // Only update if content is actually different to avoid cursor position issues
+      if (currentContent !== formData.customContent) {
+        editorRef.current.setContent(formData.customContent);
+        updateWordCount(formData.customContent);
+      }
+    }
+  }, [formData.customContent]);
+
   const handleInputChange = (field: keyof ContentData, value: string) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);

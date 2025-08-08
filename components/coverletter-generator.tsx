@@ -122,6 +122,14 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
     setFormData(data);
   }, []);
 
+  const handleContentGenerated = useCallback((content: string) => {
+    console.log('Content generated:', content);
+    setFormData(prev => ({
+      ...prev,
+      customContent: content
+    }));
+  }, []);
+
   // Create document object for download functionality - memoized to prevent unnecessary re-renders
   const currentDocument = React.useMemo(() => {
     if (!currentDocumentId) return null;
@@ -524,6 +532,7 @@ ${data.senderName || '[Ihr Name]'}`;
             onGenerate={generateCoverLetterPDF}
             onSave={handleSave}
             onFormDataChange={handleFormDataChange}
+            onContentGenerated={handleContentGenerated}
             isLoading={isLoading}
             isGenerating={isGenerating}
             initialData={formData}

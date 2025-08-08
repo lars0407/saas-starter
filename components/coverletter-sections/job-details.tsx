@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, Sparkles } from 'lucide-react';
+import Image from 'next/image';
 
 interface JobDetailsData {
   jobTitle: string;
@@ -22,14 +23,77 @@ interface JobDetailsProps {
   isEditing: boolean;
   onGenerateWithAI?: () => void;
   isGenerating?: boolean;
+  onContentGenerated?: (content: string) => void;
 }
 
-export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGenerating }: JobDetailsProps) {
+export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGenerating, onContentGenerated }: JobDetailsProps) {
   const [formData, setFormData] = useState<JobDetailsData>(data);
+  const [isGeneratingContent, setIsGeneratingContent] = useState(false);
+  const [showForm, setShowForm] = useState(true);
 
   useEffect(() => {
     setFormData(data);
   }, [data]);
+
+  // Function to decode HTML entities
+  const decodeHTMLEntities = (text: string): string => {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    return textarea.value;
+  };
+
+  const generateCoverLetterContent = async () => {
+    if (!formData.jobTitle.trim() || !formData.company.trim() || !formData.jobDescription.trim()) {
+      return;
+    }
+
+    setIsGeneratingContent(true);
+    setShowForm(false);
+
+    try {
+      // Get auth token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1];
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('https://api.jobjaeger.de/api:6H_xVEFw/artifact/cover_letter/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          job_title: formData.jobTitle,
+          job_description: formData.jobDescription,
+          job_company: formData.company
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.output && onContentGenerated) {
+        // Decode HTML entities in the response
+        const decodedContent = decodeHTMLEntities(result.output);
+        
+        onContentGenerated(decodedContent);
+      }
+    } catch (error) {
+      console.error('Error generating cover letter content:', error);
+      // Show form again on error
+      setShowForm(true);
+    } finally {
+      setIsGeneratingContent(false);
+    }
+  };
 
   const handleInputChange = (field: keyof JobDetailsData, value: string) => {
     const newData = { ...formData, [field]: value };
@@ -40,12 +104,42 @@ export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGene
   // Check if required fields are filled
   const hasRequiredData = formData.jobTitle.trim() !== '' && formData.company.trim() !== '' && formData.jobDescription.trim() !== '';
 
+  // Show loading animation when generating content
+  if (isGeneratingContent) {
+    return (
+      <Card>
+        <CardContent className="p-8">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <Image
+                src="/images/utility/loading.gif"
+                alt="Loading"
+                width={80}
+                height={80}
+                className="rounded-lg"
+              />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center justify-center gap-2">
+                <Sparkles className="h-5 w-5 text-green-500" />
+                KI generiert dein Anschreiben...
+              </h3>
+              <p className="text-sm text-gray-600 max-w-md mx-auto">
+                Yo! 🤖 Die KI analysiert gerade die Stellenanzeige und erstellt ein personalisiertes Anschreiben für dich. Das dauert nur einen Moment! ✨
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <Briefcase className="h-5 w-5" />
-          Job Details - Optional für KI-Generierung
+          Job Details - KI-Generierung
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Fülle diese Felder aus, um ein personalisiertes Anschreiben mit KI zu generieren
@@ -139,11 +233,11 @@ export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGene
         {isEditing && hasRequiredData && (
           <div className="pt-4 border-t">
             <Button
-              onClick={onGenerateWithAI}
-              disabled={isGenerating || !hasRequiredData}
+              onClick={generateCoverLetterContent}
+              disabled={isGeneratingContent || !hasRequiredData}
               className="w-full bg-[#0F973D] hover:bg-[#0F973D]/90 text-white"
             >
-              {isGenerating ? (
+              {isGeneratingContent ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                   Generiere Anschreiben...
