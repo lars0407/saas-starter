@@ -263,9 +263,6 @@ export function Content({ data, onChange, isEditing }: ContentProps) {
              
              <div className="flex items-center justify-between text-xs text-muted-foreground">
                <p>
-                 Einfacher Text-Editor für Ihr Anschreiben
-               </p>
-               <p>
                  {formData.customContent.replace(/<[^>]*>/g, '').length} Zeichen
                </p>
              </div>

@@ -43,7 +43,7 @@ export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGene
   };
 
   const generateCoverLetterContent = async () => {
-    if (!formData.jobTitle.trim() || !formData.company.trim() || !formData.jobDescription.trim()) {
+    if (!formData.jobTitle.trim() || !formData.company.trim() || !formData.jobDescription?.trim()) {
       return;
     }
 
@@ -102,7 +102,7 @@ export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGene
   };
 
   // Check if required fields are filled
-  const hasRequiredData = formData.jobTitle.trim() !== '' && formData.company.trim() !== '' && formData.jobDescription.trim() !== '';
+  const hasRequiredData = formData.jobTitle.trim() !== '' && formData.company.trim() !== '' && formData.jobDescription?.trim() !== '';
 
   // Show loading animation when generating content
   if (isGeneratingContent) {

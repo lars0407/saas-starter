@@ -282,12 +282,12 @@ export function CoverLetterForm({ onSubmit, onGenerate, onSave, onFormDataChange
               {isGenerating ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Generiere...
+                  PDF generieren...
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Generieren
+                  PDF generieren
                 </>
               )}
             </Button>
