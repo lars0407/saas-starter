@@ -38,7 +38,7 @@ export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGene
   };
 
   // Check if required fields are filled
-  const hasRequiredData = formData.jobTitle.trim() !== '' && formData.company.trim() !== '';
+  const hasRequiredData = formData.jobTitle.trim() !== '' && formData.company.trim() !== '' && formData.jobDescription.trim() !== '';
 
   return (
     <Card>
@@ -80,6 +80,25 @@ export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGene
           />
         </div>
 
+        {/* Job Description */}
+        <div className="space-y-2">
+          <Label htmlFor="jobDescription" className="text-sm font-medium">
+            Stellenanzeige 📋 <span className="text-red-500">*</span>
+          </Label>
+          <Textarea
+            id="jobDescription"
+            placeholder="Füge hier den Text der Stellenanzeige ein. Die KI analysiert die Anforderungen und passt dein Anschreiben entsprechend an..."
+            value={formData.jobDescription}
+            onChange={(e) => handleInputChange('jobDescription', e.target.value)}
+            rows={8}
+            className="min-h-[200px] resize-y"
+            disabled={!isEditing}
+          />
+          <p className="text-xs text-muted-foreground">
+            Kopiere den Text der Stellenanzeige hier hinein für optimale Ergebnisse
+          </p>
+        </div>
+
         {/* Strengths */}
         <div className="space-y-2">
           <Label htmlFor="strengths" className="text-sm font-medium">
@@ -116,25 +135,6 @@ export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGene
           </p>
         </div>
 
-        {/* Job Description */}
-        <div className="space-y-2">
-          <Label htmlFor="jobDescription" className="text-sm font-medium">
-            Stellenanzeige 📋 <span className="text-gray-500 text-xs">(Optional)</span>
-          </Label>
-          <Textarea
-            id="jobDescription"
-            placeholder="Füge hier den Text der Stellenanzeige ein. Die KI analysiert die Anforderungen und passt dein Anschreiben entsprechend an..."
-            value={formData.jobDescription}
-            onChange={(e) => handleInputChange('jobDescription', e.target.value)}
-            rows={8}
-            className="min-h-[200px] resize-y"
-            disabled={!isEditing}
-          />
-          <p className="text-xs text-muted-foreground">
-            Kopiere den Text der Stellenanzeige hier hinein für optimale Ergebnisse
-          </p>
-        </div>
-
         {/* AI Generation Button */}
         {isEditing && hasRequiredData && (
           <div className="pt-4 border-t">
@@ -166,7 +166,7 @@ export function JobDetails({ data, onChange, isEditing, onGenerateWithAI, isGene
            <div className="pt-4 border-t">
              <div className="text-center p-4 bg-green-50 rounded-lg">
                <p className="text-sm text-green-700">
-                 Fülle mindestens Job-Titel und Unternehmen aus, um ein personalisiertes Anschreiben mit KI zu generieren. Je mehr Details du angibst, desto besser wird das Ergebnis.
+                 Fülle Job-Titel, Unternehmen und Stellenanzeige aus, um ein personalisiertes Anschreiben mit KI zu generieren. Je mehr Details du angibst, desto besser wird das Ergebnis.
                </p>
              </div>
            </div>
