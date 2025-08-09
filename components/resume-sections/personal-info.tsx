@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { User, Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ResumeSummaryGenerator } from '../resume-summary-generator';
 
 interface PersonalInfoData {
   firstName: string;
@@ -29,9 +30,10 @@ interface PersonalInfoProps {
   data: PersonalInfoData;
   onChange: (data: PersonalInfoData) => void;
   isEditing?: boolean;
+  resumeData?: any; // Full resume data for AI summary generation
 }
 
-export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoProps) {
+export function PersonalInfo({ data, onChange, isEditing = true, resumeData }: PersonalInfoProps) {
   const [errors, setErrors] = useState<Partial<PersonalInfoData>>({});
 
   const handleChange = (field: keyof PersonalInfoData, value: string) => {
@@ -307,9 +309,21 @@ export function PersonalInfo({ data, onChange, isEditing = true }: PersonalInfoP
 
         {/* Professional Summary */}
         <div className="space-y-2">
-          <Label htmlFor="summary" className="text-sm font-medium">
-            Kurze Zusammenfassung 💬
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="summary" className="text-sm font-medium">
+              Kurze Zusammenfassung 💬
+            </Label>
+            
+            {/* AI Summary Generator Button */}
+            {isEditing && resumeData && (
+              <ResumeSummaryGenerator
+                resumeData={resumeData}
+                onSummaryGenerated={(summary) => handleChange('summary', summary)}
+                disabled={false}
+              />
+            )}
+          </div>
+          
           <Textarea
             id="summary"
             placeholder="Erzähl in 2-3 Sätzen, was dich ausmacht und was du suchst..."

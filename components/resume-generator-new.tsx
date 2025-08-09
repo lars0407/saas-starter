@@ -720,6 +720,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
               lastName: resumeData.personalInfo.fullName.split(' ').slice(1).join(' ') || ''
             }}
             onChange={updatePersonalInfo}
+            resumeData={resumeData}
           />
           
           {/* Education Section */}

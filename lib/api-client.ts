@@ -298,4 +298,29 @@ export async function generateCoverLetterPDF(
   return result;
 }
 
+export async function generateResumeSummary(resumeData: any) {
+  const token = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('token='))
+    ?.split('=')[1];
+
+  const response = await fetch('https://api.jobjaeger.de/api:6H_xVEFw/artifact/resume/summary/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    },
+    body: JSON.stringify({
+      resume_data: resumeData
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
  
