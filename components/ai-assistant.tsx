@@ -26,6 +26,7 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentMood, setCurrentMood] = useState('laechelnd');
+  const [isHovered, setIsHovered] = useState(false);
 
   // Load chat history from localStorage on mount
   useEffect(() => {
@@ -77,27 +78,57 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/ai-assistant', {
+      // Convert messages to the required format for the API
+      const chatHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      // Add the current user message to the history
+      chatHistory.push({
+        role: 'user',
+        content: userMessage.content
+      });
+
+      // Get auth token from cookies (same as other parts of the app)
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1];
+
+      console.log('Auth token:', token ? 'Present' : 'Missing');
+      console.log('Chat history:', chatHistory);
+
+      const response = await fetch('https://api.jobjaeger.de/api:BP7K6-ZQ/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { "Authorization": `Bearer ${token}` })
         },
         body: JSON.stringify({
-          message: userMessage.content,
-          context: context,
-          history: messages.slice(-5) // Send last 5 messages for context
+          chat_history: chatHistory
         }),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        const errorText = await response.text();
+        console.error('API Error:', errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('API Response:', data);
       
+      if (!data.response || !data.response.content) {
+        throw new Error('Invalid response format from API');
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.reply,
+        content: data.response.content,
         role: 'assistant',
         timestamp: new Date()
       };
@@ -107,7 +138,7 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: 'Entschuldigung, ich konnte deine Nachricht nicht verarbeiten. Bitte versuche es später erneut.',
+        content: `Fehler: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`,
         role: 'assistant',
         timestamp: new Date()
       };
@@ -131,49 +162,55 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
 
   return (
     <>
-      {/* Floating AI Assistant Button */}
-      <div
-        className={cn(
-          "fixed bottom-6 right-6 z-50 cursor-pointer animate-in fade-in-0 zoom-in-95 duration-500",
-          className
-        )}
-      >
-        <div
-          className="relative transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-2 active:scale-95"
-          onClick={() => setIsOpen(true)}
-        >
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg border-4 border-white relative overflow-hidden">
-            <img
-              src={`/images/characters/jobjaeger-${currentMood}.png`}
-              alt="AI Assistant"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-          </div>
-          
-          {/* Notification dot */}
-          {messages.length > 0 && (
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-in zoom-in-95 duration-300" />
+             {/* Floating AI Assistant Button */}
+               <div
+          className={cn(
+            "fixed bottom-0 right-6 z-50 cursor-pointer animate-in fade-in-0 zoom-in-95 duration-700",
+            className
           )}
-        </div>
-      </div>
+        >
+          <div
+            className="relative transition-all duration-500 ease-out hover:scale-110 hover:-translate-y-2 active:scale-95"
+            onClick={() => setIsOpen(true)}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+                        <div className="w-24 h-24 rounded-full bg-green-500 shadow-lg relative overflow-hidden">
+                           <img
+                src={isHovered ? "/images/characters/jobjaeger_chat.png" : "/images/characters/jobjaeger_hide.png"}
+                alt={isHovered ? "Jobjäger chat" : "Jobjäger versteckt"}
+                className="w-full h-full object-cover transition-all duration-500 ease-out"
+              />
+             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+           </div>
+           
+                       {/* Notification dot */}
+            {messages.length > 0 && (
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full animate-in zoom-in-95 duration-500" />
+            )}
+         </div>
+       </div>
 
-      {/* Chat Window */}
-      {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 zoom-in-95 duration-300">
-          {/* Chat Container */}
-          <div className="w-80 h-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col">
+             {/* Chat Window */}
+               {isOpen && (
+          <div className="fixed bottom-0 right-6 z-50 animate-in slide-in-from-bottom-4 zoom-in-95 duration-500">
+           {/* Chat Container */}
+           <div className="w-96 h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Job-Jäger AI</h3>
-                    <p className="text-xs text-gray-500">Dein KI-Assistent</p>
-                  </div>
-                </div>
+                                 <div className="flex items-center space-x-3">
+                   <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+                     <img
+                       src={`/images/characters/jobjaeger-${currentMood}.png`}
+                       alt="Jobjäger"
+                       className="w-full h-full object-cover"
+                     />
+                   </div>
+                   <div>
+                     <h3 className="font-semibold text-gray-900">Jobjäger</h3>
+                     <p className="text-xs text-gray-500">Dein KI-Assistent</p>
+                   </div>
+                 </div>
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={clearChat}
@@ -195,26 +232,32 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.length === 0 ? (
-                  <div className="text-center text-gray-500 py-8">
-                    <Bot className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p className="text-sm">Hallo! Ich bin dein Job-Jäger AI Assistent.</p>
-                    <p className="text-xs mt-1">Wie kann ich dir heute helfen?</p>
-                  </div>
+                                 {messages.length === 0 ? (
+                   <div className="text-center text-gray-500 py-8">
+                                           <div className="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden">
+                       <img
+                         src={`/images/characters/jobjaeger-${currentMood}.png`}
+                         alt="Jobjäger"
+                         className="w-full h-full object-cover"
+                       />
+                     </div>
+                     <p className="text-sm">Hallo! Ich bin dein Jobjäger Assistent.</p>
+                     <p className="text-xs mt-1">Wie kann ich dir heute helfen?</p>
+                   </div>
                                  ) : (
                    messages.map((message) => (
                      <div
                        key={message.id}
-                       className={cn(
-                         "flex animate-in fade-in-0 slide-in-from-bottom-2 duration-300",
-                         message.role === 'user' ? 'justify-end' : 'justify-start'
-                       )}
+                                               className={cn(
+                          "flex animate-in fade-in-0 slide-in-from-bottom-2 duration-500",
+                          message.role === 'user' ? 'justify-end' : 'justify-start'
+                        )}
                      >
                        <div
                          className={cn(
                            "max-w-xs px-4 py-2 rounded-2xl text-sm",
                            message.role === 'user'
-                             ? 'bg-blue-500 text-white'
+                             ? 'bg-green-500 text-white'
                              : 'bg-gray-100 text-gray-900'
                          )}
                        >
@@ -224,8 +267,8 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
                    ))
                  )}
                  
-                 {isLoading && (
-                   <div className="flex justify-start animate-in fade-in-0 duration-300">
+                                   {isLoading && (
+                    <div className="flex justify-start animate-in fade-in-0 duration-500">
                     <div className="bg-gray-100 text-gray-900 max-w-xs px-4 py-2 rounded-2xl text-sm">
                       <div className="flex space-x-1">
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
@@ -246,14 +289,14 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Nachricht eingeben..."
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                         className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                     disabled={isLoading}
                   />
-                  <button
-                    onClick={sendMessage}
-                    disabled={!inputValue.trim() || isLoading}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
+                                     <button
+                     onClick={sendMessage}
+                     disabled={!inputValue.trim() || isLoading}
+                     className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                   >
                     <Send className="w-4 h-4" />
                   </button>
                                  </div>
