@@ -5,6 +5,8 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
+import { AIAssistantProvider } from "@/components/ai-assistant-context"
+import AIAssistantWithContext from "@/components/ai-assistant-with-context"
 
 export default function DashboardLayout({
   children,
@@ -12,11 +14,14 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        {children}
-      </SidebarInset>
-    </SidebarProvider>
+    <AIAssistantProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
+      <AIAssistantWithContext />
+    </AIAssistantProvider>
   )
 }
