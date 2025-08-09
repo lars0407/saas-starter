@@ -90,20 +90,15 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
         content: userMessage.content
       });
 
-      // Get auth token from cookies (same as other parts of the app)
-      const token = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('token='))
-        ?.split('=')[1];
-
-      console.log('Auth token:', token ? 'Present' : 'Missing');
+      const authToken = localStorage.getItem('auth-token');
+      console.log('Auth token:', authToken ? 'Present' : 'Missing');
       console.log('Chat history:', chatHistory);
 
       const response = await fetch('https://api.jobjaeger.de/api:BP7K6-ZQ/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { "Authorization": `Bearer ${token}` })
+          'Authorization': `Bearer ${authToken || ''}`,
         },
         body: JSON.stringify({
           chat_history: chatHistory
