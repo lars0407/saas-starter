@@ -106,6 +106,7 @@ export default function SearchProfilePage() {
                    value={searchProfile.dreamJobTitle}
                    onChange={(e) => setSearchProfile(prev => ({ ...prev, dreamJobTitle: e.target.value }))}
                    placeholder="z.B. Senior Software Engineer"
+                   className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                  />
                ) : (
                  <div className="p-3 bg-muted rounded-md">
@@ -129,7 +130,7 @@ export default function SearchProfilePage() {
                <Label>Suchintensität</Label>
                {isEditing ? (
                  <Select value={searchProfile.jobSearchActivity} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, jobSearchActivity: value }))}>
-                   <SelectTrigger>
+                   <SelectTrigger className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]">
                      <SelectValue />
                    </SelectTrigger>
                    <SelectContent>
@@ -162,7 +163,7 @@ export default function SearchProfilePage() {
                  <Label>Arbeitszeit</Label>
                  {isEditing ? (
                    <Select value={searchProfile.workTimePreference} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, workTimePreference: value }))}>
-                     <SelectTrigger>
+                     <SelectTrigger className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]">
                        <SelectValue />
                      </SelectTrigger>
                      <SelectContent>
@@ -182,7 +183,7 @@ export default function SearchProfilePage() {
                  <Label>Vertragsart</Label>
                  {isEditing ? (
                    <Select value={searchProfile.contractType} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, contractType: value }))}>
-                     <SelectTrigger>
+                     <SelectTrigger className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]">
                        <SelectValue />
                      </SelectTrigger>
                      <SelectContent>
@@ -229,7 +230,7 @@ export default function SearchProfilePage() {
                <Label>Arbeitsort</Label>
                {isEditing ? (
                  <Select value={searchProfile.workLocation} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, workLocation: value }))}>
-                   <SelectTrigger>
+                   <SelectTrigger className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]">
                      <SelectValue />
                    </SelectTrigger>
                    <SelectContent>
@@ -263,7 +264,7 @@ export default function SearchProfilePage() {
                <Label>Reisebereitschaft</Label>
                {isEditing ? (
                  <Select value={searchProfile.travelPercentage} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, travelPercentage: value }))}>
-                   <SelectTrigger>
+                   <SelectTrigger className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]">
                      <SelectValue />
                    </SelectTrigger>
                    <SelectContent>
@@ -301,6 +302,7 @@ export default function SearchProfilePage() {
                    value={searchProfile.salaryExpectation}
                    onChange={(e) => setSearchProfile(prev => ({ ...prev, salaryExpectation: e.target.value }))}
                    placeholder="65000"
+                   className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                  />
                ) : (
                  <div className="p-3 bg-muted rounded-md">
@@ -325,7 +327,7 @@ export default function SearchProfilePage() {
                  <Label>Erfahrungslevel</Label>
                  {isEditing ? (
                    <Select value={searchProfile.experienceLevel} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, experienceLevel: value }))}>
-                     <SelectTrigger>
+                     <SelectTrigger className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]">
                        <SelectValue />
                      </SelectTrigger>
                      <SelectContent>
@@ -346,7 +348,7 @@ export default function SearchProfilePage() {
                  <Label>Startdatum</Label>
                  {isEditing ? (
                    <Select value={searchProfile.startDate} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, startDate: value }))}>
-                     <SelectTrigger>
+                     <SelectTrigger className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]">
                        <SelectValue />
                      </SelectTrigger>
                      <SelectContent>
