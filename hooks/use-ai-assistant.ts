@@ -1,4 +1,4 @@
-import { useAIAssistant } from '@/components/ai-assistant-context';
+import { useAIAssistant } from '@/components/ai-chat/ai-assistant-context';
 
 export function useAIAssistantHook() {
   const { context, updateContext, isVisible, setIsVisible } = useAIAssistant();

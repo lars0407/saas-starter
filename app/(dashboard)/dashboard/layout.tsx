@@ -5,8 +5,8 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
-import { AIAssistantProvider } from "@/components/ai-assistant-context"
-import AIAssistantWithContext from "@/components/ai-assistant-with-context"
+import { AIAssistantProvider } from "@/components/ai-chat/ai-assistant-context"
+import AIAssistantWithContext from "@/components/ai-chat/ai-assistant-with-context"
 
 export default function DashboardLayout({
   children,
