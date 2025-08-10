@@ -66,6 +66,11 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
+    // Check authentication status first
+    if (!checkAuthStatus()) {
+      return;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       content: inputValue.trim(),
@@ -90,15 +95,28 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
         content: userMessage.content
       });
 
-      const authToken = localStorage.getItem('auth-token');
-      console.log('Auth token:', authToken ? 'Present' : 'Missing');
+      // Get token from cookies instead of localStorage
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return null;
+      };
+
+      const authToken = getCookie('token');
+      console.log('Auth token from cookies:', authToken ? 'Present' : 'Missing');
       console.log('Chat history:', chatHistory);
+
+      // Check if auth token exists and is valid
+      if (!authToken) {
+        throw new Error('Kein Authentifizierungstoken gefunden. Bitte melden Sie sich erneut an.');
+      }
 
       const response = await fetch('https://api.jobjaeger.de/api:BP7K6-ZQ/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken || ''}`,
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           chat_history: chatHistory
@@ -111,7 +129,17 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API Error:', errorText);
-        throw new Error(`API Error: ${response.status} - ${errorText}`);
+        
+        // Handle specific error cases
+        if (response.status === 401) {
+          // Clear invalid token and show login message
+          localStorage.removeItem('auth-token');
+          throw new Error('Ihr Anmelde-Token ist abgelaufen. Bitte melden Sie sich erneut an.');
+        } else if (response.status === 403) {
+          throw new Error('Zugriff verweigert. Überprüfen Sie Ihre Berechtigungen.');
+        } else {
+          throw new Error(`API Fehler: ${response.status} - ${errorText}`);
+        }
       }
 
       const data = await response.json();
@@ -153,6 +181,28 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
   const clearChat = () => {
     setMessages([]);
     localStorage.removeItem('ai-assistant-chat');
+  };
+
+  const checkAuthStatus = () => {
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift();
+      return null;
+    };
+
+    const authToken = getCookie('token');
+    if (!authToken) {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: '⚠️ Sie sind nicht angemeldet. Bitte melden Sie sich an, um den AI-Assistenten zu nutzen.',
+        role: 'assistant',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      return false;
+    }
+    return true;
   };
 
   return (
