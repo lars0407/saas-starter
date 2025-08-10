@@ -330,7 +330,7 @@ export function OnboardingModal({
     if (isOpen) {
       console.log('Onboarding modal opened, loading saved data...')
       loadSavedStep()
-      debugLocalStorage() // Debug current status
+
     }
   }, [isOpen])
 
@@ -374,19 +374,7 @@ export function OnboardingModal({
     }
   }
 
-  // Debug function to check current localStorage status
-  const debugLocalStorage = () => {
-    if (typeof window !== 'undefined') {
-      const step = localStorage.getItem(ONBOARDING_STEP_KEY)
-      const data = localStorage.getItem(ONBOARDING_DATA_KEY)
-      const searchData = localStorage.getItem('onboarding_search')
-      console.log('Current localStorage status:', { 
-        step, 
-        data: data ? JSON.parse(data) : null,
-        searchData: searchData ? JSON.parse(searchData) : null
-      })
-    }
-  }
+
 
   // For development: manually clear localStorage
   // Uncomment and call this function if you need to reset onboarding
@@ -444,14 +432,113 @@ export function OnboardingModal({
   }
 
   const handleResumeProcessing = async (data: any) => {
-    setIsLoading(true)
-    setResumeData(data)
+    console.log('OnboardingModal: handleResumeProcessing called with:', data)
     
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 3000))
-    
-    setIsLoading(false)
-    setCurrentStep(5) // Move to completion step
+    if (data.method === 'file' && data.parsedData) {
+      // Resume was successfully parsed, store the data
+      setResumeData(data)
+      
+      // Transform the parsed data to match the profile format
+      const transformedProfileData = {
+        basics: {
+          firstName: data.parsedData.basics?.first_name || '',
+          lastName: data.parsedData.basics?.surname || '',
+          email: data.parsedData.basics?.email || '',
+          phone: data.parsedData.basics?.telephone || '',
+          location: data.parsedData.basics?.adresse_city || '',
+          adresse_street: data.parsedData.basics?.adresse_street || '',
+          adresse_city: data.parsedData.basics?.adresse_city || '',
+          adresse_postcode: data.parsedData.basics?.adresse_postcode || '',
+          adresse_country: data.parsedData.basics?.adresse_country || '',
+          website: data.parsedData.link?.find((l: any) => l.label === 'Website')?.url || '',
+          linkedin: data.parsedData.link?.find((l: any) => l.label === 'LinkedIn')?.url || '',
+          github: data.parsedData.link?.find((l: any) => l.label === 'GitHub')?.url || '',
+          summary: data.parsedData.basics?.description || '',
+        },
+        education: data.parsedData.education?.map((edu: any) => ({
+          id: `edu-${Date.now()}-${Math.random()}`,
+          institution: edu.school || '',
+          degree: edu.degree || '',
+          field: edu.subject || '',
+          location: `${edu.location_city || ''}, ${edu.location_country || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, ''),
+          startDate: edu.startDate || '',
+          endDate: edu.endDate || '',
+          current: false,
+          description: edu.description || '',
+          gpa: edu.grade || '',
+        })) || [],
+        experience: data.parsedData.experience?.map((exp: any) => ({
+          id: `exp-${Date.now()}-${Math.random()}`,
+          company: exp.company || '',
+          position: exp.title || '',
+          location: exp.location || '',
+          startDate: exp.startDate || '',
+          endDate: exp.endDate || '',
+          current: false,
+          description: exp.description || '',
+          achievements: exp.achievements || [],
+        })) || [],
+        skills: data.parsedData.skill?.map((skill: any) => ({
+          id: `skill-${Date.now()}-${Math.random()}`,
+          name: skill.skill || '',
+          category: skill.label || 'technical',
+          level: 'intermediate',
+        })) || [],
+        certifications: data.parsedData.certifications?.map((cert: any) => ({
+          id: `cert-${Date.now()}-${Math.random()}`,
+          name: cert.name || '',
+          issuer: cert.organization || '',
+          issueDate: cert.issue_date || '',
+          description: '',
+        })) || [],
+        courses: data.parsedData.courses?.map((course: any) => ({
+          id: `course-${Date.now()}-${Math.random()}`,
+          title: course.name || '',
+          provider: course.institution || '',
+          startDate: course.startDate || '',
+          endDate: course.endDate || '',
+          duration: '',
+          certificate: '',
+          description: course.description || '',
+          skills: [],
+        })) || [],
+        publications: data.parsedData.publications?.map((pub: any) => ({
+          id: `pub-${Date.now()}-${Math.random()}`,
+          title: pub.title || '',
+          type: pub.type || 'article',
+          authors: Array.isArray(pub.authors) ? pub.authors : [pub.authors || ''],
+          publicationDate: pub.publicationDate || '',
+          journal: pub.journal || '',
+          doi: pub.doi || '',
+          publisher: pub.publisher || '',
+          url: pub.url || '',
+          abstract: pub.abstract || '',
+        })) || [],
+        interests: data.parsedData.interests?.map((interest: any) => ({
+          id: `interest-${Date.now()}-${Math.random()}`,
+          name: interest.name || '',
+          category: interest.category || 'general',
+          description: interest.description || '',
+        })) || [],
+      }
+      
+      // Store the transformed profile data
+      setProfileData(transformedProfileData)
+      
+      // Save the raw parsed data to localStorage for the profile modal to access
+      // This allows ProfileContent to properly transform and display the CV data
+      localStorage.setItem('onboarding_parsed_resume', JSON.stringify(data.parsedData))
+      console.log('OnboardingModal: Stored raw parsed resume data in localStorage:', data.parsedData)
+      
+      // Move to profile creation step
+      setCurrentStep(3)
+      setCharacterIndex(2)
+    } else {
+      // Other methods (LinkedIn, manual, etc.)
+      setResumeData(data)
+      setCurrentStep(3)
+      setCharacterIndex(2)
+    }
   }
 
   const handleJobSearchIntensityComplete = (intensity: string) => {
@@ -596,6 +683,7 @@ export function OnboardingModal({
                 setProfileData({ method: 'skipped' })
                 setCurrentStep(4)
               }}
+              onBack={() => setCurrentStep(2)}
               onJobTitleComplete={handleJobTitleComplete}
               onWorkLocationComplete={handleWorkLocationComplete}
               onJobTypeComplete={handleJobTypeComplete}

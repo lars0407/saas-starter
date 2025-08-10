@@ -60,6 +60,7 @@ interface Skill {
 interface ProfileContentProps {
   onComplete: (profileData: any) => void
   onSkip: () => void
+  onBack?: () => void
   firstName?: string
   lastName?: string
 }
@@ -67,6 +68,7 @@ interface ProfileContentProps {
 export function ProfileContent({
   onComplete,
   onSkip,
+  onBack,
   firstName,
   lastName,
 }: ProfileContentProps) {
@@ -96,33 +98,101 @@ export function ProfileContent({
 
   // Load data from localStorage on component mount
   React.useEffect(() => {
+    console.log('ProfileContent: Loading data from localStorage...')
+    
+    // First, try to load parsed resume data if available
+    try {
+      const parsedResumeData = localStorage.getItem('onboarding_parsed_resume');
+      if (parsedResumeData) {
+        const parsed = JSON.parse(parsedResumeData);
+        console.log('ProfileContent: Found parsed resume data:', parsed);
+        
+        if (parsed.basics) {
+          // Transform the parsed data to match our component format
+          const transformedPersonalInfo: PersonalInfoData = {
+            firstName: parsed.basics.first_name || firstName || "",
+            lastName: parsed.basics.surname || lastName || "",
+            email: parsed.basics.email || "",
+            phone: parsed.basics.telephone || "",
+            location: parsed.basics.adresse_city || "",
+            adresse_street: parsed.basics.adresse_street || "",
+            adresse_city: parsed.basics.adresse_city || "",
+            adresse_postcode: parsed.basics.adresse_postcode || "",
+            adresse_country: parsed.basics.adresse_country || "",
+            website: parsed.link?.find((l: any) => l.label === 'website' || l.label === 'Website')?.url || "",
+            linkedin: parsed.link?.find((l: any) => l.label === 'linkedin' || l.label === 'LinkedIn')?.url || "",
+            github: parsed.link?.find((l: any) => l.label === 'github' || l.label === 'GitHub')?.url || "",
+            summary: parsed.basics.description || "",
+          };
+          
+          console.log('ProfileContent: Setting personal info from parsed resume:', transformedPersonalInfo);
+          setPersonalInfo(transformedPersonalInfo);
+          
+          // Transform education data
+          const transformedEducation: EducationEntry[] = (parsed.education || []).map((edu: any, index: number) => ({
+            id: `edu-${index}`,
+            institution: edu.school || "",
+            degree: edu.degree || "",
+            field: edu.subject || "",
+            location: `${edu.location_city || ""}, ${edu.location_country || ""}`.replace(/^,\s*/, "").replace(/,\s*$/, ""),
+            startDate: edu.startDate || "",
+            endDate: edu.endDate || "",
+            current: false,
+            description: edu.description || "",
+            gpa: edu.grade || "",
+          }));
+          
+          console.log('ProfileContent: Setting education from parsed resume:', transformedEducation);
+          setEducation(transformedEducation);
+          
+          // Transform experience data
+          const transformedExperience: ExperienceEntry[] = (parsed.experience || []).map((exp: any, index: number) => ({
+            id: `exp-${index}`,
+            company: exp.company || "",
+            position: exp.title || "",
+            location: exp.location || "",
+            startDate: exp.startDate || "",
+            endDate: exp.endDate || "",
+            current: false,
+            description: exp.description || "",
+            achievements: exp.achievements || [],
+          }));
+          
+          console.log('ProfileContent: Setting experience from parsed resume:', transformedExperience);
+          setExperience(transformedExperience);
+          
+          // Transform skills data
+          const transformedSkills: Skill[] = (parsed.skill || []).map((skill: any, index: number) => ({
+            id: `skill-${index}`,
+            name: typeof skill.skill === 'number' ? skill.skill.toString() : skill.skill || "",
+            category: (skill.label || 'technical') as 'technical' | 'soft' | 'language' | 'tool',
+            level: 'intermediate',
+          }));
+          
+          console.log('ProfileContent: Setting skills from parsed resume:', transformedSkills);
+          setSkills(transformedSkills);
+          
+          // Clear the parsed resume data from localStorage since we've loaded it
+          localStorage.removeItem('onboarding_parsed_resume');
+          console.log('ProfileContent: Cleared onboarding_parsed_resume from localStorage');
+          return; // Don't load other data sources
+        }
+      }
+    } catch (error) {
+      console.error('ProfileContent: Error loading parsed resume data:', error);
+    }
+
+    // Fallback to regular saved data
     try {
       const onboardingData = localStorage.getItem('onboarding_data');
       if (onboardingData) {
         const parsed = JSON.parse(onboardingData);
-        console.log('Auto-loading from onboarding_data:', parsed);
+        console.log('ProfileContent: Found onboarding data:', parsed);
         
         if (parsed.profileData && parsed.profileData.personalInfo) {
-          console.log('Auto-setting personal info:', parsed.profileData.personalInfo);
-          
-          // Ensure all fields are properly set, even if they're empty
-          const personalData = {
-            firstName: parsed.profileData.personalInfo.firstName || "",
-            lastName: parsed.profileData.personalInfo.lastName || "",
-            email: parsed.profileData.personalInfo.email || "",
-            phone: parsed.profileData.personalInfo.phone || "",
-            location: parsed.profileData.personalInfo.location || "",
-            adresse_street: parsed.profileData.personalInfo.adresse_street || "",
-            adresse_city: parsed.profileData.personalInfo.adresse_city || "",
-            adresse_postcode: parsed.profileData.personalInfo.adresse_postcode || "",
-            adresse_country: parsed.profileData.personalInfo.adresse_country || "",
-            website: parsed.profileData.personalInfo.website || "",
-            linkedin: parsed.profileData.personalInfo.linkedin || "",
-            github: parsed.profileData.personalInfo.github || "",
-            summary: parsed.profileData.personalInfo.summary || "",
-          };
-          
-          console.log('Auto-setting complete personal data:', personalData);
+          console.log('ProfileContent: Loading from onboarding profile data:', parsed.profileData);
+          const personalData = parsed.profileData.personalInfo;
+          console.log('ProfileContent: Setting personal info:', personalData);
           setPersonalInfo(personalData);
           setEducation(parsed.profileData.education || []);
           setExperience(parsed.profileData.experience || []);
@@ -130,9 +200,11 @@ export function ProfileContent({
         }
       }
     } catch (error) {
-      console.error('Error in auto-load:', error);
+      console.error('ProfileContent: Error loading onboarding data:', error);
     }
-  }, []);
+  }, [firstName, lastName]);
+
+
 
   const handlePersonalInfoChange = (data: PersonalInfoData) => {
     setPersonalInfo(data)
@@ -239,14 +311,21 @@ export function ProfileContent({
         </div>
       </Tabs>
 
-             <div className="flex justify-between pt-4 border-t flex-shrink-0 mt-4">
-         <Button variant="outline" onClick={handleSkip} className="text-gray-600 hover:text-gray-800">
-           Überspringen
-         </Button>
-         <Button onClick={handleSave} className="bg-[#0F973D] hover:bg-[#0D7A32] text-white">
-           Profil speichern
-         </Button>
-       </div>
+      <div className="flex justify-between pt-4 border-t flex-shrink-0 mt-4">
+        <div className="flex gap-2">
+          {onBack && (
+            <Button variant="outline" onClick={onBack} className="text-gray-600 hover:text-gray-800">
+              Zurück
+            </Button>
+          )}
+          <Button variant="outline" onClick={handleSkip} className="text-gray-600 hover:text-gray-800">
+            Überspringen
+          </Button>
+        </div>
+        <Button onClick={handleSave} className="bg-[#0F973D] hover:bg-[#0D7A32] text-white">
+          Profil speichern
+        </Button>
+      </div>
 
       {/* Skip Confirmation Dialog */}
       <Dialog open={showSkipConfirmation} onOpenChange={handleSkipCancel}>

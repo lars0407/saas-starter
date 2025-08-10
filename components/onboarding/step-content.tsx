@@ -21,6 +21,7 @@ interface StepContentProps {
   onJobSearchIntensityComplete?: (intensity: string) => void
   onProfileComplete?: (data: any) => void
   onProfileSkip?: () => void
+  onBack?: () => void
   onJobTitleComplete?: (title: string) => void
   onWorkLocationComplete?: (location: string) => void
   onJobTypeComplete?: (type: string) => void
@@ -39,6 +40,7 @@ export function StepContent({
   onJobSearchIntensityComplete,
   onProfileComplete,
   onProfileSkip,
+  onBack,
   onJobTitleComplete,
   onWorkLocationComplete,
   onJobTypeComplete,
@@ -75,6 +77,7 @@ export function StepContent({
       <ProfileContent
         onComplete={onProfileComplete || (() => {})}
         onSkip={onProfileSkip || (() => {})}
+        onBack={onBack}
         firstName={firstName}
         lastName={lastName}
       />

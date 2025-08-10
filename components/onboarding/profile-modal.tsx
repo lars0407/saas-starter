@@ -368,6 +368,33 @@ export function ProfileModal({
   // Load data from localStorage on component mount
   useEffect(() => {
     if (isOpen) {
+      // First, try to load parsed resume data if available
+      try {
+        const parsedResumeData = localStorage.getItem('onboarding_parsed_resume');
+        if (parsedResumeData) {
+          const parsed = JSON.parse(parsedResumeData);
+          console.log('Loading parsed resume data:', parsed);
+          
+          if (parsed.basics) {
+            setPersonalInfo(parsed.basics);
+            setEducation(parsed.education || []);
+            setExperience(parsed.experience || []);
+            setSkills(parsed.skills || []);
+            setCertifications(parsed.certifications || []);
+            setCourses(parsed.courses || []);
+            setPublications(parsed.publications || []);
+            setInterests(parsed.interests || []);
+            
+            // Clear the parsed resume data from localStorage since we've loaded it
+            localStorage.removeItem('onboarding_parsed_resume');
+            return; // Don't load other data sources
+          }
+        }
+      } catch (error) {
+        console.error('Error loading parsed resume data:', error);
+      }
+
+      // Fallback to regular saved data
       const savedData = onboardingProfileStorage.load();
       console.log('Loaded data from localStorage:', savedData);
       
@@ -428,10 +455,7 @@ export function ProfileModal({
     }
   }, [isOpen, initialData]);
 
-  // Debug effect to log when personalInfo changes
-  useEffect(() => {
-    console.log('personalInfo changed:', personalInfo);
-  }, [personalInfo]);
+
 
   // Save data to localStorage whenever any data changes
   useEffect(() => {
@@ -446,13 +470,11 @@ export function ProfileModal({
         publications, 
         interests
       );
-      console.log('Saving data to localStorage:', targetData);
       onboardingProfileStorage.save(targetData);
     }
   }, [personalInfo, education, experience, skills, certifications, courses, publications, interests, isOpen]);
 
   const handlePersonalInfoChange = (data: PersonalInfoData) => {
-    console.log('Personal info changed:', data);
     setPersonalInfo(data)
   }
 
@@ -584,44 +606,6 @@ export function ProfileModal({
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleSkip} className="text-gray-600 hover:text-gray-800">
               Überspringen
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                // Try to load data from onboarding_data and set it manually
-                try {
-                  const onboardingData = localStorage.getItem('onboarding_data');
-                  if (onboardingData) {
-                    const parsed = JSON.parse(onboardingData);
-                    console.log('Manual load from onboarding_data:', parsed);
-                    
-                    if (parsed.profileData && parsed.profileData.personalInfo) {
-                      console.log('Manually setting personal info:', parsed.profileData.personalInfo);
-                      setPersonalInfo(parsed.profileData.personalInfo);
-                      setEducation(parsed.profileData.education || []);
-                      setExperience(parsed.profileData.experience || []);
-                      setSkills(parsed.profileData.skills || []);
-                    }
-                  }
-                } catch (error) {
-                  console.error('Error in manual load:', error);
-                }
-              }} 
-              className="text-orange-600 hover:text-orange-800"
-            >
-              Load Data
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                console.log('Current personalInfo state:', personalInfo);
-                console.log('Current education state:', education);
-                console.log('Current experience state:', experience);
-                console.log('Current skills state:', skills);
-              }} 
-              className="text-green-600 hover:text-green-800"
-            >
-              Debug
             </Button>
           </div>
           <Button onClick={handleSave} className="bg-[#0F973D] hover:bg-[#0D7A32] text-white">
