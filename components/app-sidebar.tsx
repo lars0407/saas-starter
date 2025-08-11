@@ -176,7 +176,7 @@ const data = {
       icon: User,
       items: [
         {
-          title: "Übersicht",
+          title: "Persönlich",
           url: "/dashboard/profile",
         },
         {
