@@ -7,7 +7,7 @@ export function LoadingStep() {
       <div className="text-center">
         <div className="flex justify-center mb-4">
           <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#0F973D]"></div>
+            <div className="rounded-full h-16 w-16 border-2 border-[#0F973D]"></div>
             <div className="absolute inset-0 flex items-center justify-center">
               <FileText className="h-8 w-8 text-[#0F973D]" />
             </div>
@@ -41,7 +41,7 @@ export function LoadingStep() {
         <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
           <div className="flex-shrink-0">
             <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-              <Loader2 className="w-4 h-4 text-white animate-spin" />
+              <Loader2 className="w-4 h-4 text-white" />
             </div>
           </div>
           <div className="flex-1">
