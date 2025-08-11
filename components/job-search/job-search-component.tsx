@@ -305,6 +305,18 @@ export function JobSearchComponent() {
         return
       }
 
+      // Optimistically update the local state immediately for better UX
+      const isCurrentlySaved = savedJobs.has(jobId)
+      if (isCurrentlySaved) {
+        setSavedJobs(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(jobId)
+          return newSet
+        })
+      } else {
+        setSavedJobs(prev => new Set([...prev, jobId]))
+      }
+
       const response = await fetch("/api/job_tracker/favourite", {
         method: "POST",
         headers: {
@@ -317,6 +329,17 @@ export function JobSearchComponent() {
       })
 
       if (!response.ok) {
+        // Revert the optimistic update if the API call failed
+        if (isCurrentlySaved) {
+          setSavedJobs(prev => new Set([...prev, jobId]))
+        } else {
+          setSavedJobs(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(jobId)
+            return newSet
+          })
+        }
+        
         const errorData = await response.json()
         if (errorData.code === "ERROR_CODE_UNAUTHORIZED") {
           alert('Bitte melden Sie sich an, um Jobs zu speichern.')
@@ -328,7 +351,7 @@ export function JobSearchComponent() {
       const data = await response.json()
       console.log('Job tracker response:', data)
 
-      // Refresh the job favourites list to get the updated state
+      // Refresh the job favourites list to get the updated state from server
       await fetchJobFavourites()
 
       // Show success message based on API response
@@ -338,6 +361,19 @@ export function JobSearchComponent() {
       }
     } catch (error) {
       console.error('Error toggling saved job:', error)
+      
+      // Revert the optimistic update if there was an error
+      const isCurrentlySaved = savedJobs.has(jobId)
+      if (isCurrentlySaved) {
+        setSavedJobs(prev => new Set([...prev, jobId]))
+      } else {
+        setSavedJobs(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(jobId)
+          return newSet
+        })
+      }
+      
       // You can add error handling here (toast notification, etc.)
     }
   }
@@ -840,7 +876,11 @@ export function JobSearchComponent() {
               </div>
             ) : selectedJob ? (
               <div>
-                <JobDetailComponent job={selectedJob} />
+                <JobDetailComponent 
+                  job={selectedJob} 
+                  isSaved={savedJobs.has(selectedJob.id)}
+                  onToggleSaved={() => toggleSavedJob(selectedJob.id)}
+                />
               </div>
             ) : (
             <Card>

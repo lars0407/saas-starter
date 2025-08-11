@@ -32,12 +32,13 @@ import { cn } from "@/lib/utils"
 interface JobDetailComponentProps {
   jobId?: number
   job?: Job
+  isSaved?: boolean
+  onToggleSaved?: () => void
 }
 
-export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentProps) {
+export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onToggleSaved }: JobDetailComponentProps) {
   const [job, setJob] = useState<Job | null>(propJob || null)
   const [loading, setLoading] = useState(!propJob)
-  const [savedJobs, setSavedJobs] = useState<Set<number>>(new Set())
   const [applied, setApplied] = useState(false)
   const [showFullDescription, setShowFullDescription] = useState(false)
 
@@ -181,7 +182,7 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
       
       if (data.job_tracker_list?.items?.ids && Array.isArray(data.job_tracker_list.items.ids)) {
         const jobIds = data.job_tracker_list.items.ids
-        setSavedJobs(new Set(jobIds))
+        // setSavedJobs(new Set(jobIds)) // This line is removed as per the edit hint
         console.log('Loaded saved job IDs:', jobIds)
         console.log('Saved jobs set:', new Set(jobIds))
       } else {
@@ -210,6 +211,12 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
 
   const handleAddToTracker = async () => {
     if (!job?.id) return
+    
+    // Use the onToggleSaved prop if provided, otherwise fall back to the old logic
+    if (onToggleSaved) {
+      onToggleSaved()
+      return
+    }
     
     try {
       // Get auth token from cookies
@@ -325,7 +332,7 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
                 variant="ghost"
                 size="sm"
                 onClick={handleAddToTracker}
-                className={cn(savedJobs.has(job.id) && "text-[#0F973D]")}
+                className={cn(isSaved && "text-[#0F973D]")}
               >
                 <Bookmark className="h-4 w-4" />
               </Button>
@@ -389,7 +396,7 @@ export function JobDetailComponent({ jobId, job: propJob }: JobDetailComponentPr
                Jetzt bewerben
              </Button>
             <Button variant="outline" onClick={handleAddToTracker}>
-              Zum Jobtracker hinzufügen
+              {isSaved ? "Aus Jobtracker entfernen" : "Zum Jobtracker hinzufügen"}
             </Button>
           </div>
         </CardContent>
