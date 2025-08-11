@@ -117,33 +117,101 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
   const formatListItems = (htmlString: string, sectionName: string) => {
     if (!htmlString || htmlString === 'null' || htmlString === 'undefined') {
       return (
-                 <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
-           <AlertCircle className="h-4 w-4" />
-           <span className="text-sm font-medium">Keine {sectionName} angegeben</span>
-         </div>
+        <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
+          <AlertCircle className="h-4 w-4" />
+          <span className="text-sm font-medium">Keine {sectionName} angegeben</span>
+        </div>
       )
     }
+
+    console.log(`Formatting ${sectionName}:`, htmlString) // Debug log
     
-    // Extract list items from HTML string
-    const listItemRegex = /<li>(.*?)<\/li>/g
+    // Handle different HTML formats
+    let cleanString = htmlString
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/?p[^>]*>/gi, '\n')
+      .replace(/<\/?div[^>]*>/gi, '\n')
+      .replace(/<\/?span[^>]*>/gi, '')
+      .replace(/<\/?strong[^>]*>/gi, '')
+      .replace(/<\/?b[^>]*>/gi, '')
+      .replace(/<\/?em[^>]*>/gi, '')
+      .replace(/<\/?i[^>]*>/gi, '')
+    
+    // Try to extract list items from <li> tags first
+    const listItemRegex = /<li[^>]*>(.*?)<\/li>/gi
     const items: string[] = []
     let match
     
     while ((match = listItemRegex.exec(htmlString)) !== null) {
-      items.push(match[1].trim())
+      const item = match[1]
+        .replace(/<[^>]*>/g, '') // Remove any remaining HTML tags
+        .trim()
+      if (item && item.length > 0) {
+        items.push(item)
+      }
     }
     
-    if (items.length === 0) {
-      // If no list items found, return the original text
-      return <div className="text-muted-foreground">{htmlString}</div>
+    // If we found list items, return them as a proper list
+    if (items.length > 0) {
+      console.log(`Found ${items.length} list items:`, items)
+      return (
+        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+          {items.map((item, index) => (
+            <li key={index} className="leading-relaxed">{item}</li>
+          ))}
+        </ul>
+      )
     }
     
+    // If no <li> tags found, try to split by common separators
+    const separators = ['•', '-', '*', '·', '→', '⇒']
+    let splitItems: string[] = []
+    
+    for (const separator of separators) {
+      if (cleanString.includes(separator)) {
+        splitItems = cleanString
+          .split(separator)
+          .map(item => item.trim())
+          .filter(item => item.length > 0)
+        break
+      }
+    }
+    
+    // If we found items with separators, return them as a list
+    if (splitItems.length > 1) {
+      console.log(`Found ${splitItems.length} items with separators:`, splitItems)
+      return (
+        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+          {splitItems.map((item, index) => (
+            <li key={index} className="leading-relaxed">{item}</li>
+          ))}
+        </ul>
+      )
+    }
+    
+    // If still no items, try to split by newlines and clean up
+    const lineItems = cleanString
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && line !== 'null' && line !== 'undefined')
+    
+    if (lineItems.length > 1) {
+      console.log(`Found ${lineItems.length} line items:`, lineItems)
+      return (
+        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+          {lineItems.map((item, index) => (
+            <li key={index} className="leading-relaxed">{item}</li>
+          ))}
+        </ul>
+      )
+    }
+    
+    // Last resort: return the cleaned text as a single paragraph
+    console.log(`Returning cleaned text for ${sectionName}:`, cleanString)
     return (
-      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-        {items.map((item, index) => (
-          <li key={index} className="leading-relaxed">{item}</li>
-        ))}
-      </ul>
+      <div className="text-muted-foreground whitespace-pre-line leading-relaxed">
+        {cleanString}
+      </div>
     )
   }
 
