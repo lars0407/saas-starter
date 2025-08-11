@@ -117,51 +117,87 @@ export function JobSearchComponent() {
     }
     setError(null)
     
-    const currentPage = isLoadMore ? page : 1
+    const currentOffset = isLoadMore ? (page - 1) * 25 : 0
     
     console.log('API Request:', {
       isLoadMore,
-      currentPage,
+      currentOffset,
       page,
       search_term: filters.keyword,
-      location: filters.location
+      location: filters.location,
+      remote_work: filters.remoteWork,
+      employement_type: filters.jobType,
+      date_published: 30 // Default to 30 days
     })
     
     try {
-      const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v2/job/search", {
+      const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v3/job/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          page: currentPage,
+          offset: currentOffset,
           search_term: filters.keyword,
-          location: filters.location,
-          // Add more filter mappings if supported by API
+          remote_work: filters.remoteWork !== "all" ? filters.remoteWork : undefined,
+          employement_type: filters.jobType !== "all" ? filters.jobType : undefined,
+          date_published: 30,
+          location: filters.location || undefined,
         }),
       })
       if (!response.ok) throw new Error("Fehler beim Laden der Jobs.")
       const data = await response.json()
       
       // Debug: Log the first job to see the structure
-      if (data.items && data.items.length > 0) {
-        console.log('First job data:', data.items[0])
+      if (data.results && data.results.length > 0) {
+        console.log('First job data:', data.results[0])
         console.log('Date fields available:', {
-          created_at: data.items[0].created_at,
-          job_posted: data.items[0].job_posted,
-          posted_date: data.items[0].posted_date,
-          date: data.items[0].date
+          created_at: data.results[0].payload.data.created_at,
+          job_posted: data.results[0].payload.data.job_posted,
+          posted_date: data.results[0].payload.data.posted_date,
+          date: data.results[0].payload.data.date
         })
       }
       
-      const newJobs = data.items || []
+      // Extract jobs from the new results structure
+      const newJobs = data.results ? data.results.map((result: any) => {
+        const jobData = result.payload.data
+        return {
+          ...jobData,
+          id: typeof jobData.id === 'string' ? parseInt(jobData.id) : jobData.id
+        }
+      }) : []
+      
+      // Debug: Log all available fields in the response to find the total count
+      console.log('Full API Response:', data)
+      console.log('Available fields:', Object.keys(data))
+      
+      // Get total count from API response - check for different possible fields
+      // Based on the API response structure, we need to find the correct field
+      let totalCount = data.total || data.total_count || data.itemsTotal || data.total_results
+      
+      // If we don't have a total count from the API, estimate it based on current results
+      // This is a fallback solution
+      if (!totalCount || totalCount === 0) {
+        // If this is the first page and we have results, estimate total
+        if (!isLoadMore && newJobs.length > 0) {
+          // Assume there are more pages if we got a full page of results
+          totalCount = Math.max(newJobs.length * 2, newJobs.length + 10)
+        } else if (isLoadMore) {
+          // For load more, keep the existing total
+          totalCount = totalJobs
+        } else {
+          totalCount = newJobs.length
+        }
+      }
       
       console.log('API Response:', {
         newJobsCount: newJobs.length,
-        totalJobs: data.itemsTotal,
+        totalJobs: totalCount,
         isLoadMore,
-        currentPage,
-        jobIds: newJobs.map((job: Job) => job.id).slice(0, 5) // Show first 5 job IDs
+        currentOffset,
+        jobIds: newJobs.map((job: Job) => job.id).slice(0, 5), // Show first 5 job IDs
+        responseData: data // Log full response to see available fields
       })
       
       if (isLoadMore) {
@@ -170,17 +206,19 @@ export function JobSearchComponent() {
       } else {
         setJobs(newJobs)
         setPage(2)
+        // Reset selected job ID for new searches so the first job gets selected
+        setSelectedJobId(null)
       }
       
-      setTotalJobs(data.itemsTotal || 0)
+      setTotalJobs(totalCount)
       setHasMoreJobs(newJobs.length === 25)
     } catch (err: any) {
       setError(err.message || "Unbekannter Fehler")
       if (!isLoadMore) {
         setJobs([])
       }
-      } finally {
-        setLoading(false)
+    } finally {
+      setLoading(false)
       setLoadingMore(false)
     }
   }
@@ -188,11 +226,11 @@ export function JobSearchComponent() {
   useEffect(() => {
     fetchJobs(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.keyword, filters.location]) // Only trigger on main search fields for now
+  }, [filters.keyword, filters.location, filters.jobType, filters.remoteWork]) // Trigger on main search fields and job type/remote work
 
   // Select first job when jobs are loaded
   useEffect(() => {
-    if (jobs.length > 0 && !selectedJobId) {
+    if (jobs.length > 0 && (!selectedJobId || !jobs.find(job => job.id === selectedJobId))) {
       setSelectedJobId(jobs[0].id)
     }
   }, [jobs, selectedJobId])
@@ -234,6 +272,14 @@ export function JobSearchComponent() {
 
   const handleFilterChange = (key: keyof JobSearchFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))
+    
+    // Trigger search immediately for job type and remote work changes
+    if (key === 'jobType' || key === 'remoteWork') {
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        fetchJobs(false)
+      }, 100)
+    }
   }
 
   const handleSearch = () => {
@@ -365,7 +411,12 @@ export function JobSearchComponent() {
                 placeholder="Job-Titel, Firma oder Schlüsselwörter..."
                 value={filters.keyword}
                 onChange={(e) => handleFilterChange('keyword', e.target.value)}
-                className="pl-10"
+                className="pl-10 focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20 focus:outline-none"
+                style={{
+                  '--tw-ring-color': '#0F973D',
+                  '--tw-border-opacity': '1',
+                  '--tw-ring-opacity': '0.2'
+                } as React.CSSProperties}
               />
             </div>
             <div className="flex-1 relative">
@@ -374,7 +425,12 @@ export function JobSearchComponent() {
                 placeholder="Stadt, Bundesland oder Remote..."
                 value={filters.location}
                 onChange={(e) => handleFilterChange('location', e.target.value)}
-                className="pl-10"
+                className="pl-10 focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20 focus:outline-none"
+                style={{
+                  '--tw-ring-color': '#0F973D',
+                  '--tw-border-opacity': '1',
+                  '--tw-ring-opacity': '0.2'
+                } as React.CSSProperties}
               />
             </div>
             <Button
@@ -477,7 +533,7 @@ export function JobSearchComponent() {
         <div className="lg:col-span-1 flex flex-col space-y-4 min-h-0">
       <div className="flex items-center justify-between">
              <h2 className="text-lg font-semibold">
-               {loading ? "Lade Jobs..." : `${jobs.length} von ${totalJobs.toLocaleString('de-DE')} Jobs gefunden`}
+               {loading ? "Lade Jobs..." : "Jobs gefunden"}
              </h2>
             <Select>
               <SelectTrigger className="w-32 focus:border-[#0F973D] focus:ring-[#0F973D]">
