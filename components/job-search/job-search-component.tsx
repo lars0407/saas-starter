@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, MapPin, Briefcase, Building2, Clock, DollarSign, Filter, Star, Bookmark, ExternalLink, Eye } from "lucide-react"
+import { Search, MapPin, Briefcase, Building2, Clock, DollarSign, Filter, Star, Bookmark, ExternalLink, Eye, X, Plus, HelpCircle, Target, Globe, Calendar, Settings, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,11 @@ import { Separator } from "@/components/ui/separator"
 import { Job } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { JobDetailComponent } from "./job-detail-component"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Textarea } from "@/components/ui/textarea"
 
 interface JobSearchFilters {
   keyword: string
@@ -39,7 +44,6 @@ export function JobSearchComponent() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showFilters, setShowFilters] = useState(false)
   const [savedJobs, setSavedJobs] = useState<Set<number>>(new Set())
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null)
   const [totalJobs, setTotalJobs] = useState<number>(0)
@@ -48,6 +52,37 @@ export function JobSearchComponent() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [isNearBottom, setIsNearBottom] = useState(false)
   const [observerTarget, setObserverTarget] = useState<HTMLDivElement | null>(null)
+  const [searchProfileOpen, setSearchProfileOpen] = useState(false)
+  
+  // Search Profile State
+  const [searchProfile, setSearchProfile] = useState({
+    jobFunctions: [] as string[],
+    excludedTitles: [] as string[],
+    jobType: {
+      fullTime: true,
+      contract: false,
+      partTime: false,
+      internship: false
+    },
+    workModel: {
+      onsite: true,
+      remote: true,
+      hybrid: true
+    },
+    location: '',
+    radius: '25km',
+    experienceLevel: {
+      intern: false,
+      entryLevel: true,
+      midLevel: true,
+      seniorLevel: false,
+      leadStaff: false,
+      directorExecutive: false
+    },
+    requiredExperience: [0, 11],
+    datePosted: '',
+    minSalary: 0
+  })
 
   // Load initial jobs and job favourites on component mount
   useEffect(() => {
@@ -469,14 +504,398 @@ export function JobSearchComponent() {
                 } as React.CSSProperties}
               />
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2"
-            >
-              <Filter className="h-4 w-4" />
-              Filter
-            </Button>
+            <Sheet open={searchProfileOpen} onOpenChange={setSearchProfileOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Filter className="h-4 w-4" />
+                  Filter
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[1000px] overflow-y-auto">
+                <SheetHeader className="sticky top-0 bg-white border-b pb-4 z-10">
+                  <div className="flex items-center justify-between">
+                    <SheetTitle className="flex items-center gap-2">
+                      <Settings className="h-5 w-5 text-[#0F973D]" />
+                      Suchprofil & Filter
+                    </SheetTitle>
+                    <Button 
+                      className="bg-[#0F973D] hover:bg-[#0F973D]/90"
+                      onClick={() => {
+                        console.log('Saving search profile:', searchProfile);
+                        setSearchProfileOpen(false);
+                      }}
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Speichern
+                    </Button>
+                  </div>
+                </SheetHeader>
+                <div className="space-y-6 mt-6">
+                  {/* Job Functions */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-[#0F973D]" />
+                        Job Functions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Job Functions</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="jobFunction"
+                            placeholder="Job Function hinzufügen..."
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                const value = (e.target as HTMLInputElement).value;
+                                if (value && !searchProfile.jobFunctions.includes(value)) {
+                                  setSearchProfile(prev => ({ 
+                                    ...prev, 
+                                    jobFunctions: [...prev.jobFunctions, value] 
+                                  }));
+                                  (e.target as HTMLInputElement).value = '';
+                                }
+                              }
+                            }}
+                            className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const input = document.querySelector('input[id="jobFunction"]') as HTMLInputElement;
+                              if (input && input.value && !searchProfile.jobFunctions.includes(input.value)) {
+                                setSearchProfile(prev => ({ 
+                                  ...prev, 
+                                  jobFunctions: [...prev.jobFunctions, input.value] 
+                                }));
+                                input.value = '';
+                              }
+                            }}
+                            className="hover:bg-[#0F973D] hover:text-white hover:border-[#0F973D]"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Hinzufügen
+                          </Button>
+                        </div>
+                        {searchProfile.jobFunctions.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {searchProfile.jobFunctions.map((jobFunction, index) => (
+                              <Badge key={index} variant="secondary" className="bg-green-100 text-green-800 flex items-center gap-1">
+                                {jobFunction}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSearchProfile(prev => ({
+                                      ...prev,
+                                      jobFunctions: prev.jobFunctions.filter(jf => jf !== jobFunction)
+                                    }));
+                                  }}
+                                  className="h-4 w-4 p-0 hover:bg-green-200"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Job Type */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-[#0F973D]" />
+                        Job Type
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.jobType.fullTime}
+                            onCheckedChange={(checked: boolean) => 
+                              setSearchProfile(prev => ({ 
+                                ...prev, 
+                                jobType: { ...prev.jobType, fullTime: checked } 
+                              }))
+                            }
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Vollzeit</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.jobType.contract}
+                            onCheckedChange={(checked: boolean) => 
+                              setSearchProfile(prev => ({ 
+                                ...prev, 
+                                jobType: { ...prev.jobType, contract: checked } 
+                              }))
+                            }
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Vertrag</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.jobType.partTime}
+                            onCheckedChange={(checked: boolean) => 
+                              setSearchProfile(prev => ({ 
+                                ...prev, 
+                                jobType: { ...prev.jobType, partTime: checked } 
+                              }))
+                            }
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Teilzeit</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.jobType.internship}
+                            onCheckedChange={(checked: boolean) => 
+                              setSearchProfile(prev => ({ 
+                                ...prev, 
+                                jobType: { ...prev.jobType, internship: checked } 
+                              }))
+                            }
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Praktikum</Label>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Work Model */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Globe className="h-5 w-5 text-[#0F973D]" />
+                        Arbeitsmodell
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.workModel.onsite}
+                            onCheckedChange={(checked: boolean) => 
+                              setSearchProfile(prev => ({ 
+                                ...prev, 
+                                workModel: { ...prev.workModel, onsite: checked } 
+                              }))
+                            }
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Vor Ort</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.workModel.remote}
+                            onCheckedChange={(checked: boolean) => 
+                              setSearchProfile(prev => ({ 
+                                ...prev, 
+                                workModel: { ...prev.workModel, remote: checked } 
+                              }))
+                            }
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Remote</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.workModel.hybrid}
+                            onCheckedChange={(checked: boolean) => 
+                              setSearchProfile(prev => ({ 
+                                ...prev, 
+                                workModel: { ...prev.workModel, hybrid: checked } 
+                              }))
+                            }
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Hybrid</Label>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Location */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-[#0F973D]" />
+                        Standort
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Standort</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={searchProfile.location}
+                            onChange={(e) => setSearchProfile(prev => ({ ...prev, location: e.target.value }))}
+                            placeholder="Standort eingeben..."
+                            className="flex-1 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]"
+                          />
+                          <Select value={searchProfile.radius} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, radius: value }))}>
+                            <SelectTrigger className="w-24 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="5km">5km</SelectItem>
+                              <SelectItem value="10km">10km</SelectItem>
+                              <SelectItem value="25km">25km</SelectItem>
+                              <SelectItem value="50km">50km</SelectItem>
+                              <SelectItem value="100km">100km</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Experience Level */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Target className="h-5 w-5 text-[#0F973D]" />
+                        Erfahrungslevel
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.experienceLevel.intern}
+                            onCheckedChange={(checked: boolean) => 
+                              setSearchProfile(prev => ({ 
+                                ...prev, 
+                                experienceLevel: { ...prev.experienceLevel, intern: checked } 
+                              }))
+                            }
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Praktikant/Neuer Absolvent</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.experienceLevel.entryLevel}
+                            onCheckedChange={(checked: boolean) => 
+                              setSearchProfile(prev => ({ 
+                                ...prev, 
+                                experienceLevel: { ...prev.experienceLevel, entryLevel: checked } 
+                              }))
+                            }
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Einsteiger</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.experienceLevel.midLevel}
+                            onCheckedChange={(checked: boolean) => 
+                              setSearchProfile(prev => ({ 
+                                ...prev, 
+                                experienceLevel: { ...prev.experienceLevel, midLevel: checked } 
+                              }))
+                            }
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Mittleres Level</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.experienceLevel.seniorLevel}
+                            onCheckedChange={(checked: boolean) => 
+                              setSearchProfile(prev => ({ 
+                                ...prev, 
+                                experienceLevel: { ...prev.experienceLevel, seniorLevel: checked } 
+                              }))
+                            }
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Senior Level</Label>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Date Posted */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-[#0F973D]" />
+                        Veröffentlichungsdatum
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <RadioGroup value={searchProfile.datePosted} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, datePosted: value }))}>
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="past24h" id="past24h" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
+                              <Label htmlFor="past24h">Letzte 24 Stunden</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="past3days" id="past3days" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
+                              <Label htmlFor="past3days">Letzte 3 Tage</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="pastWeek" id="pastWeek" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
+                              <Label htmlFor="pastWeek">Letzte Woche</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="pastMonth" id="pastMonth" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
+                              <Label htmlFor="pastMonth">Letzter Monat</Label>
+                            </div>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Compensation */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5 text-[#0F973D]" />
+                        Vergütung
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Mindest-Jahresgehalt</Label>
+                        <Input
+                          type="number"
+                          value={searchProfile.minSalary}
+                          onChange={(e) => setSearchProfile(prev => ({ ...prev, minSalary: parseInt(e.target.value) || 0 }))}
+                          placeholder="Mindest-Jahresgehalt €0k/Jahr"
+                          className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Close Button */}
+                  <div className="flex justify-center">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setSearchProfileOpen(false)}
+                    >
+                      Schließen
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
             <Button 
               className="bg-[#0F973D] hover:bg-[#0F973D]/90"
               onClick={handleSearch}
@@ -487,81 +906,6 @@ export function JobSearchComponent() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Advanced Filters */}
-      {showFilters && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Erweiterte Filter</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Beschäftigungstyp</label>
-                <Select value={filters.jobType} onValueChange={(value) => handleFilterChange('jobType', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Alle Typen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Typen</SelectItem>
-                    <SelectItem value="Full-time">Vollzeit</SelectItem>
-                    <SelectItem value="Part-time">Teilzeit</SelectItem>
-                    <SelectItem value="Contract">Vertrag</SelectItem>
-                    <SelectItem value="Internship">Praktikum</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Erfahrungslevel</label>
-                <Select value={filters.experienceLevel} onValueChange={(value) => handleFilterChange('experienceLevel', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Alle Level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Level</SelectItem>
-                    <SelectItem value="Entry">Anfänger</SelectItem>
-                    <SelectItem value="Mid-level">Mittel</SelectItem>
-                    <SelectItem value="Senior">Senior</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Remote-Arbeit</label>
-                <Select value={filters.remoteWork} onValueChange={(value) => handleFilterChange('remoteWork', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Alle Optionen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Optionen</SelectItem>
-                    <SelectItem value="Remote">Vollständig Remote</SelectItem>
-                    <SelectItem value="Hybrid">Hybrid</SelectItem>
-                    <SelectItem value="On-site">Vor Ort</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Unternehmensgröße</label>
-                <Select value={filters.companySize} onValueChange={(value) => handleFilterChange('companySize', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Alle Größen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Größen</SelectItem>
-                    <SelectItem value="1-10">1-10 Mitarbeiter</SelectItem>
-                    <SelectItem value="11-50">11-50 Mitarbeiter</SelectItem>
-                    <SelectItem value="51-200">51-200 Mitarbeiter</SelectItem>
-                    <SelectItem value="201-500">201-500 Mitarbeiter</SelectItem>
-                    <SelectItem value="500+">500+ Mitarbeiter</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
