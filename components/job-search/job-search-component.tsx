@@ -56,14 +56,16 @@ export function JobSearchComponent() {
   
   // Search Profile State
   const [searchProfile, setSearchProfile] = useState({
-    jobFunctions: [] as string[],
+    jobTitle: '',
     excludedTitles: [] as string[],
     jobType: {
       fullTime: true,
-      contract: false,
       partTime: false,
+      temporary: false,
+      contract: false,
       internship: false
     },
+    employement_type: ['FULL_TIME', 'Not Applicable'] as string[],
     workModel: {
       onsite: true,
       remote: true,
@@ -175,7 +177,7 @@ export function JobSearchComponent() {
           offset: currentOffset,
           search_term: filters.keyword,
           remote_work: filters.remoteWork !== "all" ? filters.remoteWork : undefined,
-          employement_type: filters.jobType !== "all" ? filters.jobType : undefined,
+          employement_type: searchProfile.employement_type && searchProfile.employement_type.length > 0 ? searchProfile.employement_type : undefined,
           date_published: 30,
           location: filters.location || undefined,
         }),
@@ -261,7 +263,7 @@ export function JobSearchComponent() {
   useEffect(() => {
     fetchJobs(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.keyword, filters.location, filters.jobType, filters.remoteWork]) // Trigger on main search fields and job type/remote work
+  }, [filters.keyword, filters.location, filters.remoteWork]) // Trigger on main search fields and remote work
 
   // Select first job when jobs are loaded
   useEffect(() => {
@@ -317,8 +319,64 @@ export function JobSearchComponent() {
     }
   }
 
+  // Handle search profile changes without triggering job search
+  const handleSearchProfileChange = (updates: Partial<typeof searchProfile>) => {
+    setSearchProfile(prev => ({ ...prev, ...updates }))
+  }
+
   const handleSearch = () => {
     fetchJobs(false)
+  }
+
+  // Helper function to get employement_type array based on selected job types
+  const getEmployementTypeArray = (jobType: any) => {
+    const employementTypes: string[] = []
+    
+    if (jobType.fullTime) {
+      employementTypes.push('FULL_TIME', 'Not Applicable')
+    }
+    if (jobType.partTime) {
+      employementTypes.push('PART_TIME')
+    }
+    if (jobType.temporary) {
+      employementTypes.push('TEMPORARY')
+    }
+    if (jobType.contract) {
+      employementTypes.push('FREELANCE')
+    }
+    if (jobType.internship) {
+      employementTypes.push('INTERN')
+    }
+    
+    // If no options are selected, include all types
+    if (employementTypes.length === 0) {
+      employementTypes.push('FULL_TIME', 'PART_TIME', 'TEMPORARY', 'FREELANCE', 'INTERN', 'Not Applicable')
+    }
+    
+    return employementTypes
+  }
+
+  // Helper function to translate employment types to German
+  const translateEmploymentType = (type: string) => {
+    switch (type) {
+      case 'Full-time':
+      case 'FULL_TIME':
+        return 'Vollzeit'
+      case 'Part-time':
+      case 'PART_TIME':
+        return 'Teilzeit'
+      case 'Temporary':
+      case 'TEMPORARY':
+        return 'Befristet'
+      case 'Contract':
+      case 'FREELANCE':
+        return 'Vertrag'
+      case 'Internship':
+      case 'INTERN':
+        return 'Praktikum'
+      default:
+        return type
+    }
   }
 
   // handleLoadMore is no longer needed with infinite scroll
@@ -521,10 +579,26 @@ export function JobSearchComponent() {
                       <Settings className="h-5 w-5 text-[#0F973D]" />
                       Suchprofil & Filter
                     </SheetTitle>
-                    <Button 
+                                        <Button
                       className="bg-[#0F973D] hover:bg-[#0F973D]/90"
                       onClick={() => {
                         console.log('Saving search profile:', searchProfile);
+                        
+                        // Update search filters with search profile data
+                        const newFilters = {
+                          ...filters,
+                          keyword: searchProfile.jobTitle || '',
+                        };
+                        
+                        // Set the new filters
+                        setFilters(newFilters);
+                        
+                        // Explicitly trigger job search with new parameters
+                        setTimeout(() => {
+                          fetchJobs(false);
+                        }, 100);
+                        
+                        // Close the drawer
                         setSearchProfileOpen(false);
                       }}
                     >
@@ -534,76 +608,33 @@ export function JobSearchComponent() {
                   </div>
                 </SheetHeader>
                 <div className="space-y-6 mt-6">
-                  {/* Job Functions */}
+                  {/* Job Title */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Briefcase className="h-5 w-5 text-[#0F973D]" />
-                        Job Functions
+                        Job Titel
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label>Job Functions</Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            id="jobFunction"
-                            placeholder="Job Function hinzufügen..."
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                const value = (e.target as HTMLInputElement).value;
-                                if (value && !searchProfile.jobFunctions.includes(value)) {
-                                  setSearchProfile(prev => ({ 
-                                    ...prev, 
-                                    jobFunctions: [...prev.jobFunctions, value] 
-                                  }));
-                                  (e.target as HTMLInputElement).value = '';
-                                }
-                              }
-                            }}
-                            className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const input = document.querySelector('input[id="jobFunction"]') as HTMLInputElement;
-                              if (input && input.value && !searchProfile.jobFunctions.includes(input.value)) {
-                                setSearchProfile(prev => ({ 
-                                  ...prev, 
-                                  jobFunctions: [...prev.jobFunctions, input.value] 
-                                }));
-                                input.value = '';
-                              }
-                            }}
-                            className="hover:bg-[#0F973D] hover:text-white hover:border-[#0F973D]"
-                          >
-                            <Plus className="h-4 w-4 mr-1" />
-                            Hinzufügen
-                          </Button>
-                        </div>
-                        {searchProfile.jobFunctions.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {searchProfile.jobFunctions.map((jobFunction, index) => (
-                              <Badge key={index} variant="secondary" className="bg-green-100 text-green-800 flex items-center gap-1">
-                                {jobFunction}
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSearchProfile(prev => ({
-                                      ...prev,
-                                      jobFunctions: prev.jobFunctions.filter(jf => jf !== jobFunction)
-                                    }));
-                                  }}
-                                  className="h-4 w-4 p-0 hover:bg-green-200"
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
+                        <Label>Job Titel</Label>
+                        <Input
+                          id="jobTitle"
+                          placeholder="Job Titel eingeben..."
+                          value={searchProfile.jobTitle || ''}
+                          onChange={(e) => {
+                            handleSearchProfileChange({ 
+                              jobTitle: e.target.value 
+                            });
+                          }}
+                          className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:outline-none"
+                          style={{
+                            '--tw-ring-color': '#0F973D',
+                            '--tw-border-opacity': '1',
+                            '--tw-ring-opacity': '0.2'
+                          } as React.CSSProperties}
+                        />
                       </div>
                     </CardContent>
                   </Card>
@@ -621,51 +652,74 @@ export function JobSearchComponent() {
                         <div className="flex items-center space-x-2">
                           <Switch
                             checked={searchProfile.jobType.fullTime}
-                            onCheckedChange={(checked: boolean) => 
-                              setSearchProfile(prev => ({ 
-                                ...prev, 
-                                jobType: { ...prev.jobType, fullTime: checked } 
-                              }))
-                            }
+                            onCheckedChange={(checked: boolean) => {
+                              const newJobType = { ...searchProfile.jobType, fullTime: checked }
+                              const newEmployementType = getEmployementTypeArray(newJobType)
+                              handleSearchProfileChange({
+                                jobType: newJobType,
+                                employement_type: newEmployementType
+                              })
+                            }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
                           <Label>Vollzeit</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Switch
-                            checked={searchProfile.jobType.contract}
-                            onCheckedChange={(checked: boolean) => 
-                              setSearchProfile(prev => ({ 
-                                ...prev, 
-                                jobType: { ...prev.jobType, contract: checked } 
-                              }))
-                            }
-                            className="data-[state=checked]:bg-[#0F973D]"
-                          />
-                          <Label>Vertrag</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch
                             checked={searchProfile.jobType.partTime}
-                            onCheckedChange={(checked: boolean) => 
-                              setSearchProfile(prev => ({ 
-                                ...prev, 
-                                jobType: { ...prev.jobType, partTime: checked } 
-                              }))
-                            }
+                            onCheckedChange={(checked: boolean) => {
+                              const newJobType = { ...searchProfile.jobType, partTime: checked }
+                              const newEmployementType = getEmployementTypeArray(newJobType)
+                              handleSearchProfileChange({
+                                jobType: newJobType,
+                                employement_type: newEmployementType
+                              })
+                            }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
                           <Label>Teilzeit</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Switch
+                            checked={searchProfile.jobType.temporary}
+                            onCheckedChange={(checked: boolean) => {
+                              const newJobType = { ...searchProfile.jobType, temporary: checked }
+                              const newEmployementType = getEmployementTypeArray(newJobType)
+                              handleSearchProfileChange({
+                                jobType: newJobType,
+                                employement_type: newEmployementType
+                              })
+                            }}
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Befristet</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={searchProfile.jobType.contract}
+                            onCheckedChange={(checked: boolean) => {
+                              const newJobType = { ...searchProfile.jobType, contract: checked }
+                              const newEmployementType = getEmployementTypeArray(newJobType)
+                              handleSearchProfileChange({
+                                jobType: newJobType,
+                                employement_type: newEmployementType
+                              })
+                            }}
+                            className="data-[state=checked]:bg-[#0F973D]"
+                          />
+                          <Label>Vertrag</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
                             checked={searchProfile.jobType.internship}
-                            onCheckedChange={(checked: boolean) => 
-                              setSearchProfile(prev => ({ 
-                                ...prev, 
-                                jobType: { ...prev.jobType, internship: checked } 
-                              }))
-                            }
+                            onCheckedChange={(checked: boolean) => {
+                              const newJobType = { ...searchProfile.jobType, internship: checked }
+                              const newEmployementType = getEmployementTypeArray(newJobType)
+                              handleSearchProfileChange({
+                                jobType: newJobType,
+                                employement_type: newEmployementType
+                              })
+                            }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
                           <Label>Praktikum</Label>
@@ -1022,12 +1076,7 @@ export function JobSearchComponent() {
                        <div className="flex flex-wrap gap-1">
                          {job.job_employement_type && job.job_employement_type !== 'null' && job.job_employement_type !== 'Not Applicable' && (
                            <Badge variant="outline" className="text-xs">
-                             {job.job_employement_type === 'Full-time' ? 'Vollzeit' :
-                              job.job_employement_type === 'FULL_TIME' ? 'Vollzeit' :
-                              job.job_employement_type === 'Part-time' ? 'Teilzeit' :
-                              job.job_employement_type === 'Contract' ? 'Vertrag' :
-                              job.job_employement_type === 'Internship' ? 'Praktikum' :
-                              job.job_employement_type}
+                             {translateEmploymentType(job.job_employement_type)}
                            </Badge>
                          )}
                          {job.salary && job.salary !== 'null' && job.salary !== 'Not Applicable' && (

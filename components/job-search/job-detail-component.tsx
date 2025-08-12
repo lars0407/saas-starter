@@ -215,6 +215,29 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
     )
   }
 
+  // Helper function to translate employment types to German
+  const translateEmploymentType = (type: string) => {
+    switch (type) {
+      case 'Full-time':
+      case 'FULL_TIME':
+        return 'Vollzeit'
+      case 'Part-time':
+      case 'PART_TIME':
+        return 'Teilzeit'
+      case 'Temporary':
+      case 'TEMPORARY':
+        return 'Befristet'
+      case 'Contract':
+      case 'FREELANCE':
+        return 'Vertrag'
+      case 'Internship':
+      case 'INTERN':
+        return 'Praktikum'
+      default:
+        return type
+    }
+  }
+
   // Fetch job favourites from API
   const fetchJobFavourites = async () => {
     try {
@@ -416,12 +439,7 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
           <div className="flex flex-wrap gap-2 mb-6">
             {job.job_employement_type && job.job_employement_type !== 'null' && job.job_employement_type !== 'Not Applicable' && (
               <Badge variant="outline">
-                {job.job_employement_type === 'Full-time' ? 'Vollzeit' :
-                 job.job_employement_type === 'FULL_TIME' ? 'Vollzeit' :
-                 job.job_employement_type === 'Part-time' ? 'Teilzeit' :
-                 job.job_employement_type === 'Contract' ? 'Vertrag' :
-                 job.job_employement_type === 'Internship' ? 'Praktikum' :
-                 job.job_employement_type}
+                {translateEmploymentType(job.job_employement_type)}
               </Badge>
             )}
             {job.salary && job.salary !== 'null' && job.salary !== 'Not Applicable' && (
