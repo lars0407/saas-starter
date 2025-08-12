@@ -71,6 +71,7 @@ export function JobSearchComponent() {
       remote: true,
       hybrid: true
     },
+    remote_work: ['Kein Homeoffice', 'null', 'Vollständig remote', 'Hybrid', 'Teilweise Homeoffice'] as string[],
     location: '',
     radius: '25km',
     experienceLevel: {
@@ -83,17 +84,25 @@ export function JobSearchComponent() {
     },
     requiredExperience: [0, 11],
     datePosted: '',
-    minSalary: 0
+    minSalary: 0,
+    // New fields for coordinates
+    selectedLocation: null as { lon: number; lat: number } | null
   })
 
-  // Load initial jobs and job favourites on component mount
+  // Location search state
+  const [locationSuggestions, setLocationSuggestions] = useState<Array<{ fullAddress: string; coordinates: { lon: number; lat: number } }>>([])
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false)
+  const [locationSearchTerm, setLocationSearchTerm] = useState('')
+
+  // Load job favourites on component mount
   useEffect(() => {
-    const loadInitialData = async () => {
-      await fetchJobFavourites() // Load favourites first
-      await fetchJobs(false) // Then load jobs
-    }
-    loadInitialData()
+    fetchJobFavourites()
   }, [])
+
+  // Sync locationSearchTerm with searchProfile.location
+  useEffect(() => {
+    setLocationSearchTerm(searchProfile.location)
+  }, [searchProfile.location])
 
   // Fetch job favourites from API
   const fetchJobFavourites = async () => {
@@ -176,10 +185,23 @@ export function JobSearchComponent() {
         body: JSON.stringify({
           offset: currentOffset,
           search_term: filters.keyword,
-          remote_work: filters.remoteWork !== "all" ? filters.remoteWork : undefined,
+          remote_work: searchProfile.remote_work && searchProfile.remote_work.length > 0 ? searchProfile.remote_work : undefined,
           employement_type: searchProfile.employement_type && searchProfile.employement_type.length > 0 ? searchProfile.employement_type : undefined,
           date_published: 30,
-          location: filters.location || undefined,
+          ...(searchProfile.selectedLocation && {
+            location: [
+              {
+                key: "location",
+                geo_radius: {
+                  center: {
+                    lon: searchProfile.selectedLocation.lon,
+                    lat: searchProfile.selectedLocation.lat
+                  },
+                  radius: 50000
+                }
+              }
+            ]
+          })
         }),
       })
       if (!response.ok) throw new Error("Fehler beim Laden der Jobs.")
@@ -263,7 +285,7 @@ export function JobSearchComponent() {
   useEffect(() => {
     fetchJobs(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.keyword, filters.location, filters.remoteWork]) // Trigger on main search fields and remote work
+  }, [filters.keyword, filters.remoteWork]) // Trigger on main search fields and remote work
 
   // Select first job when jobs are loaded
   useEffect(() => {
@@ -354,6 +376,81 @@ export function JobSearchComponent() {
     }
     
     return employementTypes
+  }
+
+  // Helper function to get remote_work array based on selected work model
+  const getRemoteWorkArray = (workModel: any) => {
+    const remoteWorkTypes: string[] = []
+    
+    if (workModel.onsite) {
+      remoteWorkTypes.push('Kein Homeoffice', 'null')
+    }
+    if (workModel.remote) {
+      remoteWorkTypes.push('Vollständig remote')
+    }
+    if (workModel.hybrid) {
+      remoteWorkTypes.push('Hybrid', 'Teilweise Homeoffice')
+    }
+    
+    // If no options are selected, include all types
+    if (remoteWorkTypes.length === 0) {
+      remoteWorkTypes.push('Kein Homeoffice', 'null', 'Vollständig remote', 'Hybrid', 'Teilweise Homeoffice')
+    }
+    
+    return remoteWorkTypes
+  }
+
+  // Function to fetch location suggestions from the API
+  const fetchLocationSuggestions = async (searchTerm: string) => {
+    if (!searchTerm || searchTerm.length < 2) {
+      setLocationSuggestions([])
+      setShowLocationDropdown(false)
+      return
+    }
+
+    try {
+      const response = await fetch(`https://api.jobjaeger.de/api:O72K2wiB/geopoint/search?adresse=${encodeURIComponent(searchTerm)}`)
+      if (!response.ok) {
+        console.error('Error fetching location suggestions')
+        return
+      }
+
+      const data = await response.json()
+      console.log('Location suggestions response:', data)
+
+      if (data.suggestions && Array.isArray(data.suggestions)) {
+        const suggestions = data.suggestions.map((item: any) => {
+          // Extract coordinates and full address
+          const coordinates = item.geometry?.coordinates
+          const lon = coordinates?.[0]
+          const lat = coordinates?.[1]
+          
+          // Use full_address if available, otherwise construct from name and place_formatted
+          let fullAddress = 'Unbekannter Ort'
+          if (item.properties && item.properties.full_address) {
+            fullAddress = item.properties.full_address
+          } else if (item.properties && item.properties.name && item.properties.place_formatted) {
+            fullAddress = `${item.properties.name}, ${item.properties.place_formatted}`
+          } else if (item.properties && item.properties.name) {
+            fullAddress = item.properties.name
+          }
+          
+          return {
+            fullAddress,
+            coordinates: { lon, lat }
+          }
+        })
+        setLocationSuggestions(suggestions)
+        setShowLocationDropdown(suggestions.length > 0)
+      } else {
+        setLocationSuggestions([])
+        setShowLocationDropdown(false)
+      }
+    } catch (error) {
+      console.error('Error fetching location suggestions:', error)
+      setLocationSuggestions([])
+      setShowLocationDropdown(false)
+    }
   }
 
   // Helper function to translate employment types to German
@@ -553,14 +650,48 @@ export function JobSearchComponent() {
               <Input
                 placeholder="Stadt, Bundesland oder Remote..."
                 value={filters.location}
-                onChange={(e) => handleFilterChange('location', e.target.value)}
-                className="pl-10 focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:ring-opacity-20 focus:outline-none"
+                onChange={(e) => {
+                  const value = e.target.value
+                  setFilters(prev => ({ ...prev, location: value }))
+                  // Fetch location suggestions from API
+                  fetchLocationSuggestions(value)
+                }}
+                onFocus={() => {
+                  if (locationSuggestions.length > 0) {
+                    setShowLocationDropdown(true)
+                  }
+                }}
+                onBlur={() => {
+                  // Delay hiding dropdown to allow clicking on suggestions
+                  setTimeout(() => setShowLocationDropdown(false), 200)
+                }}
+                className="pl-10 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:ring-2 focus:ring-opacity-20 focus:outline-none"
                 style={{
                   '--tw-ring-color': '#0F973D',
                   '--tw-border-opacity': '1',
                   '--tw-ring-opacity': '0.2'
                 } as React.CSSProperties}
               />
+              
+              {/* Location Suggestions Dropdown for main search field */}
+              {showLocationDropdown && locationSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                  {locationSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, location: suggestion.fullAddress }))
+                        setSearchProfile(prev => ({ ...prev, selectedLocation: suggestion.coordinates }))
+                        setShowLocationDropdown(false)
+                        setLocationSuggestions([])
+                      }}
+                    >
+                      {suggestion.fullAddress}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <Sheet open={searchProfileOpen} onOpenChange={setSearchProfileOpen}>
               <SheetTrigger asChild>
@@ -572,7 +703,7 @@ export function JobSearchComponent() {
                   Filter
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[1000px] overflow-y-auto">
+                              <SheetContent side="right" className="overflow-y-auto !w-[600px] px-6" style={{ width: '600px', minWidth: '600px', maxWidth: '600px' }}>
                 <SheetHeader className="sticky top-0 bg-white border-b pb-4 z-10">
                   <div className="flex items-center justify-between">
                     <SheetTitle className="flex items-center gap-2">
@@ -741,12 +872,14 @@ export function JobSearchComponent() {
                         <div className="flex items-center space-x-2">
                           <Switch
                             checked={searchProfile.workModel.onsite}
-                            onCheckedChange={(checked: boolean) => 
-                              setSearchProfile(prev => ({ 
-                                ...prev, 
-                                workModel: { ...prev.workModel, onsite: checked } 
-                              }))
-                            }
+                            onCheckedChange={(checked: boolean) => {
+                              const newWorkModel = { ...searchProfile.workModel, onsite: checked }
+                              const newRemoteWork = getRemoteWorkArray(newWorkModel)
+                              handleSearchProfileChange({
+                                workModel: newWorkModel,
+                                remote_work: newRemoteWork
+                              })
+                            }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
                           <Label>Vor Ort</Label>
@@ -754,12 +887,14 @@ export function JobSearchComponent() {
                         <div className="flex items-center space-x-2">
                           <Switch
                             checked={searchProfile.workModel.remote}
-                            onCheckedChange={(checked: boolean) => 
-                              setSearchProfile(prev => ({ 
-                                ...prev, 
-                                workModel: { ...prev.workModel, remote: checked } 
-                              }))
-                            }
+                            onCheckedChange={(checked: boolean) => {
+                              const newWorkModel = { ...searchProfile.workModel, remote: checked }
+                              const newRemoteWork = getRemoteWorkArray(newWorkModel)
+                              handleSearchProfileChange({
+                                workModel: newWorkModel,
+                                remote_work: newRemoteWork
+                              })
+                            }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
                           <Label>Remote</Label>
@@ -767,12 +902,14 @@ export function JobSearchComponent() {
                         <div className="flex items-center space-x-2">
                           <Switch
                             checked={searchProfile.workModel.hybrid}
-                            onCheckedChange={(checked: boolean) => 
-                              setSearchProfile(prev => ({ 
-                                ...prev, 
-                                workModel: { ...prev.workModel, hybrid: checked } 
-                              }))
-                            }
+                            onCheckedChange={(checked: boolean) => {
+                              const newWorkModel = { ...searchProfile.workModel, hybrid: checked }
+                              const newRemoteWork = getRemoteWorkArray(newWorkModel)
+                              handleSearchProfileChange({
+                                workModel: newWorkModel,
+                                remote_work: newRemoteWork
+                              })
+                            }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
                           <Label>Hybrid</Label>
@@ -793,12 +930,57 @@ export function JobSearchComponent() {
                       <div className="space-y-2">
                         <Label>Standort</Label>
                         <div className="flex items-center gap-2">
-                          <Input
-                            value={searchProfile.location}
-                            onChange={(e) => setSearchProfile(prev => ({ ...prev, location: e.target.value }))}
-                            placeholder="Standort eingeben..."
-                            className="flex-1 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]"
-                          />
+                          <div className="flex-1 relative">
+                            <Input
+                              value={locationSearchTerm}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                setLocationSearchTerm(value)
+                                fetchLocationSuggestions(value)
+                              }}
+                              onFocus={() => {
+                                if (locationSuggestions.length > 0) {
+                                  setShowLocationDropdown(true)
+                                }
+                              }}
+                              onBlur={() => {
+                                // Save the current input as location if no suggestion was selected
+                                if (locationSearchTerm && locationSearchTerm !== searchProfile.location) {
+                                  setSearchProfile(prev => ({ ...prev, location: locationSearchTerm }))
+                                }
+                                // Delay hiding dropdown to allow clicking on suggestions
+                                setTimeout(() => setShowLocationDropdown(false), 200)
+                              }}
+                              placeholder="Standort eingeben..."
+                              className="w-full focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:outline-none"
+                              style={{
+                                '--tw-ring-color': '#0F973D',
+                                '--tw-border-opacity': '1',
+                                '--tw-ring-opacity': '0.2'
+                              } as React.CSSProperties}
+                            />
+                            
+                            {/* Location Suggestions Dropdown */}
+                            {showLocationDropdown && locationSuggestions.length > 0 && (
+                              <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                                {locationSuggestions.map((suggestion, index) => (
+                                  <div
+                                    key={index}
+                                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                    onClick={() => {
+                                      setLocationSearchTerm(suggestion.fullAddress)
+                                      setSearchProfile(prev => ({ ...prev, location: suggestion.fullAddress, selectedLocation: suggestion.coordinates }))
+                                      setShowLocationDropdown(false)
+                                      setLocationSuggestions([])
+                                    }}
+                                  >
+                                    {suggestion.fullAddress}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          
                           <Select value={searchProfile.radius} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, radius: value }))}>
                             <SelectTrigger className="w-24 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]">
                               <SelectValue />
@@ -816,71 +998,7 @@ export function JobSearchComponent() {
                     </CardContent>
                   </Card>
 
-                  {/* Experience Level */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Target className="h-5 w-5 text-[#0F973D]" />
-                        Erfahrungslevel
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={searchProfile.experienceLevel.intern}
-                            onCheckedChange={(checked: boolean) => 
-                              setSearchProfile(prev => ({ 
-                                ...prev, 
-                                experienceLevel: { ...prev.experienceLevel, intern: checked } 
-                              }))
-                            }
-                            className="data-[state=checked]:bg-[#0F973D]"
-                          />
-                          <Label>Praktikant/Neuer Absolvent</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={searchProfile.experienceLevel.entryLevel}
-                            onCheckedChange={(checked: boolean) => 
-                              setSearchProfile(prev => ({ 
-                                ...prev, 
-                                experienceLevel: { ...prev.experienceLevel, entryLevel: checked } 
-                              }))
-                            }
-                            className="data-[state=checked]:bg-[#0F973D]"
-                          />
-                          <Label>Einsteiger</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={searchProfile.experienceLevel.midLevel}
-                            onCheckedChange={(checked: boolean) => 
-                              setSearchProfile(prev => ({ 
-                                ...prev, 
-                                experienceLevel: { ...prev.experienceLevel, midLevel: checked } 
-                              }))
-                            }
-                            className="data-[state=checked]:bg-[#0F973D]"
-                          />
-                          <Label>Mittleres Level</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={searchProfile.experienceLevel.seniorLevel}
-                            onCheckedChange={(checked: boolean) => 
-                              setSearchProfile(prev => ({ 
-                                ...prev, 
-                                experienceLevel: { ...prev.experienceLevel, seniorLevel: checked } 
-                              }))
-                            }
-                            className="data-[state=checked]:bg-[#0F973D]"
-                          />
-                          <Label>Senior Level</Label>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+
 
                   {/* Date Posted */}
                   <Card>
@@ -916,37 +1034,9 @@ export function JobSearchComponent() {
                     </CardContent>
                   </Card>
 
-                  {/* Compensation */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-[#0F973D]" />
-                        Vergütung
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Mindest-Jahresgehalt</Label>
-                        <Input
-                          type="number"
-                          value={searchProfile.minSalary}
-                          onChange={(e) => setSearchProfile(prev => ({ ...prev, minSalary: parseInt(e.target.value) || 0 }))}
-                          placeholder="Mindest-Jahresgehalt €0k/Jahr"
-                          className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
 
-                  {/* Close Button */}
-                  <div className="flex justify-center">
-                    <Button 
-                      variant="outline"
-                      onClick={() => setSearchProfileOpen(false)}
-                    >
-                      Schließen
-                    </Button>
-                  </div>
+
+
                 </div>
               </SheetContent>
             </Sheet>

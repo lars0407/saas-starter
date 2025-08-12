@@ -77,52 +77,16 @@ const data = {
     },
   ],
   navMain: [
-            {
-          title: "Jobjäger",
-          url: "/dashboard/agent",
-          icon: Bot,
-          isActive: false,
-          items: [
-            {
-              title: "Übersicht",
-              url: "/dashboard/agent",
-            },
-            {
-              title: "Agent Chat",
-              url: "/dashboard/agent-chat",
-            },
-          ],
-        },
         {
           title: "Jobsuche",
           url: "/dashboard/job-search",
           icon: SquareTerminal,
           isActive: true,
-          items: [
-            {
-              title: "Klassisch",
-              url: "/dashboard/job-search",
-            },
-            {
-              title: "KI Suche",
-              url: "/dashboard/ai-job-search",
-            },
-            {
-              title: "Empfehlungen",
-              url: "/dashboard/job-recommendations",
-            },
-          ],
         },
     {
       title: "Jobtracker",
       url: "/dashboard",
       icon: Kanban,
-      items: [
-        {
-          title: "Kanban Board",
-          url: "/dashboard",
-        },
-      ],
     },
     {
       title: "Dokumente",

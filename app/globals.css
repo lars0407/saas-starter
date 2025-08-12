@@ -99,6 +99,23 @@
     -webkit-line-clamp: 2;
   }
   
+  /* Hide Sheet close button (X icon) */
+  [data-radix-dialog-content] button[aria-label="Close"],
+  [data-radix-dialog-content] button[aria-label="Schließen"],
+  [data-radix-dialog-content] button[data-radix-dialog-close],
+  .sheet-close-button,
+  button[data-radix-dialog-close],
+  /* More aggressive selectors to catch all close buttons */
+  [data-radix-dialog-content] button:last-child,
+  [data-radix-dialog-content] button[type="button"]:last-child,
+  /* Target any button that might be a close button */
+  [data-radix-dialog-content] > div:first-child button,
+  /* Hide any button in the top-right area */
+  [data-radix-dialog-content] button[class*="close"],
+  [data-radix-dialog-content] button[class*="Close"] {
+    display: none !important;
+  }
+  
   /* Resume Generator Input Focus Styles */
   .resume-generator input:focus,
   .resume-generator textarea:focus {
