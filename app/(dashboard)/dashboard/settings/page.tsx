@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
@@ -13,6 +13,20 @@ import { AiSettings } from "@/components/settings/ai-settings"
 import { Lock, Bell, Shield, Globe, Bot } from "lucide-react"
 
 type SettingsSection = "password" | "notifications" | "privacy" | "language" | "ai"
+
+interface UserPreferences {
+  job_offers: boolean
+  newsletter: boolean
+  call: boolean
+  whatsapp: boolean
+  notification: {
+    newJobAlerts: boolean
+    applicationReminders: boolean
+    aiDocumentChanges: boolean
+    weeklySummary: boolean
+    newsAndUpdates: boolean
+  }
+}
 
 const settingsTabs = [
   {
@@ -54,6 +68,100 @@ const settingsTabs = [
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<SettingsSection>("password")
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // Load user preferences when component mounts
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        // Get auth token from cookies
+        const token = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('token='))
+          ?.split('=')[1]
+
+        if (!token) {
+          console.log('No auth token found, skipping preferences load')
+          setLoading(false)
+          return
+        }
+
+        const response = await fetch("https://api.jobjaeger.de/api:7yCsbR9L/preferences", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          
+          // Handle specific error codes
+          if (errorData.code === "ERROR_CODE_NOT_FOUND") {
+            // User doesn't have preferences yet, create default ones
+            console.log('User has no preferences yet, using defaults')
+            setPreferences({
+              job_offers: true,
+              newsletter: true,
+              call: true,
+              whatsapp: true,
+              notification: {
+                newJobAlerts: true,
+                applicationReminders: true,
+                aiDocumentChanges: false,
+                weeklySummary: true,
+                newsAndUpdates: false
+              }
+            })
+            setLoading(false)
+            return
+          }
+          
+          throw new Error(errorData.message || "Fehler beim Laden der Präferenzen")
+        }
+
+        const data = await response.json()
+        if (data && data.length > 0) {
+          setPreferences(data[0])
+        } else {
+          // No preferences found, use defaults
+          setPreferences({
+            job_offers: true,
+            newsletter: true,
+            call: true,
+            whatsapp: true,
+            notification: {
+              newJobAlerts: true,
+              applicationReminders: true,
+              aiDocumentChanges: false,
+              weeklySummary: true,
+              newsAndUpdates: false
+            }
+          })
+        }
+      } catch (error) {
+        console.error('Error loading preferences:', error)
+        // Use default preferences on error
+        setPreferences({
+          job_offers: true,
+          newsletter: true,
+          call: true,
+          whatsapp: true,
+          notification: {
+            newJobAlerts: true,
+            applicationReminders: true,
+            aiDocumentChanges: false,
+            weeklySummary: true,
+            newsAndUpdates: false
+          }
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadPreferences()
+  }, [])
 
   const currentTab = settingsTabs.find(tab => tab.id === activeSection) || settingsTabs[0]
 
@@ -99,25 +207,26 @@ export default function SettingsPage() {
             )
           })}
         </TabsList>
-        
-        <TabsContent value="password" className="mt-0">
+
+        {/* Tab Content */}
+        <TabsContent value="password">
           <PasswordSettings />
         </TabsContent>
         
-        <TabsContent value="notifications" className="mt-0">
-          <NotificationSettings />
+        <TabsContent value="notifications">
+          <NotificationSettings preferences={preferences} />
         </TabsContent>
         
-        <TabsContent value="privacy" className="mt-0">
-          <PrivacySettings />
+        <TabsContent value="privacy">
+          <PrivacySettings preferences={preferences} />
         </TabsContent>
         
-        <TabsContent value="language" className="mt-0">
+        <TabsContent value="language">
           <LanguageSettings />
         </TabsContent>
         
-        <TabsContent value="ai" className="mt-0">
-          <AiSettings />
+        <TabsContent value="ai">
+          <AiSettings preferences={preferences} />
         </TabsContent>
       </Tabs>
     </div>

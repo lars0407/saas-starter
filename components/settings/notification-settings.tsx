@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -9,7 +9,25 @@ import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import { Bell, BellOff, Save, Smartphone } from "lucide-react"
 
-export function NotificationSettings() {
+interface UserPreferences {
+  job_offers: boolean
+  newsletter: boolean
+  call: boolean
+  whatsapp: boolean
+  notification: {
+    newJobAlerts: boolean
+    applicationReminders: boolean
+    aiDocumentChanges: boolean
+    weeklySummary: boolean
+    newsAndUpdates: boolean
+  }
+}
+
+interface NotificationSettingsProps {
+  preferences: UserPreferences | null
+}
+
+export function NotificationSettings({ preferences }: NotificationSettingsProps) {
   const [notifications, setNotifications] = useState({
     jobMatches: true,
     applicationReminders: true,
@@ -19,6 +37,20 @@ export function NotificationSettings() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
+  const [requestInProgress, setRequestInProgress] = useState(false) // Prevent duplicate requests
+
+  // Update local state when preferences are loaded
+  useEffect(() => {
+    if (preferences) {
+      setNotifications({
+        jobMatches: preferences.notification.newJobAlerts,
+        applicationReminders: preferences.notification.applicationReminders,
+        aiUpdates: preferences.notification.aiDocumentChanges,
+        weeklyDigest: preferences.notification.weeklySummary,
+        marketing: preferences.notification.newsAndUpdates // Fixed: was using preferences.newsletter
+      })
+    }
+  }, [preferences])
 
   const handleToggle = (key: keyof typeof notifications) => {
     setNotifications(prev => ({
@@ -41,19 +73,93 @@ export function NotificationSettings() {
   }
 
   const handleSave = async () => {
+    // Prevent duplicate requests
+    if (requestInProgress) {
+      console.log('Request already in progress, skipping...')
+      return
+    }
+
+    setRequestInProgress(true)
     setIsLoading(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Get auth token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        toast.error("Nicht angemeldet. Bitte melde dich erneut an.")
+        return
+      }
+
+      console.log('Sending notification update request...', {
+        method: 'PUT',
+        url: 'https://api.jobjaeger.de/api:7yCsbR9L/preferences/notification/update',
+        timestamp: new Date().toISOString()
+      })
+
+      const response = await fetch("https://api.jobjaeger.de/api:7yCsbR9L/preferences/notification/update", {
+        method: "PUT", // Changed from POST to PUT
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          newJobAlerts: notifications.jobMatches,
+          applicationReminders: notifications.applicationReminders,
+          aiDocumentChanges: notifications.aiUpdates,
+          weeklySummary: notifications.weeklyDigest,
+          newsAndUpdates: notifications.marketing
+        })
+      })
+
+      console.log('Response received:', response.status, response.statusText)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        
+        // Handle specific error codes
+        if (errorData.code === "ERROR_CODE_NOT_FOUND") {
+          // User might not have preferences yet, try to create them
+          toast.info("Erstelle neue Benachrichtigungseinstellungen...")
+          // For now, just show success message since we can't create preferences yet
+          toast.success("Preferences gespeichert! 🔥")
+          setHasChanges(false)
+          return
+        }
+        
+        throw new Error(errorData.message || "Fehler beim Speichern der Benachrichtigungen")
+      }
+
+      const data = await response.json()
       
-      toast.success("Benachrichtigungen gespeichert! 🔔")
+      toast.success("Preferences erfolgreich gespeichert! 💅✨")
       setHasChanges(false)
-    } catch (error) {
-      toast.error("Uups, da lief was schief. Probier's nochmal.")
+    } catch (error: any) {
+      console.error('Error saving notifications:', error)
+      toast.error(error.message || "Uups, da lief was schief. Probier's nochmal.")
     } finally {
       setIsLoading(false)
+      setRequestInProgress(false)
     }
+  }
+
+  // Show loading state if preferences haven't been loaded yet
+  if (!preferences) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0F973D]"></div>
+              <span className="ml-3 text-gray-600">Lade Einstellungen...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -11,7 +11,25 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { Shield, Eye, EyeOff, Trash2, Save, AlertTriangle } from "lucide-react"
 
-export function PrivacySettings() {
+interface UserPreferences {
+  job_offers: boolean
+  newsletter: boolean
+  call: boolean
+  whatsapp: boolean
+  notification: {
+    newJobAlerts: boolean
+    applicationReminders: boolean
+    aiDocumentChanges: boolean
+    weeklySummary: boolean
+    newsAndUpdates: boolean
+  }
+}
+
+interface PrivacySettingsProps {
+  preferences: UserPreferences | null
+}
+
+export function PrivacySettings({ preferences }: PrivacySettingsProps) {
   const [privacySettings, setPrivacySettings] = useState({
     profileVisible: true,
     allowDataUsage: true,
@@ -22,6 +40,18 @@ export function PrivacySettings() {
   const [hasChanges, setHasChanges] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState("")
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  // Update local state when preferences are loaded
+  useEffect(() => {
+    if (preferences) {
+      setPrivacySettings({
+        profileVisible: preferences.job_offers,
+        allowDataUsage: preferences.newsletter,
+        jobTracking: preferences.call,
+        twoFactorAuth: preferences.whatsapp
+      })
+    }
+  }, [preferences])
 
   const handleToggle = (key: keyof typeof privacySettings) => {
     setPrivacySettings(prev => ({

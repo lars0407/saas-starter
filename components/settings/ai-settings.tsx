@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -11,7 +11,25 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { Bot, Save, RefreshCw, AlertTriangle, Brain, Sparkles } from "lucide-react"
 
-export function AiSettings() {
+interface UserPreferences {
+  job_offers: boolean
+  newsletter: boolean
+  call: boolean
+  whatsapp: boolean
+  notification: {
+    newJobAlerts: boolean
+    applicationReminders: boolean
+    aiDocumentChanges: boolean
+    weeklySummary: boolean
+    newsAndUpdates: boolean
+  }
+}
+
+interface AiSettingsProps {
+  preferences: UserPreferences | null
+}
+
+export function AiSettings({ preferences }: AiSettingsProps) {
   const [aiSettings, setAiSettings] = useState({
     useJobHistory: true,
     autoEnhancement: true,
@@ -22,6 +40,18 @@ export function AiSettings() {
   const [hasChanges, setHasChanges] = useState(false)
   const [resetConfirm, setResetConfirm] = useState("")
   const [showResetDialog, setShowResetDialog] = useState(false)
+
+  // Update local state when preferences are loaded
+  useEffect(() => {
+    if (preferences) {
+      setAiSettings({
+        useJobHistory: preferences.notification.aiDocumentChanges,
+        autoEnhancement: preferences.notification.newJobAlerts,
+        personalizedSuggestions: preferences.notification.weeklySummary,
+        learningMode: preferences.notification.newsAndUpdates
+      })
+    }
+  }, [preferences])
 
   const handleToggle = (key: keyof typeof aiSettings) => {
     setAiSettings(prev => ({
