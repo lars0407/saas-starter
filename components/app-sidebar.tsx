@@ -138,16 +138,6 @@ const data = {
       title: "Profil",
       url: "/dashboard/profile",
       icon: User,
-      items: [
-        {
-          title: "Persönlich",
-          url: "/dashboard/profile",
-        },
-        {
-          title: "Suchprofil",
-          url: "/dashboard/search-profile",
-        },
-      ],
     },
     {
       title: "Settings",

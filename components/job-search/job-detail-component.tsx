@@ -42,6 +42,7 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
   const [applied, setApplied] = useState(false)
   const [showFullDescription, setShowFullDescription] = useState(false)
 
+
   useEffect(() => {
     // If we have a job prop, use it directly
     if (propJob) {
@@ -300,6 +301,10 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
     }
   }
 
+  const toggleDescription = () => {
+    setShowFullDescription(!showFullDescription)
+  }
+
   const handleAddToTracker = async () => {
     if (!job?.id) return
     
@@ -358,9 +363,7 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
     }
   }
 
-  const toggleDescription = () => {
-    setShowFullDescription(!showFullDescription)
-  }
+
 
   if (loading) {
     return (
@@ -532,7 +535,7 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
         </CardHeader>
         <CardContent>
           <div className="flex items-start gap-4 mb-4">
-            <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+            <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
               {job.company?.employer_logo ? (
                 <img
                   src={job.company.employer_logo}
@@ -549,7 +552,6 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
             </div>
             <div>
               <h3 className="font-semibold text-lg">{job.company?.employer_name}</h3>
-              <p className="text-muted-foreground mb-2">{job.company?.short_description}</p>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>Gegründet: {job.company?.founded}</span>
                 <span>Mitarbeiter: {job.company?.company_size}</span>
@@ -560,37 +562,28 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
                      {job.company?.about && (
              <div className="mb-4">
                <div className="text-muted-foreground">
-                 {showFullDescription ? (
-                   <p>{job.company.about}</p>
-                 ) : (
-                   <p>
-                     {job.company.about.length > 150 
-                       ? `${job.company.about.substring(0, 150)}...` 
-                       : job.company.about
-                     }
-                   </p>
-                 )}
+                 <p className={showFullDescription ? "" : "line-clamp-2"}>
+                   {job.company.about}
+                 </p>
                </div>
-               {job.company.about.length > 150 && (
-                 <Button
-                   variant="ghost"
-                   size="sm"
-                   onClick={toggleDescription}
-                   className="mt-2 p-0 h-auto text-[#0F973D] hover:text-[#0F973D]/80"
-                 >
-                   {showFullDescription ? (
-                     <>
-                       Weniger anzeigen
-                       <ChevronUp className="h-4 w-4 ml-1" />
-                     </>
-                   ) : (
-                     <>
-                       Mehr anzeigen
-                       <ChevronDown className="h-4 w-4 ml-1" />
-                     </>
-                   )}
-                 </Button>
-               )}
+               <Button
+                 variant="ghost"
+                 size="sm"
+                 onClick={toggleDescription}
+                 className="mt-2 p-0 h-auto text-[#0F973D] hover:text-[#0F973D]/80"
+               >
+                 {showFullDescription ? (
+                   <>
+                     Weniger anzeigen
+                     <ChevronUp className="h-4 w-4 ml-1" />
+                   </>
+                 ) : (
+                   <>
+                     Mehr anzeigen
+                     <ChevronDown className="h-4 w-4 ml-1" />
+                   </>
+                 )}
+               </Button>
              </div>
            )}
           

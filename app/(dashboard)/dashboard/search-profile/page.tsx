@@ -33,21 +33,23 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 
 export default function SearchProfilePage() {
   const [searchProfile, setSearchProfile] = useState({
-    jobFunctions: ['Mechanical Engineer'] as string[],
-    excludedTitles: [] as string[],
+    jobTitle: '',
     jobType: {
       fullTime: true,
-      contract: false,
       partTime: false,
+      temporary: false,
+      contract: false,
       internship: false
     },
+    employement_type: ['FULL_TIME', 'Not Applicable'] as string[],
     workModel: {
       onsite: true,
       remote: true,
       hybrid: true
     },
-    location: 'Within US',
-    radius: '25mi',
+    remote_work: ['Kein Homeoffice', 'null', 'Vollständig remote', 'Hybrid', 'Teilweise Homeoffice'] as string[],
+    location: '',
+    radius: '25km',
     experienceLevel: {
       intern: false,
       entryLevel: true,
@@ -58,7 +60,8 @@ export default function SearchProfilePage() {
     },
     requiredExperience: [0, 11],
     datePosted: '',
-    minSalary: 0
+    minSalary: 0,
+    selectedLocation: null as { lon: number; lat: number } | null
   });
 
   const handleSave = () => {
@@ -66,43 +69,58 @@ export default function SearchProfilePage() {
     // Show success message or handle API response
   };
 
-  const addJobFunction = (jobFunction: string) => {
-    if (jobFunction && !searchProfile.jobFunctions.includes(jobFunction)) {
-      setSearchProfile(prev => ({ 
-        ...prev, 
-        jobFunctions: [...prev.jobFunctions, jobFunction] 
-      }));
+  // Helper function to get employement_type array based on selected job types
+  const getEmployementTypeArray = (jobType: any) => {
+    const employementTypes: string[] = []
+    
+    if (jobType.fullTime) {
+      employementTypes.push('FULL_TIME', 'Not Applicable')
     }
-  };
-
-  const removeJobFunction = (jobFunctionToRemove: string) => {
-    setSearchProfile(prev => ({
-      ...prev,
-      jobFunctions: prev.jobFunctions.filter(jobFunction => jobFunction !== jobFunctionToRemove)
-    }));
-  };
-
-  const addExcludedTitle = (title: string) => {
-    if (title && !searchProfile.excludedTitles.includes(title)) {
-      setSearchProfile(prev => ({ 
-        ...prev, 
-        excludedTitles: [...prev.excludedTitles, title] 
-      }));
+    if (jobType.partTime) {
+      employementTypes.push('PART_TIME')
     }
-  };
+    if (jobType.temporary) {
+      employementTypes.push('TEMPORARY')
+    }
+    if (jobType.contract) {
+      employementTypes.push('FREELANCE')
+    }
+    if (jobType.internship) {
+      employementTypes.push('INTERN')
+    }
+    
+    // If no options are selected, include all types
+    if (employementTypes.length === 0) {
+      employementTypes.push('FULL_TIME', 'PART_TIME', 'TEMPORARY', 'FREELANCE', 'INTERN', 'Not Applicable')
+    }
+    
+    return employementTypes
+  }
 
-  const removeExcludedTitle = (titleToRemove: string) => {
-    setSearchProfile(prev => ({
-      ...prev,
-      excludedTitles: prev.excludedTitles.filter(title => title !== titleToRemove)
-    }));
-  };
+  // Helper function to get remote_work array based on selected work model
+  const getRemoteWorkArray = (workModel: any) => {
+    const remoteWorkTypes: string[] = []
+    
+    if (workModel.onsite) {
+      remoteWorkTypes.push('Kein Homeoffice', 'null')
+    }
+    if (workModel.remote) {
+      remoteWorkTypes.push('Vollständig remote')
+    }
+    if (workModel.hybrid) {
+      remoteWorkTypes.push('Hybrid', 'Teilweise Homeoffice')
+    }
+    
+    // If no options are selected, include all types
+    if (remoteWorkTypes.length === 0) {
+      remoteWorkTypes.push('Kein Homeoffice', 'null', 'Vollständig remote', 'Hybrid', 'Teilweise Homeoffice')
+    }
+    
+    return remoteWorkTypes
+  }
 
   const clearAll = (section: string) => {
     switch (section) {
-      case 'jobFunctions':
-        setSearchProfile(prev => ({ ...prev, jobFunctions: [] }));
-        break;
       case 'experienceLevel':
         setSearchProfile(prev => ({
           ...prev,
@@ -157,158 +175,51 @@ export default function SearchProfilePage() {
           </div>
           <Button 
             onClick={handleSave} 
-            disabled={searchProfile.jobFunctions.length === 0}
+            disabled={!searchProfile.jobTitle}
             className={`${
-              searchProfile.jobFunctions.length === 0 
+              !searchProfile.jobTitle 
                 ? 'bg-gray-400 cursor-not-allowed hover:bg-gray-400' 
                 : 'bg-[#0F973D] hover:bg-[#0F973D]/90'
             }`}
           >
             <Save className="h-4 w-4 mr-2" />
-            {searchProfile.jobFunctions.length === 0 ? 'Job Function erforderlich' : 'Speichern'}
+            {!searchProfile.jobTitle ? 'Job Titel erforderlich' : 'Speichern'}
           </Button>
         </div>
       </div>
 
       <div className="space-y-6">
-        {/* Job Function */}
+        {/* Job Title */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Briefcase className="h-5 w-5 text-[#0F973D]" />
-              Job Function
+              Job Titel
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Wählen Sie aus der Dropdown-Liste für beste Ergebnisse
+              Der Job Titel, nach dem du suchst
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="jobFunction" className="flex items-center gap-1">
-                  Job Function <span className="text-red-500">*</span>
-                </Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => clearAll('jobFunctions')}
-                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                >
-                  Alle löschen
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="jobFunction"
-                  placeholder="Job Function hinzufügen..."
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      addJobFunction((e.target as HTMLInputElement).value);
-                      (e.target as HTMLInputElement).value = '';
-                    }
-                  }}
-                  className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const input = document.querySelector('input[id="jobFunction"]') as HTMLInputElement;
-                    if (input && input.value) {
-                      addJobFunction(input.value);
-                      input.value = '';
-                    }
-                  }}
-                  className="hover:bg-[#0F973D] hover:text-white hover:border-[#0F973D] focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Hinzufügen
-                </Button>
-              </div>
-              {searchProfile.jobFunctions.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {searchProfile.jobFunctions.map((jobFunction, index) => (
-                    <Badge key={index} variant="secondary" className="bg-green-100 text-green-800 flex items-center gap-1">
-                      {jobFunction}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeJobFunction(jobFunction)}
-                        className="h-4 w-4 p-0 hover:bg-green-200"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-              {searchProfile.jobFunctions.length === 0 && (
+              <Label htmlFor="jobTitle" className="flex items-center gap-1">
+                Job Titel <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="jobTitle"
+                placeholder="Job Titel eingeben..."
+                value={searchProfile.jobTitle}
+                onChange={(e) => setSearchProfile(prev => ({ ...prev, jobTitle: e.target.value }))}
+                className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+              />
+              {!searchProfile.jobTitle && (
                 <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
                   <div className="flex items-center gap-2">
                     <HelpCircle className="h-4 w-4 text-amber-600" />
                     <p className="text-sm text-amber-800">
-                      ⚠️ Mindestens eine Job Function muss ausgewählt sein, um das Suchprofil zu speichern.
+                      ⚠️ Ein Job Titel muss eingegeben werden, um das Suchprofil zu speichern.
                     </p>
                   </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Excluded Title */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <X className="h-5 w-5 text-red-500" />
-              Ausgeschlossene Titel
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Ausgeschlossene Titel</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder="Titel hinzufügen..."
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      addExcludedTitle((e.target as HTMLInputElement).value);
-                      (e.target as HTMLInputElement).value = '';
-                    }
-                  }}
-                  className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const input = document.querySelector('input[placeholder="Titel hinzufügen..."]') as HTMLInputElement;
-                    if (input && input.value) {
-                      addExcludedTitle(input.value);
-                      input.value = '';
-                    }
-                  }}
-                  className="hover:bg-[#0F973D] hover:text-white hover:border-[#0F973D] focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Hinzufügen
-                </Button>
-              </div>
-              {searchProfile.excludedTitles.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {searchProfile.excludedTitles.map((title, index) => (
-                    <Badge key={index} variant="outline" className="flex items-center gap-1">
-                      {title}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeExcludedTitle(title)}
-                        className="h-4 w-4 p-0 hover:bg-red-100"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ))}
                 </div>
               )}
             </div>
@@ -325,62 +236,85 @@ export default function SearchProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <Label className="flex items-center gap-1">
-                Job Type <span className="text-red-500">*</span>
-              </Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={searchProfile.jobType.fullTime}
-                    onCheckedChange={(checked: boolean) => 
-                      setSearchProfile(prev => ({ 
-                        ...prev, 
-                        jobType: { ...prev.jobType, fullTime: checked } 
-                      }))
-                    }
-                    className="data-[state=checked]:bg-[#0F973D] data-[state=checked]:border-[#0F973D] focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                  />
-                  <Label htmlFor="fullTime">Vollzeit</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={searchProfile.jobType.contract}
-                    onCheckedChange={(checked: boolean) => 
-                      setSearchProfile(prev => ({ 
-                        ...prev, 
-                        jobType: { ...prev.jobType, contract: checked } 
-                      }))
-                    }
-                    className="data-[state=checked]:bg-[#0F973D] data-[state=checked]:border-[#0F973D] focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                  />
-                  <Label htmlFor="contract">Vertrag</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={searchProfile.jobType.partTime}
-                    onCheckedChange={(checked: boolean) => 
-                      setSearchProfile(prev => ({ 
-                        ...prev, 
-                        jobType: { ...prev.jobType, partTime: checked } 
-                      }))
-                    }
-                    className="data-[state=checked]:bg-[#0F973D] data-[state=checked]:border-[#0F973D] focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                  />
-                  <Label htmlFor="partTime">Teilzeit</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={searchProfile.jobType.internship}
-                    onCheckedChange={(checked: boolean) => 
-                      setSearchProfile(prev => ({ 
-                        ...prev, 
-                        jobType: { ...prev.jobType, internship: checked } 
-                      }))
-                    }
-                    className="data-[state=checked]:bg-[#0F973D] data-[state=checked]:border-[#0F973D] focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                  />
-                  <Label htmlFor="internship">Praktikum</Label>
-                </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={searchProfile.jobType.fullTime}
+                  onCheckedChange={(checked: boolean) => {
+                    const newJobType = { ...searchProfile.jobType, fullTime: checked }
+                    const newEmployementType = getEmployementTypeArray(newJobType)
+                    setSearchProfile(prev => ({
+                      ...prev,
+                      jobType: newJobType,
+                      employement_type: newEmployementType
+                    }))
+                  }}
+                  className="data-[state=checked]:bg-[#0F973D]"
+                />
+                <Label>Vollzeit</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={searchProfile.jobType.partTime}
+                  onCheckedChange={(checked: boolean) => {
+                    const newJobType = { ...searchProfile.jobType, partTime: checked }
+                    const newEmployementType = getEmployementTypeArray(newJobType)
+                    setSearchProfile(prev => ({
+                      ...prev,
+                      jobType: newJobType,
+                      employement_type: newEmployementType
+                    }))
+                  }}
+                  className="data-[state=checked]:bg-[#0F973D]"
+                />
+                <Label>Teilzeit</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={searchProfile.jobType.temporary}
+                  onCheckedChange={(checked: boolean) => {
+                    const newJobType = { ...searchProfile.jobType, temporary: checked }
+                    const newEmployementType = getEmployementTypeArray(newJobType)
+                    setSearchProfile(prev => ({
+                      ...prev,
+                      jobType: newJobType,
+                      employement_type: newEmployementType
+                    }))
+                  }}
+                  className="data-[state=checked]:bg-[#0F973D]"
+                />
+                <Label>Befristet</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={searchProfile.jobType.contract}
+                  onCheckedChange={(checked: boolean) => {
+                    const newJobType = { ...searchProfile.jobType, contract: checked }
+                    const newEmployementType = getEmployementTypeArray(newJobType)
+                    setSearchProfile(prev => ({
+                      ...prev,
+                      jobType: newJobType,
+                      employement_type: newEmployementType
+                    }))
+                  }}
+                  className="data-[state=checked]:bg-[#0F973D]"
+                />
+                <Label>Vertrag</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={searchProfile.jobType.internship}
+                  onCheckedChange={(checked: boolean) => {
+                    const newJobType = { ...searchProfile.jobType, internship: checked }
+                    const newEmployementType = getEmployementTypeArray(newJobType)
+                    setSearchProfile(prev => ({
+                      ...prev,
+                      jobType: newJobType,
+                      employement_type: newEmployementType
+                    }))
+                  }}
+                  className="data-[state=checked]:bg-[#0F973D]"
+                />
+                <Label>Praktikum</Label>
               </div>
             </div>
           </CardContent>
@@ -396,49 +330,53 @@ export default function SearchProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <Label className="flex items-center gap-1">
-                Arbeitsmodell <span className="text-red-500">*</span>
-              </Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={searchProfile.workModel.onsite}
-                    onCheckedChange={(checked: boolean) => 
-                      setSearchProfile(prev => ({ 
-                        ...prev, 
-                        workModel: { ...prev.workModel, onsite: checked } 
-                      }))
-                    }
-                    className="data-[state=checked]:bg-[#0F973D] data-[state=checked]:border-[#0F973D] focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                  />
-                  <Label htmlFor="onsite">Vor Ort</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={searchProfile.workModel.remote}
-                    onCheckedChange={(checked: boolean) => 
-                      setSearchProfile(prev => ({ 
-                        ...prev, 
-                        workModel: { ...prev.workModel, remote: checked } 
-                      }))
-                    }
-                    className="data-[state=checked]:bg-[#0F973D] data-[state=checked]:border-[#0F973D] focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                  />
-                  <Label htmlFor="remote">Remote</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={searchProfile.workModel.hybrid}
-                    onCheckedChange={(checked: boolean) => 
-                      setSearchProfile(prev => ({ 
-                        ...prev, 
-                        workModel: { ...prev.workModel, hybrid: checked } 
-                      }))
-                    }
-                    className="data-[state=checked]:bg-[#0F973D] data-[state=checked]:border-[#0F973D] focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                  />
-                  <Label htmlFor="hybrid">Hybrid</Label>
-                </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={searchProfile.workModel.onsite}
+                  onCheckedChange={(checked: boolean) => {
+                    const newWorkModel = { ...searchProfile.workModel, onsite: checked }
+                    const newRemoteWork = getRemoteWorkArray(newWorkModel)
+                    setSearchProfile(prev => ({
+                      ...prev,
+                      workModel: newWorkModel,
+                      remote_work: newRemoteWork
+                    }))
+                  }}
+                  className="data-[state=checked]:bg-[#0F973D]"
+                />
+                <Label>Vor Ort</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={searchProfile.workModel.remote}
+                  onCheckedChange={(checked: boolean) => {
+                    const newWorkModel = { ...searchProfile.workModel, remote: checked }
+                    const newRemoteWork = getRemoteWorkArray(newWorkModel)
+                    setSearchProfile(prev => ({
+                      ...prev,
+                      workModel: newWorkModel,
+                      remote_work: newRemoteWork
+                    }))
+                  }}
+                  className="data-[state=checked]:bg-[#0F973D]"
+                />
+                <Label>Remote</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={searchProfile.workModel.hybrid}
+                  onCheckedChange={(checked: boolean) => {
+                    const newWorkModel = { ...searchProfile.workModel, hybrid: checked }
+                    const newRemoteWork = getRemoteWorkArray(newWorkModel)
+                    setSearchProfile(prev => ({
+                      ...prev,
+                      workModel: newWorkModel,
+                      remote_work: newRemoteWork
+                    }))
+                  }}
+                  className="data-[state=checked]:bg-[#0F973D]"
+                />
+                <Label>Hybrid</Label>
               </div>
             </div>
           </CardContent>
@@ -463,7 +401,7 @@ export default function SearchProfilePage() {
                   className="flex-1 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                 />
                 <Select value={searchProfile.radius} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, radius: value }))}>
-                  <SelectTrigger className="w-24 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]">
+                  <SelectTrigger className="w-24 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -475,10 +413,6 @@ export default function SearchProfilePage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button variant="outline" size="sm" className="mt-2 hover:bg-[#0F973D] hover:text-white hover:border-[#0F973D] focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2">
-                <Plus className="h-4 w-4 mr-1" />
-                Hinzufügen
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -495,7 +429,7 @@ export default function SearchProfilePage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-1">
-                  Erfahrungslevel <span className="text-red-500">*</span>
+                  Erfahrungslevel
                 </Label>
                 <Button
                   variant="ghost"
@@ -608,60 +542,6 @@ export default function SearchProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Required Experience */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-[#0F973D]" />
-              Benötigte Erfahrung
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Benötigte Erfahrung {searchProfile.requiredExperience[0]}-{searchProfile.requiredExperience[1]} Jahre</Label>
-              <div className="px-2">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-[#0F973D] h-2 rounded-full" 
-                    style={{ 
-                      width: `${(searchProfile.requiredExperience[1] / 20) * 100}%`,
-                      marginLeft: `${(searchProfile.requiredExperience[0] / 20) * 100}%`
-                    }}
-                  ></div>
-                </div>
-                <div className="flex justify-between mt-2">
-                  <Input
-                    type="number"
-                    value={searchProfile.requiredExperience[0]}
-                    onChange={(e) => setSearchProfile(prev => ({ 
-                      ...prev, 
-                      requiredExperience: [parseInt(e.target.value) || 0, prev.requiredExperience[1]] 
-                    }))}
-                    className="w-20 text-center focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
-                    min={0}
-                    max={searchProfile.requiredExperience[1]}
-                  />
-                  <Input
-                    type="number"
-                    value={searchProfile.requiredExperience[1]}
-                    onChange={(e) => setSearchProfile(prev => ({ 
-                      ...prev, 
-                      requiredExperience: [prev.requiredExperience[0], parseInt(e.target.value) || 0] 
-                    }))}
-                    className="w-20 text-center focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
-                    min={searchProfile.requiredExperience[0]}
-                    max={20}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>0 Jahre</span>
-                <span>20 Jahre</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Date Posted */}
         <Card>
           <CardHeader>
@@ -672,33 +552,22 @@ export default function SearchProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Veröffentlichungsdatum</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => clearAll('datePosted')}
-                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                >
-                  Alle löschen
-                </Button>
-              </div>
               <RadioGroup value={searchProfile.datePosted} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, datePosted: value }))}>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="past24h" id="past24h" className="focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2 data-[state=checked]:bg-[#0F973D] data-[state=checked]:border-[#0F973D]" />
+                    <RadioGroupItem value="past24h" id="past24h" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
                     <Label htmlFor="past24h">Letzte 24 Stunden</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="past3days" id="past3days" className="focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2 data-[state=checked]:bg-[#0F973D] data-[state=checked]:border-[#0F973D]" />
+                    <RadioGroupItem value="past3days" id="past3days" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
                     <Label htmlFor="past3days">Letzte 3 Tage</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="pastWeek" id="pastWeek" className="focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2 data-[state=checked]:bg-[#0F973D] data-[state=checked]:border-[#0F973D]" />
+                    <RadioGroupItem value="pastWeek" id="pastWeek" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
                     <Label htmlFor="pastWeek">Letzte Woche</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="pastMonth" id="pastMonth" className="focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2 data-[state=checked]:bg-[#0F973D] data-[state=checked]:border-[#0F973D]" />
+                    <RadioGroupItem value="pastMonth" id="pastMonth" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
                     <Label htmlFor="pastMonth">Letzter Monat</Label>
                   </div>
                 </div>
@@ -707,32 +576,22 @@ export default function SearchProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Compensation & Sponsorship */}
+        {/* Salary Range */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-[#0F973D]" />
-              Vergütung & Sponsoring
+              Gehaltsbereich
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Mindest-Jahresgehalt</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => clearAll('minSalary')}
-                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-[#0F973D] focus:ring-offset-2"
-                >
-                  Alle löschen
-                </Button>
-              </div>
+              <Label>Mindestgehalt (€)</Label>
               <Input
                 type="number"
+                placeholder="0"
                 value={searchProfile.minSalary}
                 onChange={(e) => setSearchProfile(prev => ({ ...prev, minSalary: parseInt(e.target.value) || 0 }))}
-                placeholder="Mindest-Jahresgehalt €0k/Jahr"
                 className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
               />
             </div>
@@ -740,5 +599,5 @@ export default function SearchProfilePage() {
         </Card>
       </div>
     </div>
-  );
+  )
 } 
