@@ -164,9 +164,9 @@ export function JobtrackerBoard() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Jobtracker</h1>
-        <p className="text-muted-foreground">
+      <div className="mb-4 md:mb-6 px-4 md:px-0">
+        <h1 className="text-xl md:text-2xl font-bold">Jobtracker</h1>
+        <p className="text-sm md:text-base text-muted-foreground">
           Verwalte deine Jobbewerbungen visuell
         </p>
       </div>
@@ -178,15 +178,17 @@ export function JobtrackerBoard() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-full overflow-x-auto">
-                          {COLUMNS.map((column) => (
+          {/* Mobile: Horizontal scroll, Desktop: Grid */}
+          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 h-full overflow-x-auto md:overflow-x-visible pb-4 md:pb-0">
+            {COLUMNS.map((column) => (
+              <div key={column.id} className="min-w-[280px] md:min-w-0 md:w-auto">
                 <JobColumnComponent
-                  key={column.id}
                   column={column}
                   jobs={getJobsForColumn(column.id)}
                   isLoading={isLoading}
                 />
-              ))}
+              </div>
+            ))}
           </div>
 
           <DragOverlay>

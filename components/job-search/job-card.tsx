@@ -42,46 +42,52 @@ export function JobCard({ job, className, index = 0 }: JobCardProps) {
         className
       )}
     >
-        <CardHeader className="pb-3">
+        <CardContent className="pt-0 px-2 md:px-4 pb-1 space-y-1">
+          {/* Status Badge - Above Title */}
+          {!job.isActive && (
+            <Badge variant="destructive" className="text-xs px-1 py-0.5">
+              <AlertCircle className="w-3 h-3" />
+              <span className="hidden sm:inline ml-1">Nicht mehr aktiv</span>
+              <span className="sm:hidden">Inaktiv</span>
+            </Badge>
+          )}
+          
+          {/* Job Title */}
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-sm font-medium line-clamp-2 leading-tight">
+            <CardTitle className="text-xs md:text-sm font-medium line-clamp-2 leading-tight mb-0">
               {job.title}
             </CardTitle>
-            {!job.isActive && (
-              <Badge variant="destructive" className="text-xs">
-                <AlertCircle className="w-3 h-3" />
-                Nicht mehr aktiv
-              </Badge>
-            )}
           </div>
-        </CardHeader>
-        <CardContent className="pt-0 space-y-3">
-          <div className="space-y-1">
+          
+          <div className="space-y-0.5">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Building2 className="w-3 h-3" />
+              <Building2 className="w-3 h-3 flex-shrink-0" />
               <span className="truncate">{job.company}</span>
             </div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <MapPin className="w-3 h-3" />
+              <MapPin className="w-3 h-3 flex-shrink-0" />
               <span className="truncate">{job.location}</span>
             </div>
           </div>
           
           <div className="flex flex-wrap gap-1">
-            <Badge variant="outline" className="text-xs">
-              Ähnliche Jobs ansehen
+            <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+              <span className="hidden sm:inline">Ähnliche Jobs ansehen</span>
+              <span className="sm:hidden">Ähnliche</span>
             </Badge>
             {job.status === 'interviewing' && job.joboffer_received && (
-              <Badge variant="default" className="text-xs bg-green-500 hover:bg-green-600">
-                Job bekommen
+              <Badge variant="default" className="text-xs bg-green-500 hover:bg-green-600 px-1.5 py-0.5">
+                <span className="hidden sm:inline">Job bekommen</span>
+                <span className="sm:hidden">Job ✓</span>
               </Badge>
             )}
           </div>
           
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="flex-1 text-xs">
+          <div className="flex gap-2 pt-0.5">
+            <Button size="sm" variant="outline" className="flex-1 text-xs h-7 md:h-8">
               <Eye className="w-3 h-3 mr-1" />
-              Details
+              <span className="hidden sm:inline">Details</span>
+              <span className="sm:hidden">Info</span>
             </Button>
           </div>
         </CardContent>
