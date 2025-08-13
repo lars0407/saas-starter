@@ -153,28 +153,6 @@ const data = {
       title: "Settings",
       url: "/dashboard/settings",
       icon: Settings2,
-      items: [
-        {
-          title: "Passwort",
-          url: "/dashboard/settings",
-        },
-        {
-          title: "Benachrichtigungen",
-          url: "/dashboard/settings",
-        },
-        {
-          title: "Datenschutz",
-          url: "/dashboard/settings",
-        },
-        {
-          title: "Sprache & Region",
-          url: "/dashboard/settings",
-        },
-        {
-          title: "KI-Personalisierung",
-          url: "/dashboard/settings",
-        },
-      ],
     },
   ],
 }

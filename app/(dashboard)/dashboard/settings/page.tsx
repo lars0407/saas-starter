@@ -163,6 +163,16 @@ export default function SettingsPage() {
     loadPreferences()
   }, [])
 
+  // Handle hash fragment to set active tab
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '')
+      if (hash && ['password', 'notifications', 'privacy', 'language', 'ai'].includes(hash)) {
+        setActiveSection(hash as SettingsSection)
+      }
+    }
+  }, [])
+
   const currentTab = settingsTabs.find(tab => tab.id === activeSection) || settingsTabs[0]
 
   return (
