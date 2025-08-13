@@ -63,6 +63,24 @@ export function LanguageSettings() {
   return (
     <div className="space-y-6">
 
+      {/* Coming Soon */}
+      <Card className="bg-gray-50 border-gray-200">
+        <CardContent className="pt-6">
+          <div className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+            <div>
+              <h3 className="font-medium text-gray-900">Bald verfügbar 🚀</h3>
+              <ul className="text-sm text-gray-600 mt-2 space-y-1">
+                <li>• Mehr Sprachen (Italienisch, Niederländisch, etc.)</li>
+                <li>• Automatische Zeitzonen-Erkennung</li>
+                <li>• Regionale Job-Trends und Statistiken</li>
+                <li>• Personalisierte regionale Einstellungen</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Language Settings */}
       <Card>
         <CardHeader>
@@ -72,8 +90,8 @@ export function LanguageSettings() {
           {/* Language Selection */}
           <div className="space-y-2">
             <Label className="text-base font-medium">Sprache auswählen</Label>
-            <Select value={language} onValueChange={handleLanguageChange}>
-              <SelectTrigger className="focus:border-[#0F973D] focus:ring-[#0F973D]/20">
+            <Select value={language} onValueChange={handleLanguageChange} disabled>
+              <SelectTrigger className="focus:border-[#0F973D] focus:ring-[#0F973D]/20 bg-gray-100">
                 <SelectValue placeholder="Sprache wählen" />
               </SelectTrigger>
               <SelectContent>
@@ -90,6 +108,10 @@ export function LanguageSettings() {
             <p className="text-sm text-gray-500">
               Diese Sprache wird für die gesamte App verwendet
             </p>
+            <div className="flex items-center space-x-2 text-amber-600 bg-amber-50 p-2 rounded-md">
+              <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+              <span className="text-sm font-medium">🚧 Under Construction</span>
+            </div>
           </div>
 
           <Separator />
@@ -100,8 +122,8 @@ export function LanguageSettings() {
               <Clock className="h-4 w-4" />
               <span>Uhrzeit: 24h oder 12h?</span>
             </Label>
-            <Select value={timeFormat} onValueChange={handleTimeFormatChange}>
-              <SelectTrigger className="focus:border-[#0F973D] focus:ring-[#0F973D]/20">
+            <Select value={timeFormat} onValueChange={handleTimeFormatChange} disabled>
+              <SelectTrigger className="focus:border-[#0F973D] focus:ring-[#0F973D]/20 bg-gray-100">
                 <SelectValue placeholder="Zeitformat wählen" />
               </SelectTrigger>
               <SelectContent>
@@ -115,6 +137,10 @@ export function LanguageSettings() {
             <p className="text-sm text-gray-500">
               Bestimmt, wie Uhrzeiten in der App angezeigt werden
             </p>
+            <div className="flex items-center space-x-2 text-amber-600 bg-amber-50 p-2 rounded-md">
+              <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+              <span className="text-sm font-medium">🚧 Under Construction</span>
+            </div>
           </div>
 
           <Separator />
@@ -129,10 +155,16 @@ export function LanguageSettings() {
               <p className="text-sm text-gray-500">
                 Zeige Jobvorschläge basierend auf deinem Standort
               </p>
+              <div className="flex items-center space-x-2 text-amber-600 bg-amber-50 p-2 rounded-md mt-2">
+                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                <span className="text-sm font-medium">🚧 Under Construction</span>
+              </div>
             </div>
             <Switch
               checked={locationBasedJobs}
               onCheckedChange={handleLocationToggle}
+              disabled
+              className="opacity-50"
             />
           </div>
         </CardContent>
@@ -143,48 +175,12 @@ export function LanguageSettings() {
         <CardContent className="pt-6">
           <Button
             onClick={handleSave}
-            disabled={!hasChanges || isLoading}
-            className="w-full bg-[#0F973D] hover:bg-[#0D7A32] text-white"
+            disabled={true}
+            className="w-full bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed"
           >
             <Save className="mr-2 h-4 w-4" />
-            {isLoading ? "Speichern..." : "Einstellungen speichern"}
+            🚧 Under Construction
           </Button>
-        </CardContent>
-      </Card>
-
-      {/* Language Tips */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="pt-6">
-          <div className="flex items-start space-x-3">
-            <Globe className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <h3 className="font-medium text-blue-900">Sprache-Tipps 🌍</h3>
-              <ul className="text-sm text-blue-700 mt-2 space-y-1">
-                <li>• Die Sprache wird sofort für die gesamte App geändert</li>
-                <li>• Jobvorschläge werden in der gewählten Sprache angezeigt</li>
-                <li>• Standort-basierte Jobs helfen dir, lokale Angebote zu finden</li>
-                <li>• Du kannst die Einstellungen jederzeit ändern</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Coming Soon */}
-      <Card className="bg-gray-50 border-gray-200">
-        <CardContent className="pt-6">
-          <div className="flex items-start space-x-3">
-            <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
-            <div>
-              <h3 className="font-medium text-gray-900">Bald verfügbar 🚀</h3>
-              <ul className="text-sm text-gray-600 mt-2 space-y-1">
-                <li>• Mehr Sprachen (Italienisch, Niederländisch, etc.)</li>
-                <li>• Automatische Zeitzonen-Erkennung</li>
-                <li>• Regionale Job-Trends und Statistiken</li>
-                <li>• Personalisierte regionale Einstellungen</li>
-              </ul>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

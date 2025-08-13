@@ -101,6 +101,25 @@ export function AiSettings({ preferences }: AiSettingsProps) {
 
   return (
     <div className="space-y-6">
+
+      {/* Coming Soon */}
+      <Card className="bg-gray-50 border-gray-200">
+        <CardContent className="pt-6">
+          <div className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+            <div>
+              <h3 className="font-medium text-gray-900">Bald verfügbar 🚀</h3>
+              <ul className="text-sm text-gray-600 mt-2 space-y-1">
+                <li>• Erweiterte KI-Personalisierung</li>
+                <li>• Intelligente Jobvorschläge</li>
+                <li>• Automatische Dokumentenoptimierung</li>
+                <li>• Lernende KI-Algorithmen</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* AI Settings */}
       <Card>
         <CardHeader>
@@ -114,10 +133,16 @@ export function AiSettings({ preferences }: AiSettingsProps) {
               <p className="text-sm text-gray-500">
                 Erlaube KI, meinen Verlauf für bessere Vorschläge zu nutzen
               </p>
+              <div className="flex items-center space-x-2 text-amber-600 bg-amber-50 p-2 rounded-md mt-2">
+                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                <span className="text-sm font-medium">🚧 Under Construction</span>
+              </div>
             </div>
             <Switch
               checked={aiSettings.useJobHistory}
               onCheckedChange={() => handleToggle('useJobHistory')}
+              disabled
+              className="opacity-50"
             />
           </div>
 
@@ -130,10 +155,16 @@ export function AiSettings({ preferences }: AiSettingsProps) {
               <p className="text-sm text-gray-500">
                 Meine Lebensläufe & Anschreiben automatisch verbessern
               </p>
+              <div className="flex items-center space-x-2 text-amber-600 bg-amber-50 p-2 rounded-md mt-2">
+                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                <span className="text-sm font-medium">🚧 Under Construction</span>
+              </div>
             </div>
             <Switch
               checked={aiSettings.autoEnhancement}
               onCheckedChange={() => handleToggle('autoEnhancement')}
+              disabled
+              className="opacity-50"
             />
           </div>
 
@@ -146,10 +177,16 @@ export function AiSettings({ preferences }: AiSettingsProps) {
               <p className="text-sm text-gray-500">
                 KI-basierte Jobempfehlungen basierend auf deinem Profil
               </p>
+              <div className="flex items-center space-x-2 text-amber-600 bg-amber-50 p-2 rounded-md mt-2">
+                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                <span className="text-sm font-medium">🚧 Under Construction</span>
+              </div>
             </div>
             <Switch
               checked={aiSettings.personalizedSuggestions}
               onCheckedChange={() => handleToggle('personalizedSuggestions')}
+              disabled
+              className="opacity-50"
             />
           </div>
 
@@ -162,10 +199,16 @@ export function AiSettings({ preferences }: AiSettingsProps) {
               <p className="text-sm text-gray-500">
                 KI lernt aus deinen Entscheidungen für bessere Vorschläge
               </p>
+              <div className="flex items-center space-x-2 text-amber-600 bg-amber-50 p-2 rounded-md mt-2">
+                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                <span className="text-sm font-medium">🚧 Under Construction</span>
+              </div>
             </div>
             <Switch
               checked={aiSettings.learningMode}
               onCheckedChange={() => handleToggle('learningMode')}
+              disabled
+              className="opacity-50"
             />
           </div>
         </CardContent>
@@ -176,11 +219,11 @@ export function AiSettings({ preferences }: AiSettingsProps) {
         <CardContent className="pt-6">
           <Button
             onClick={handleSave}
-            disabled={!hasChanges || isLoading}
-            className="w-full bg-[#0F973D] hover:bg-[#0D7A32] text-white"
+            disabled={true}
+            className="w-full bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed"
           >
             <Save className="mr-2 h-4 w-4" />
-            {isLoading ? "Speichern..." : "Einstellungen speichern"}
+            🚧 Under Construction
           </Button>
         </CardContent>
       </Card>
@@ -253,42 +296,6 @@ export function AiSettings({ preferences }: AiSettingsProps) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </CardContent>
-      </Card>
-
-      {/* AI Tips */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="pt-6">
-          <div className="flex items-start space-x-3">
-            <Brain className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <h3 className="font-medium text-blue-900">KI-Tipps 🤖</h3>
-              <ul className="text-sm text-blue-700 mt-2 space-y-1">
-                <li>• Je mehr Daten du teilst, desto besser die Jobvorschläge</li>
-                <li>• Die KI lernt aus deinen Bewerbungen und Entscheidungen</li>
-                <li>• Automatische Optimierung verbessert deine Dokumente</li>
-                <li>• Du kannst jederzeit alle Einstellungen ändern</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* AI Stats */}
-      <Card className="bg-green-50 border-green-200">
-        <CardContent className="pt-6">
-          <div className="flex items-start space-x-3">
-            <Sparkles className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <h3 className="font-medium text-green-900">Deine KI-Statistiken 📊</h3>
-              <div className="text-sm text-green-700 mt-2 space-y-1">
-                <p>• <strong>127</strong> Jobs analysiert</p>
-                <p>• <strong>23</strong> Bewerbungen optimiert</p>
-                <p>• <strong>89%</strong> Übereinstimmung mit deinen Präferenzen</p>
-                <p>• <strong>15</strong> neue Jobvorschläge diese Woche</p>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
