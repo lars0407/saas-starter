@@ -19,6 +19,7 @@ interface UserPreferences {
   newsletter: boolean
   call: boolean
   whatsapp: boolean
+  profile_public: boolean
   notification: {
     newJobAlerts: boolean
     applicationReminders: boolean
@@ -105,6 +106,7 @@ export default function SettingsPage() {
               newsletter: true,
               call: true,
               whatsapp: true,
+              profile_public: true, // Added profile_public to defaults
               notification: {
                 newJobAlerts: true,
                 applicationReminders: true,
@@ -130,6 +132,7 @@ export default function SettingsPage() {
             newsletter: true,
             call: true,
             whatsapp: true,
+            profile_public: true, // Added profile_public to defaults
             notification: {
               newJobAlerts: true,
               applicationReminders: true,
@@ -147,6 +150,7 @@ export default function SettingsPage() {
           newsletter: true,
           call: true,
           whatsapp: true,
+          profile_public: true, // Added profile_public to defaults
           notification: {
             newJobAlerts: true,
             applicationReminders: true,
