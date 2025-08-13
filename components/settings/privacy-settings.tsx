@@ -86,13 +86,35 @@ export function PrivacySettings({ preferences }: PrivacySettingsProps) {
     setIsLoading(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Get auth token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        toast.error("Nicht angemeldet. Bitte melde dich erneut an.")
+        return
+      }
+
+      const response = await fetch("https://api.jobjaeger.de/api:7yCsbR9L/profile/delete", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Fehler beim Löschen des Kontos")
+      }
+
+      const data = await response.json()
       
-      toast.success("Bye bye, Jobjäger 👋")
+      toast.success(data.message || "Bye bye, Jobjäger 👋")
       // Redirect to logout or home page
-    } catch (error) {
-      toast.error("Fehler beim Löschen des Kontos.")
+    } catch (error: any) {
+      toast.error(error.message || "Fehler beim Löschen des Kontos.")
     } finally {
       setIsLoading(false)
       setShowDeleteDialog(false)
@@ -200,7 +222,7 @@ export function PrivacySettings({ preferences }: PrivacySettingsProps) {
           <div>
             <h3 className="font-medium text-red-900 mb-2">Bye bye, Jobjäger 👋</h3>
             <p className="text-sm text-red-700 mb-4">
-              Bist du dir sicher? Wir löschen alles – für immer. Das kann nicht rückgängig gemacht werden.
+              Bist du dir wirklich sicher? Das ist endgültig – alle deine Daten, Bewerbungen und Einstellungen verschwinden für immer. Kein Zurück mehr! 💀
             </p>
           </div>
 
@@ -218,8 +240,8 @@ export function PrivacySettings({ preferences }: PrivacySettingsProps) {
                   <span>Konto wirklich löschen?</span>
                 </DialogTitle>
                 <DialogDescription>
-                  Diese Aktion kann nicht rückgängig gemacht werden. Alle deine Daten, 
-                  Bewerbungen und Einstellungen werden für immer gelöscht.
+                  Das ist der finale Move! Alle deine Daten, Bewerbungen und Einstellungen werden für immer gelöscht. 
+                  Kein Undo, kein Reset – einfach weg! 😵‍💫
                 </DialogDescription>
               </DialogHeader>
               
@@ -269,7 +291,7 @@ export function PrivacySettings({ preferences }: PrivacySettingsProps) {
                 <li>• Deine Daten gehören dir – du bestimmst, was passiert</li>
                 <li>• Wir verwenden deine Daten nur für bessere Jobvorschläge</li>
                 <li>• Du kannst jederzeit alle Einstellungen ändern</li>
-                <li>• Bei Fragen zum Datenschutz: support@jobjaeger.de</li>
+                <li>• Bei Fragen zum Datenschutz: lars@jobjaeger.de</li>
               </ul>
             </div>
           </div>
