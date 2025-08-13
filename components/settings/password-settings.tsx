@@ -9,6 +9,10 @@ import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import { Lock, Eye, EyeOff, Save, Shield } from "lucide-react"
 
+function cn(...classes: string[]) {
+  return classes.filter(Boolean).join(" ")
+}
+
 export function PasswordSettings() {
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -45,15 +49,43 @@ export function PasswordSettings() {
     setIsLoading(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Get auth token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        toast.error("Nicht angemeldet. Bitte melde dich erneut an.")
+        return
+      }
+
+      const response = await fetch("https://api.jobjaeger.de/api:7yCsbR9L/profile/passwort/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          current_passwort: currentPassword,
+          new_passwort: newPassword,
+          new_passwort_confirmation: confirmPassword
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Fehler beim Aktualisieren des Passworts")
+      }
+
+      const data = await response.json()
       
-      toast.success("Dein Passwort ist jetzt safe! ✅")
+      toast.success(data.message || "Dein Passwort wurde erfolgreich aktualisiert! ✅")
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
-    } catch (error) {
-      toast.error("Uups, da lief was schief. Probier's nochmal.")
+    } catch (error: any) {
+      toast.error(error.message || "Uups, da lief was schief. Probier's nochmal.")
     } finally {
       setIsLoading(false)
     }
@@ -77,7 +109,12 @@ export function PasswordSettings() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="Dein aktuelles Passwort"
-                className="focus:border-[#0F973D] focus:ring-[#0F973D]/20 pr-10"
+                className="border-gray-300 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:outline-none pr-10"
+                style={{
+                  '--tw-ring-color': '#0F973D',
+                  '--tw-border-opacity': '1',
+                  '--tw-ring-opacity': '0.2'
+                } as React.CSSProperties}
               />
               <Button
                 type="button"
@@ -100,7 +137,12 @@ export function PasswordSettings() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Dein neues Passwort"
-                className="focus:border-[#0F973D] focus:ring-[#0F973D]/20 pr-10"
+                className="border-gray-300 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:outline-none pr-10"
+                style={{
+                  '--tw-ring-color': '#0F973D',
+                  '--tw-border-opacity': '1',
+                  '--tw-ring-opacity': '0.2'
+                } as React.CSSProperties}
               />
               <Button
                 type="button"
@@ -123,7 +165,12 @@ export function PasswordSettings() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Bestätige dein neues Passwort"
-                className="focus:border-[#0F973D] focus:ring-[#0F973D]/20 pr-10"
+                className="border-gray-300 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:outline-none pr-10"
+                style={{
+                  '--tw-ring-color': '#0F973D',
+                  '--tw-border-opacity': '1',
+                  '--tw-ring-opacity': '0.2'
+                } as React.CSSProperties}
               />
               <Button
                 type="button"
@@ -192,7 +239,6 @@ export function PasswordSettings() {
               <ul className="text-sm text-green-700 mt-2 space-y-1">
                 <li>• Verwende ein einzigartiges Passwort für jeden Account</li>
                 <li>• Teile dein Passwort niemals mit anderen</li>
-                <li>• Aktiviere 2FA für zusätzlichen Schutz</li>
                 <li>• Ändere dein Passwort regelmäßig</li>
               </ul>
             </div>
@@ -201,8 +247,4 @@ export function PasswordSettings() {
       </Card>
     </div>
   )
-}
-
-function cn(...classes: string[]) {
-  return classes.filter(Boolean).join(" ")
 } 
