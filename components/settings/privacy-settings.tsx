@@ -16,6 +16,7 @@ interface UserPreferences {
   newsletter: boolean
   call: boolean
   whatsapp: boolean
+  profile_public: boolean
   notification: {
     newJobAlerts: boolean
     applicationReminders: boolean
@@ -31,10 +32,7 @@ interface PrivacySettingsProps {
 
 export function PrivacySettings({ preferences }: PrivacySettingsProps) {
   const [privacySettings, setPrivacySettings] = useState({
-    profileVisible: true,
-    allowDataUsage: true,
-    jobTracking: true,
-    twoFactorAuth: false
+    profileVisible: true
   })
   const [isLoading, setIsLoading] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
@@ -45,10 +43,7 @@ export function PrivacySettings({ preferences }: PrivacySettingsProps) {
   useEffect(() => {
     if (preferences) {
       setPrivacySettings({
-        profileVisible: preferences.job_offers,
-        allowDataUsage: preferences.newsletter,
-        jobTracking: preferences.call,
-        twoFactorAuth: preferences.whatsapp
+        profileVisible: preferences.profile_public
       })
     }
   }, [preferences])
@@ -65,13 +60,39 @@ export function PrivacySettings({ preferences }: PrivacySettingsProps) {
     setIsLoading(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Get auth token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        toast.error("Nicht angemeldet. Bitte melde dich erneut an.")
+        return
+      }
+
+      const response = await fetch("https://api.jobjaeger.de/api:7yCsbR9L/profile/visibility/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          visibility: privacySettings.profileVisible
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Fehler beim Speichern der Sichtbarkeit")
+      }
+
+      const data = await response.json()
       
-      toast.success("Datenschutz-Einstellungen gespeichert! 🔒")
+      toast.success(data.message || "Profil-Sichtbarkeit erfolgreich aktualisiert! 🎯✨")
       setHasChanges(false)
-    } catch (error) {
-      toast.error("Uups, da lief was schief. Probier's nochmal.")
+    } catch (error: any) {
+      toast.error(error.message || "Uups, da lief was schief. Probier's nochmal.")
     } finally {
       setIsLoading(false)
     }
@@ -147,52 +168,8 @@ export function PrivacySettings({ preferences }: PrivacySettingsProps) {
 
           <Separator />
 
-          {/* Data Usage */}
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label className="text-base font-medium">KI darf meine Daten nutzen</Label>
-              <p className="text-sm text-gray-500">
-                Erlaube KI, meine Daten zu nutzen für bessere Vorschläge
-              </p>
-            </div>
-            <Switch
-              checked={privacySettings.allowDataUsage}
-              onCheckedChange={() => handleToggle('allowDataUsage')}
-            />
-          </div>
-
-          <Separator />
-
           {/* Job Tracking */}
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label className="text-base font-medium">Job-Tracking aktivieren</Label>
-              <p className="text-sm text-gray-500">
-                Verfolge deine Bewerbungen und Job-Aktivitäten
-              </p>
-            </div>
-            <Switch
-              checked={privacySettings.jobTracking}
-              onCheckedChange={() => handleToggle('jobTracking')}
-            />
-          </div>
-
-          <Separator />
-
-          {/* 2FA */}
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label className="text-base font-medium">Zwei-Faktor-Authentifizierung</Label>
-              <p className="text-sm text-gray-500">
-                Zusätzlicher Schutz für dein Konto (bald verfügbar)
-              </p>
-            </div>
-            <Switch
-              checked={privacySettings.twoFactorAuth}
-              onCheckedChange={() => handleToggle('twoFactorAuth')}
-              disabled
-            />
-          </div>
+          {/* Removed Job Tracking option */}
         </CardContent>
       </Card>
 
