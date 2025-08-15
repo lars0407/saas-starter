@@ -198,7 +198,7 @@ export default function AddressSearch({
           value={query}
           onChange={handleInputChange}
           placeholder={placeholder}
-          className="pl-10 pr-20 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]"
+          className="pl-10 pr-20 border-gray-300 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
           onFocus={() => {
             if (addresses.length > 0) {
               setShowDropdown(true);
