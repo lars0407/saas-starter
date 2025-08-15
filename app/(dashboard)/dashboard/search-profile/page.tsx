@@ -121,13 +121,25 @@ export default function SearchProfilePage() {
             },
             place: searchProfile.location,
             distance: searchProfile.radius ? parseInt(searchProfile.radius.replace('km', '')) * 1000 : 25000,
-            location: apiData.location,
             job_titles: apiData.job_title
+          },
+          adresse: searchProfile.selectedAddress?.display_name || searchProfile.location || '',
+          location: {
+            adresse: searchProfile.selectedAddress?.display_name || searchProfile.location || '',
+            location: searchProfile.selectedLocation ? {
+              key: "data.location",
+              geo_radius: {
+                center: {
+                  lon: searchProfile.selectedLocation.lon,
+                  lat: searchProfile.selectedLocation.lat
+                },
+                radius: searchProfile.radius ? parseInt(searchProfile.radius.replace('km', '')) * 1000 : 25000
+              }
+            } : {}
           },
           job_search_activity: 'casual',
           work_location_preference: 'in-person',
           work_time_preference: 'full-time',
-          location: {},
           date_published: apiData.date_published,
           employement_type: apiData.employement_type,
           remote_work: apiData.remote_work,
@@ -188,14 +200,27 @@ export default function SearchProfilePage() {
       }
 
       console.log('Saving search profile:', searchProfile);
+      console.log('Selected address:', searchProfile.selectedAddress);
+      console.log('Selected location:', searchProfile.selectedLocation);
+      console.log('Radius:', searchProfile.radius);
       
       // Prepare the data in the format expected by the update API
       const apiData = {
         job_title: searchProfile.jobTitle ? [searchProfile.jobTitle] : [],
-        location: searchProfile.selectedLocation ? {
-          lat: searchProfile.selectedLocation.lat,
-          lng: searchProfile.selectedLocation.lon
-        } : {},
+        adresse: searchProfile.selectedAddress?.display_name || searchProfile.location || '',
+        location: {
+          adresse: searchProfile.selectedAddress?.display_name || searchProfile.location || '',
+          location: searchProfile.selectedLocation ? {
+            key: "data.location",
+            geo_radius: {
+              center: {
+                lon: searchProfile.selectedLocation.lon,
+                lat: searchProfile.selectedLocation.lat
+              },
+              radius: searchProfile.radius ? parseInt(searchProfile.radius.replace('km', '')) * 1000 : 25000
+            }
+          } : {}
+        },
         remote_work: searchProfile.remote_work,
         date_published: getDatePublishedValue(searchProfile.datePosted),
         employement_type: searchProfile.employement_type
@@ -203,6 +228,10 @@ export default function SearchProfilePage() {
 
       console.log('Sending API data:', apiData);
       console.log('Date published value:', apiData.date_published, 'for selection:', searchProfile.datePosted);
+      console.log('Address data being sent:', {
+        adresse: apiData.adresse,
+        location: apiData.location
+      });
 
       // Try to update first, if it fails, create a new one
       let response = await fetch("https://api.jobjaeger.de/api:7yCsbR9L/search_profile/update", {
@@ -275,12 +304,23 @@ export default function SearchProfilePage() {
           ...searchProfile,
           jobTitle: profile.job_title?.[0] || profile.search_term || '',
           minSalary: profile.salary_expectation?.amount_eur || 0,
-          radius: profile.parameter?.distance ? `${Math.round(profile.parameter.distance / 1000)}km` : '25km',
-          selectedLocation: profile.parameter?.location?.lat && profile.parameter?.location?.lng ? {
-            lat: profile.parameter.location.lat,
-            lon: profile.parameter.location.lng
+          radius: profile.location?.location?.geo_radius?.radius ? `${Math.round(profile.location.location.geo_radius.radius / 1000)}km` : '25km',
+          // Handle new address structure
+          selectedLocation: profile.location?.location?.geo_radius?.center ? {
+            lat: profile.location.location.geo_radius.center.lat,
+            lon: profile.location.location.geo_radius.center.lon
           } : null,
-          location: profile.parameter?.place || '',
+          location: profile.location?.adresse || profile.adresse || profile.parameter?.place || '',
+          // Handle selected address for AddressSearch component
+          selectedAddress: profile.location?.adresse ? {
+            id: 0, // We don't have the original ID from the API
+            display_name: profile.location.adresse,
+            lat: profile.location.location?.geo_radius?.center?.lat || 0,
+            lon: profile.location.location?.geo_radius?.center?.lon || 0,
+            type: 'loaded',
+            importance: 0,
+            address: {}
+          } : null,
           jobType: {
             fullTime: profile.parameter?.type?.FULL_TIME || false,
             partTime: profile.parameter?.type?.PART_TIME || false,
@@ -901,25 +941,7 @@ export default function SearchProfilePage() {
                   </Select>
                 </div>
                 
-                {/* Selected Address Info */}
-                {searchProfile.selectedAddress && (
-                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
-                    <div className="flex items-start gap-2">
-                      <MapPin className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-green-800">
-                          Ausgewählte Adresse
-                        </div>
-                        <div className="text-xs text-green-700 mt-1">
-                          {searchProfile.selectedAddress.display_name}
-                        </div>
-                        <div className="text-xs text-green-600 mt-1">
-                          Koordinaten: {searchProfile.selectedAddress.lat.toFixed(6)}, {searchProfile.selectedAddress.lon.toFixed(6)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+
               </div>
             </CardContent>
           </Card>
