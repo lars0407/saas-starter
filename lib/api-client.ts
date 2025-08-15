@@ -323,4 +323,137 @@ export async function generateResumeSummary(resumeData: any) {
   return response.json();
 }
 
- 
+/**
+ * Save published date to database
+ */
+export async function savePublishedDate(
+  documentId: number,
+  intervalValue: number,
+  metadata?: Record<string, any>
+) {
+  const token = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('token='))
+    ?.split('=')[1];
+
+  const response = await fetch("https://api.jobjaeger.de/api:SiRHLF4Y/documents/publish-date", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { "Authorization": `Bearer ${token}` })
+    },
+    body: JSON.stringify({
+      document_id: documentId,
+      date_published: intervalValue, // Speichert 1, 3, 7 oder 30
+      metadata: metadata || {}
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Get published date from database
+ */
+export async function getPublishedDate(documentId: number) {
+  const token = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('token='))
+    ?.split('=')[1];
+
+  const response = await fetch(`https://api.jobjaeger.de/api:SiRHLF4Y/documents/${documentId}/publish-date`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { "Authorization": `Bearer ${token}` })
+    }
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Search addresses using OpenStreetMap Nominatim API
+ */
+export async function searchAddresses(query: string, limit: number = 5) {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=${limit}&addressdetails=1&countrycodes=de`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Address search failed')
+    }
+
+    const data = await response.json()
+    return data.map((item: any) => ({
+      id: item.place_id,
+      display_name: item.display_name,
+      lat: parseFloat(item.lat),
+      lon: parseFloat(item.lon),
+      type: item.type,
+      importance: item.importance,
+      address: {
+        city: item.address?.city || item.address?.town || item.address?.village,
+        state: item.address?.state,
+        country: item.address?.country,
+        postcode: item.address?.postcode,
+        street: item.address?.road,
+        house_number: item.address?.house_number
+      }
+    }))
+  } catch (error) {
+    console.error('Address search error:', error)
+    throw new Error('Address search failed. Please try again.')
+  }
+}
+
+/**
+ * Get address details from coordinates (reverse geocoding)
+ */
+export async function getAddressDetails(lat: number, lon: number) {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Address details fetch failed')
+    }
+
+    const data = await response.json()
+    return {
+      id: data.place_id,
+      display_name: data.display_name,
+      lat: parseFloat(data.lat),
+      lon: parseFloat(data.lon),
+      address: {
+        city: data.address?.city || data.address?.town || data.address?.village,
+        state: data.address?.state,
+        country: data.address?.country,
+        postcode: data.address?.postcode,
+        street: data.address?.road,
+        house_number: data.address?.house_number
+      }
+    }
+  } catch (error) {
+    console.error('Address details error:', error)
+    throw new Error('Address details fetch failed. Please try again.')
+  }
+}

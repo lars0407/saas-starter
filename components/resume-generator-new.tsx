@@ -22,6 +22,8 @@ import { Experience } from './resume-sections/experience';
 import { Skills } from './resume-sections/skills';
 import { saveResume, fetchDocument, generateResumePDF } from '@/lib/api-client';
 import { useDocumentDownload } from '@/hooks/use-document-download';
+import { DatePublisher } from './date-publisher';
+import { useDatePublisher } from '@/hooks/use-date-publisher';
 
 interface DownloadResponse {
   download_link: {
@@ -119,6 +121,13 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const [pdfGenerationStatus, setPdfGenerationStatus] = useState<'idle' | 'generating' | 'polling' | 'ready' | 'error'>('idle');
   const { downloadDocument, isLoading: isDownloading } = useDocumentDownload();
+  
+  // Date publishing hook
+  const { publishedDates, publishNewDate } = useDatePublisher({
+    documentId: currentDocumentId,
+    documentType: 'resume',
+    userName: resumeData.personalInfo.fullName
+  });
 
   // Utility function to convert date formats
   const convertDateToMonthInput = (dateString: string): string => {
@@ -830,6 +839,23 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Date Publisher Section */}
+          <DatePublisher
+            metadata={{
+              documentId: currentDocumentId,
+              documentType: 'resume',
+              userName: resumeData.personalInfo.fullName
+            }}
+            onDatePublished={(publishedDate) => {
+              console.log('Resume published with date:', publishedDate);
+              console.log('Database value saved:', publishedDate.intervalValue);
+              // The hook automatically updates the state
+              // You can add additional logic here, such as updating the resume status
+              // or sending notifications to other users
+            }}
+            className="mt-6"
+          />
         </div>
       </div>
 

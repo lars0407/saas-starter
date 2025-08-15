@@ -154,8 +154,146 @@ export function JobSearchComponent() {
     }
   }
 
+  // Helper function to convert radius string to meters
+  const convertRadiusToMeters = (radius: string): number => {
+    const value = parseInt(radius.replace('km', ''));
+    return value * 1000;
+  };
+
+  // Fetch jobs with specific location coordinates (to avoid state update timing issues)
+  const fetchJobsWithLocation = async (isLoadMore: boolean, coordinates: { lon: number; lat: number }, radius: string) => {
+    console.log('fetchJobsWithLocation called with coordinates:', coordinates, 'radius:', radius);
+    
+    if (isLoadMore) {
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+    }
+    setError(null)
+    
+    const currentOffset = isLoadMore ? (page - 1) * 25 : 0
+    
+    console.log('API Request with location:', {
+      isLoadMore,
+      currentOffset,
+      page,
+      search_term: filters.keyword,
+      location: filters.location,
+      remote_work: filters.remoteWork,
+      employement_type: filters.jobType,
+      date_published: 30,
+      coordinates,
+      radius
+    })
+    
+    try {
+      const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v3/job/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          offset: currentOffset,
+          search_term: filters.keyword,
+          remote_work: searchProfile.remote_work && searchProfile.remote_work.length > 0 ? searchProfile.remote_work : undefined,
+          employement_type: searchProfile.employement_type && searchProfile.employement_type.length > 0 ? searchProfile.employement_type : undefined,
+          date_published: 30,
+          location: {
+            key: "data.location",
+            geo_radius: {
+              center: {
+                lon: coordinates.lon,
+                lat: coordinates.lat
+              },
+              radius: convertRadiusToMeters(radius)
+            }
+          }
+        }),
+      })
+      if (!response.ok) throw new Error("Fehler beim Laden der Jobs.")
+      const data = await response.json()
+      
+      // Debug: Log the first job to see the structure
+      if (data.results && data.results.length > 0) {
+        console.log('First job data:', data.results[0])
+        console.log('Date fields available:', {
+          created_at: data.results[0].payload.data.created_at,
+          job_posted: data.results[0].payload.data.job_posted,
+          posted_date: data.results[0].payload.data.posted_date,
+          date: data.results[0].payload.data.date
+        })
+      }
+      
+      // Extract jobs from the new results structure
+      const newJobs = data.results ? data.results.map((result: any) => {
+        const jobData = result.payload.data
+        return {
+          ...jobData,
+          id: typeof jobData.id === 'string' ? parseInt(jobData.id) : jobData.id
+        }
+      }) : []
+      
+      // Debug: Log all available fields in the response to find the total count
+      console.log('Full API Response:', data)
+      console.log('Available fields:', Object.keys(data))
+      
+      // Get total count from API response - check for different possible fields
+      // Based on the API response structure, we need to find the correct field
+      let totalCount = data.total || data.total_count || data.itemsTotal || data.total_results
+      
+      // If we don't have a total count from the API, estimate it based on current results
+      // This is a fallback solution
+      if (!totalCount || totalCount === 0) {
+        // If this is the first page and we have results, estimate total
+        if (!isLoadMore && newJobs.length > 0) {
+          // Assume there are more pages if we got a full page of results
+          totalCount = Math.max(newJobs.length * 2, newJobs.length + 10)
+        } else if (isLoadMore) {
+          // For load more, keep the existing total
+          totalCount = totalJobs
+        } else {
+          totalCount = newJobs.length
+        }
+      }
+      
+      console.log('API Response:', {
+        newJobsCount: newJobs.length,
+        totalJobs: totalCount,
+        isLoadMore,
+        currentOffset,
+        jobIds: newJobs.map((job: Job) => job.id).slice(0, 5), // Show first 5 job IDs
+        responseData: data // Log full response to see available fields
+      })
+      
+      if (isLoadMore) {
+        setJobs(prev => [...prev, ...newJobs])
+        setPage(prev => prev + 1)
+      } else {
+        setJobs(newJobs)
+        setPage(2)
+        // Reset selected job ID for new searches so the first job gets selected
+        setSelectedJobId(null)
+      }
+      
+      setTotalJobs(totalCount)
+      setHasMoreJobs(newJobs.length === 25)
+    } catch (err: any) {
+      setError(err.message || "Unbekannter Fehler")
+      if (!isLoadMore) {
+        setJobs([])
+      }
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
+    }
+  };
+
   // Fetch jobs from Xano API
   const fetchJobs = async (isLoadMore = false) => {
+    console.log('fetchJobs called with isLoadMore:', isLoadMore);
+    console.log('Current searchProfile.selectedLocation:', searchProfile.selectedLocation);
+    console.log('Current searchProfile.radius:', searchProfile.radius);
+    
     if (isLoadMore) {
       setLoadingMore(true)
     } else {
@@ -173,7 +311,9 @@ export function JobSearchComponent() {
       location: filters.location,
       remote_work: filters.remoteWork,
       employement_type: filters.jobType,
-      date_published: 30 // Default to 30 days
+      date_published: 30,
+      selectedLocation: searchProfile.selectedLocation,
+      radius: searchProfile.radius
     })
     
     try {
@@ -189,18 +329,16 @@ export function JobSearchComponent() {
           employement_type: searchProfile.employement_type && searchProfile.employement_type.length > 0 ? searchProfile.employement_type : undefined,
           date_published: 30,
           ...(searchProfile.selectedLocation && {
-            location: [
-              {
-                key: "location",
-                geo_radius: {
-                  center: {
-                    lon: searchProfile.selectedLocation.lon,
-                    lat: searchProfile.selectedLocation.lat
-                  },
-                  radius: 50000
-                }
+            location: {
+              key: "data.location",
+              geo_radius: {
+                center: {
+                  lon: searchProfile.selectedLocation.lon,
+                  lat: searchProfile.selectedLocation.lat
+                },
+                radius: convertRadiusToMeters(searchProfile.radius)
               }
-            ]
+            }
           })
         }),
       })
@@ -400,6 +538,18 @@ export function JobSearchComponent() {
     return remoteWorkTypes
   }
 
+  // Update employement_type and remote_work when jobType or workModel changes
+  useEffect(() => {
+    const newEmployementType = getEmployementTypeArray(searchProfile.jobType)
+    const newRemoteWork = getRemoteWorkArray(searchProfile.workModel)
+    
+    setSearchProfile(prev => ({
+      ...prev,
+      employement_type: newEmployementType,
+      remote_work: newRemoteWork
+    }))
+  }, [searchProfile.jobType, searchProfile.workModel])
+
   // Function to fetch location suggestions from the API
   const fetchLocationSuggestions = async (searchTerm: string) => {
     if (!searchTerm || searchTerm.length < 2) {
@@ -450,6 +600,106 @@ export function JobSearchComponent() {
       console.error('Error fetching location suggestions:', error)
       setLocationSuggestions([])
       setShowLocationDropdown(false)
+    }
+  }
+
+  // Function to load search profile data from API
+  const loadSearchProfile = async () => {
+    try {
+      // Get auth token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        console.log('No auth token found, skipping search profile load')
+        return
+      }
+
+      console.log('Loading search profile from API...')
+      
+      const response = await fetch("https://api.jobjaeger.de/api:7yCsbR9L/search_profile", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Error loading search profile:', errorData)
+        return
+      }
+
+      const data = await response.json()
+      console.log('Search profile API response:', data)
+
+      if (data.search_profile && data.search_profile.length > 0) {
+        const profile = data.search_profile[0]
+        
+        // Map API data to local search profile state
+        const newSearchProfile = {
+          ...searchProfile,
+          jobTitle: profile.job_title?.[0] || profile.search_term || '',
+          minSalary: profile.salary_expectation?.amount_eur || 0,
+          radius: profile.parameter?.distance ? `${Math.round(profile.parameter.distance / 1000)}km` : '25km',
+          selectedLocation: profile.parameter?.location?.lat && profile.parameter?.location?.lng ? {
+            lat: profile.parameter.location.lat,
+            lon: profile.parameter.location.lng
+          } : null,
+          location: profile.parameter?.place || '',
+          jobType: {
+            fullTime: profile.parameter?.type?.FULL_TIME || false,
+            partTime: profile.parameter?.type?.PART_TIME || false,
+            temporary: profile.parameter?.type?.TEMPORARY || false,
+            contract: profile.parameter?.type?.Freelance || false,
+            internship: profile.parameter?.type?.INTERN || false
+          },
+          workModel: {
+            onsite: profile.type_of_workplace?.onsite || false,
+            remote: profile.type_of_workplace?.remote || false,
+            hybrid: profile.type_of_workplace?.hybrid || false
+          },
+          datePosted: profile.date_published ? 'pastMonth' : '',
+          employement_type: profile.employement_type || [],
+          remote_work: profile.remote_work || []
+        }
+
+        console.log('Updating search profile with API data:', newSearchProfile)
+        setSearchProfile(newSearchProfile)
+        
+        // Also update the main filters if we have a job title
+        if (newSearchProfile.jobTitle) {
+          setFilters(prev => ({ ...prev, keyword: newSearchProfile.jobTitle }))
+        }
+        
+        // Update employement_type and remote_work based on the new jobType and workModel
+        const newEmployementType = getEmployementTypeArray(newSearchProfile.jobType)
+        const newRemoteWork = getRemoteWorkArray(newSearchProfile.workModel)
+        
+        setSearchProfile(prev => ({
+          ...prev,
+          employement_type: newEmployementType,
+          remote_work: newRemoteWork
+        }))
+        
+        // Update locationSearchTerm to show the loaded location
+        if (profile.parameter?.place) {
+          setLocationSearchTerm(profile.parameter.place)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading search profile:', error)
+    }
+  }
+
+  // Handle search profile drawer open/close
+  const handleSearchProfileOpenChange = (open: boolean) => {
+    setSearchProfileOpen(open)
+    
+    // Load search profile data when drawer opens
+    if (open) {
+      loadSearchProfile()
     }
   }
 
@@ -653,6 +903,8 @@ export function JobSearchComponent() {
                 onChange={(e) => {
                   const value = e.target.value
                   setFilters(prev => ({ ...prev, location: value }))
+                  // Clear selected location when user types new location
+                  setSearchProfile(prev => ({ ...prev, selectedLocation: null }))
                   // Fetch location suggestions from API
                   fetchLocationSuggestions(value)
                 }}
@@ -681,10 +933,21 @@ export function JobSearchComponent() {
                       key={index}
                       className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
                       onClick={() => {
+                        console.log('Location selected:', suggestion);
+                        console.log('Setting filters and search profile...');
+                        
                         setFilters(prev => ({ ...prev, location: suggestion.fullAddress }))
-                        setSearchProfile(prev => ({ ...prev, selectedLocation: suggestion.coordinates }))
+                        setSearchProfile(prev => ({ ...prev, location: suggestion.fullAddress, selectedLocation: suggestion.coordinates }))
                         setShowLocationDropdown(false)
                         setLocationSuggestions([])
+                        
+                        console.log('About to trigger fetchJobs...');
+                        // Immediately trigger job search with new location coordinates
+                        // Pass the location data directly to avoid state update timing issues
+                        setTimeout(() => {
+                          console.log('Executing fetchJobsWithLocation with location:', suggestion.fullAddress, 'coordinates:', suggestion.coordinates);
+                          fetchJobsWithLocation(false, suggestion.coordinates, searchProfile.radius);
+                        }, 100);
                       }}
                     >
                       {suggestion.fullAddress}
@@ -693,7 +956,7 @@ export function JobSearchComponent() {
                 </div>
               )}
             </div>
-            <Sheet open={searchProfileOpen} onOpenChange={setSearchProfileOpen}>
+            <Sheet open={searchProfileOpen} onOpenChange={handleSearchProfileOpenChange}>
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
@@ -936,6 +1199,8 @@ export function JobSearchComponent() {
                               onChange={(e) => {
                                 const value = e.target.value
                                 setLocationSearchTerm(value)
+                                // Clear selected location when user types new location
+                                setSearchProfile(prev => ({ ...prev, selectedLocation: null }))
                                 fetchLocationSuggestions(value)
                               }}
                               onFocus={() => {
@@ -972,6 +1237,12 @@ export function JobSearchComponent() {
                                       setSearchProfile(prev => ({ ...prev, location: suggestion.fullAddress, selectedLocation: suggestion.coordinates }))
                                       setShowLocationDropdown(false)
                                       setLocationSuggestions([])
+                                      
+                                      // Immediately trigger job search with new location coordinates
+                                      setTimeout(() => {
+                                        console.log('Executing fetchJobsWithLocation from drawer with location:', suggestion.fullAddress, 'coordinates:', suggestion.coordinates);
+                                        fetchJobsWithLocation(false, suggestion.coordinates, searchProfile.radius);
+                                      }, 100);
                                     }}
                                   >
                                     {suggestion.fullAddress}
@@ -981,7 +1252,17 @@ export function JobSearchComponent() {
                             )}
                           </div>
                           
-                          <Select value={searchProfile.radius} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, radius: value }))}>
+                          <Select value={searchProfile.radius} onValueChange={(value) => {
+                            setSearchProfile(prev => ({ ...prev, radius: value }))
+                            
+                            // Trigger job search with new radius if location is selected
+                            if (searchProfile.selectedLocation) {
+                              setTimeout(() => {
+                                console.log('Executing fetchJobsWithLocation from radius change with coordinates:', searchProfile.selectedLocation, 'new radius:', value);
+                                fetchJobsWithLocation(false, searchProfile.selectedLocation!, value);
+                              }, 100);
+                            }
+                          }}>
                             <SelectTrigger className="w-24 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]">
                               <SelectValue />
                             </SelectTrigger>
