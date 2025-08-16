@@ -86,7 +86,23 @@ export function JobSearchComponent() {
     datePosted: '',
     minSalary: 0,
     // New fields for coordinates
-    selectedLocation: null as { lon: number; lat: number } | null
+    selectedLocation: null as { lon: number; lat: number } | null,
+    selectedAddress: null as {
+      id: number;
+      display_name: string;
+      lat: number;
+      lon: number;
+      type: string;
+      importance: number;
+      address: {
+        city?: string;
+        state?: string;
+        country?: string;
+        postcode?: string;
+        street?: string;
+        house_number?: string;
+      };
+    } | null
   })
 
   // Location search state
@@ -94,9 +110,10 @@ export function JobSearchComponent() {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
   const [locationSearchTerm, setLocationSearchTerm] = useState('')
 
-  // Load job favourites on component mount
+  // Load job favourites and search profile on component mount
   useEffect(() => {
     fetchJobFavourites()
+    loadSearchProfile()
   }, [])
 
   // Sync locationSearchTerm with searchProfile.location
@@ -159,6 +176,22 @@ export function JobSearchComponent() {
     const value = parseInt(radius.replace('km', ''));
     return value * 1000;
   };
+
+  // Helper function to convert numeric value back to datePosted selection
+  const getDatePostedFromValue = (datePublished: number): string => {
+    switch (datePublished) {
+      case 1:
+        return 'past24h';
+      case 3:
+        return 'past3days';
+      case 7:
+        return 'pastWeek';
+      case 30:
+        return 'pastMonth';
+      default:
+        return '';
+    }
+  }
 
   // Fetch jobs with specific location coordinates (to avoid state update timing issues)
   const fetchJobsWithLocation = async (isLoadMore: boolean, coordinates: { lon: number; lat: number }, radius: string) => {
@@ -603,6 +636,157 @@ export function JobSearchComponent() {
     }
   }
 
+  // Function to save search profile to API
+  const saveSearchProfile = async () => {
+    try {
+      // Get auth token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        console.log('No auth token found, skipping search profile save')
+        return
+      }
+
+      console.log('Saving search profile to API:', searchProfile)
+      
+      // Helper function to convert datePosted selection to numeric value (same as search profile page)
+      const getDatePublishedValue = (datePosted: string): number => {
+        switch (datePosted) {
+          case 'past24h':
+            return 1; // 24 Stunden
+          case 'past3days':
+            return 3; // 3 Tage
+          case 'pastWeek':
+            return 7; // 1 Woche
+          case 'pastMonth':
+            return 30; // 1 Monat
+          default:
+            return 0; // Keine Auswahl
+        }
+      }
+      
+      // Prepare the data in the format expected by the API (same as search profile page)
+      const apiData = {
+        job_title: searchProfile.jobTitle ? [searchProfile.jobTitle] : [],
+        adresse: searchProfile.selectedAddress?.display_name || searchProfile.location || '',
+        location: {
+          adresse: searchProfile.selectedAddress?.display_name || searchProfile.location || '',
+          location: searchProfile.selectedLocation ? {
+            key: "data.location",
+            geo_radius: {
+              center: {
+                lon: searchProfile.selectedLocation.lon,
+                lat: searchProfile.selectedLocation.lat
+              },
+              radius: searchProfile.radius ? parseInt(searchProfile.radius.replace('km', '')) * 1000 : 25000
+            }
+          } : {}
+        },
+        remote_work: searchProfile.remote_work,
+        date_published: getDatePublishedValue(searchProfile.datePosted),
+        employement_type: searchProfile.employement_type
+      }
+
+      console.log('Sending API data:', apiData)
+
+      // Try to update first, if it fails, create a new one
+      let response = await fetch("https://api.jobjaeger.de/api:7yCsbR9L/search_profile/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(apiData)
+      })
+
+      let result;
+      if (!response.ok) {
+        // If update fails, try to create a new profile (same structure as search profile page)
+        console.log('Update failed, trying to create new profile...')
+        const createResponse = await fetch("https://api.jobjaeger.de/api:7yCsbR9L/search_profile", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            search_profile: [{
+              salary: searchProfile.minSalary,
+              range: '',
+              roles: [],
+              job_title: apiData.job_title,
+              search_term: searchProfile.jobTitle || '',
+              parameter: {
+                type: {
+                  INTERN: searchProfile.jobType.internship,
+                  FULL_TIME: searchProfile.jobType.fullTime,
+                  Freelance: searchProfile.jobType.contract,
+                  PART_TIME: searchProfile.jobType.partTime,
+                  TEMPORARY: searchProfile.jobType.temporary
+                },
+                place: searchProfile.location,
+                distance: searchProfile.radius ? parseInt(searchProfile.radius.replace('km', '')) * 1000 : 25000,
+                job_titles: apiData.job_title
+              },
+              adresse: searchProfile.selectedAddress?.display_name || searchProfile.location || '',
+              location: {
+                adresse: searchProfile.selectedAddress?.display_name || searchProfile.location || '',
+                location: searchProfile.selectedLocation ? {
+                  key: "data.location",
+                  geo_radius: {
+                    center: {
+                      lon: searchProfile.selectedLocation.lon,
+                      lat: searchProfile.selectedLocation.lat
+                    },
+                    radius: searchProfile.radius ? parseInt(searchProfile.radius.replace('km', '')) * 1000 : 25000
+                  }
+                } : {}
+              },
+              job_search_activity: 'casual',
+              work_location_preference: 'in-person',
+              work_time_preference: 'full-time',
+              date_published: apiData.date_published,
+              employement_type: apiData.employement_type,
+              remote_work: apiData.remote_work,
+              type_of_workplace: {
+                hybrid: searchProfile.workModel.hybrid,
+                remote: searchProfile.workModel.remote,
+                onsite: searchProfile.workModel.onsite
+              },
+              search_type: {
+                active: false,
+                passive: false,
+                curious: false
+              },
+              salary_expectation: {
+                type: 'Monthly salary (gross)',
+                amount_eur: searchProfile.minSalary
+              }
+            }]
+          })
+        })
+
+        if (!createResponse.ok) {
+          const errorData = await createResponse.json()
+          throw new Error(errorData.message || "Fehler beim Erstellen des Suchprofils")
+        }
+
+        result = await createResponse.json()
+      } else {
+        result = await response.json()
+      }
+
+      console.log('Search profile saved successfully:', result)
+      
+    } catch (error: any) {
+      console.error('Error saving search profile:', error)
+      // Don't show error toast here as it might interfere with the job search
+    }
+  }
+
   // Function to load search profile data from API
   const loadSearchProfile = async () => {
     try {
@@ -642,12 +826,23 @@ export function JobSearchComponent() {
           ...searchProfile,
           jobTitle: profile.job_title?.[0] || profile.search_term || '',
           minSalary: profile.salary_expectation?.amount_eur || 0,
-          radius: profile.parameter?.distance ? `${Math.round(profile.parameter.distance / 1000)}km` : '25km',
-          selectedLocation: profile.parameter?.location?.lat && profile.parameter?.location?.lng ? {
-            lat: profile.parameter.location.lat,
-            lon: profile.parameter.location.lng
+          radius: profile.location?.location?.geo_radius?.radius ? `${Math.round(profile.location.location.geo_radius.radius / 1000)}km` : '25km',
+          // Handle new address structure
+          selectedLocation: profile.location?.location?.geo_radius?.center ? {
+            lat: profile.location.location.geo_radius.center.lat,
+            lon: profile.location.location.geo_radius.center.lon
           } : null,
-          location: profile.parameter?.place || '',
+          location: profile.location?.adresse || profile.adresse || profile.parameter?.place || '',
+          // Handle selected address for AddressSearch component
+          selectedAddress: profile.location?.adresse ? {
+            id: 0, // We don't have the original ID from the API
+            display_name: profile.location.adresse,
+            lat: profile.location.location?.geo_radius?.center?.lat || 0,
+            lon: profile.location.location?.geo_radius?.center?.lon || 0,
+            type: 'loaded',
+            importance: 0,
+            address: {}
+          } : null,
           jobType: {
             fullTime: profile.parameter?.type?.FULL_TIME || false,
             partTime: profile.parameter?.type?.PART_TIME || false,
@@ -656,11 +851,11 @@ export function JobSearchComponent() {
             internship: profile.parameter?.type?.INTERN || false
           },
           workModel: {
-            onsite: profile.type_of_workplace?.onsite || false,
-            remote: profile.type_of_workplace?.remote || false,
-            hybrid: profile.type_of_workplace?.hybrid || false
+            onsite: profile.remote_work?.includes('Kein Homeoffice') || profile.type_of_workplace?.onsite || false,
+            remote: profile.remote_work?.includes('Vollständig remote') || profile.type_of_workplace?.remote || false,
+            hybrid: profile.remote_work?.includes('Hybrid') || profile.remote_work?.includes('Teilweise Homeoffice') || profile.type_of_workplace?.hybrid || false
           },
-          datePosted: profile.date_published ? 'pastMonth' : '',
+          datePosted: getDatePostedFromValue(profile.date_published),
           employement_type: profile.employement_type || [],
           remote_work: profile.remote_work || []
         }
@@ -673,14 +868,12 @@ export function JobSearchComponent() {
           setFilters(prev => ({ ...prev, keyword: newSearchProfile.jobTitle }))
         }
         
-        // Update employement_type and remote_work based on the new jobType and workModel
+        // Update employement_type based on the new jobType (but keep remote_work from API)
         const newEmployementType = getEmployementTypeArray(newSearchProfile.jobType)
-        const newRemoteWork = getRemoteWorkArray(newSearchProfile.workModel)
         
         setSearchProfile(prev => ({
           ...prev,
-          employement_type: newEmployementType,
-          remote_work: newRemoteWork
+          employement_type: newEmployementType
         }))
         
         // Update locationSearchTerm to show the loaded location
@@ -975,8 +1168,11 @@ export function JobSearchComponent() {
                     </SheetTitle>
                                         <Button
                       className="bg-[#0F973D] hover:bg-[#0F973D]/90"
-                      onClick={() => {
+                      onClick={async () => {
                         console.log('Saving search profile:', searchProfile);
+                        
+                        // Save search profile to API
+                        await saveSearchProfile();
                         
                         // Update search filters with search profile data
                         const newFilters = {
