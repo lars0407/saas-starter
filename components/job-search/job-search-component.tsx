@@ -26,6 +26,7 @@ interface JobSearchFilters {
   salaryRange: string
   remoteWork: string
   companySize: string
+  datePublished: string
 }
 
 const initialFilters: JobSearchFilters = {
@@ -36,6 +37,7 @@ const initialFilters: JobSearchFilters = {
   salaryRange: "",
   remoteWork: "all",
   companySize: "all",
+  datePublished: "",
 }
 
 export function JobSearchComponent() {
@@ -321,6 +323,139 @@ export function JobSearchComponent() {
     }
   };
 
+  // Fetch jobs with specific filters (for immediate use after filter updates)
+  const fetchJobsWithNewFilters = async (newFilters: JobSearchFilters, isLoadMore = false) => {
+    console.log('fetchJobsWithNewFilters called with filters:', newFilters);
+    console.log('Current searchProfile.selectedLocation:', searchProfile.selectedLocation);
+    console.log('Current searchProfile.radius:', searchProfile.radius);
+    
+    if (isLoadMore) {
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+    }
+    setError(null)
+    
+    const currentOffset = isLoadMore ? (page - 1) * 25 : 0
+    
+    console.log('API Request with new filters:', {
+      isLoadMore,
+      currentOffset,
+      page,
+      search_term: newFilters.keyword,
+      location: newFilters.location,
+      remote_work: newFilters.remoteWork,
+      employement_type: newFilters.jobType,
+      date_published: newFilters.datePublished,
+      date_published_value: newFilters.datePublished ? getDatePublishedValue(newFilters.datePublished) : 30,
+      selectedLocation: searchProfile.selectedLocation,
+      radius: searchProfile.radius
+    })
+    
+    try {
+      const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v3/job/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          offset: currentOffset,
+          search_term: newFilters.keyword,
+          remote_work: searchProfile.remote_work && searchProfile.remote_work.length > 0 ? searchProfile.remote_work : undefined,
+          employement_type: searchProfile.employement_type && searchProfile.employement_type.length > 0 ? searchProfile.employement_type : undefined,
+          date_published: newFilters.datePublished ? getDatePublishedValue(newFilters.datePublished) : 30,
+          ...(searchProfile.selectedLocation && {
+            location: {
+              key: "data.location",
+              geo_radius: {
+                center: {
+                  lon: searchProfile.selectedLocation.lon,
+                  lat: searchProfile.selectedLocation.lat
+                },
+                radius: convertRadiusToMeters(searchProfile.radius)
+              }
+            }
+          })
+        }),
+      })
+      if (!response.ok) throw new Error("Fehler beim Laden der Jobs.")
+      const data = await response.json()
+      
+      // Debug: Log the first job to see the structure
+      if (data.results && data.results.length > 0) {
+        console.log('First job data:', data.results[0])
+        console.log('Date fields available:', {
+          created_at: data.results[0].payload.data.created_at,
+          job_posted: data.results[0].payload.data.job_posted,
+          posted_date: data.results[0].payload.data.posted_date,
+          date: data.results[0].payload.data.date
+        })
+      }
+      
+      // Extract jobs from the new results structure
+      const newJobs = data.results ? data.results.map((result: any) => {
+        const jobData = result.payload.data
+        return {
+          ...jobData,
+          id: typeof jobData.id === 'string' ? parseInt(jobData.id) : jobData.id
+        }
+      }) : []
+      
+      // Debug: Log all available fields in the response to find the total count
+      console.log('Full API Response:', data)
+      console.log('Available fields:', Object.keys(data))
+      
+      // Get total count from API response - check for different possible fields
+      // Based on the API response structure, we need to find the correct field
+      let totalCount = data.total || data.total_count || data.itemsTotal || data.total_results
+      
+      // If we don't have a total count from the API, estimate it based on current results
+      // This is a fallback solution
+      if (!totalCount || totalCount === 0) {
+        // If this is the first page and we have results, estimate total
+        if (!isLoadMore && newJobs.length > 0) {
+          // Assume there are more pages if we got a full page of results
+          totalCount = Math.max(newJobs.length * 2, newJobs.length + 10)
+        } else if (isLoadMore) {
+          // For load more, keep the existing total
+          totalCount = totalJobs
+        } else {
+          totalCount = newJobs.length
+        }
+      }
+      
+      console.log('API Response:', {
+        newJobsCount: newJobs.length,
+        totalJobs: totalCount,
+        isLoadMore,
+        currentOffset,
+        jobIds: newJobs.map((job: Job) => job.id).slice(0, 5), // Show first 5 job IDs
+        responseData: data // Log full response to see available fields
+      })
+      
+      if (isLoadMore) {
+        setJobs(prev => [...prev, ...newJobs])
+        setPage(prev => prev + 1)
+      } else {
+        setJobs(newJobs)
+        setPage(2)
+        // Reset selected job ID for new searches so the first job gets selected
+        setSelectedJobId(null)
+      }
+      
+      setTotalJobs(totalCount)
+      setHasMoreJobs(newJobs.length === 25)
+    } catch (err: any) {
+      setError(err.message || "Unbekannter Fehler")
+      if (!isLoadMore) {
+        setJobs([])
+      }
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
+    }
+  }
+
   // Fetch jobs from Xano API
   const fetchJobs = async (isLoadMore = false) => {
     console.log('fetchJobs called with isLoadMore:', isLoadMore);
@@ -344,7 +479,8 @@ export function JobSearchComponent() {
       location: filters.location,
       remote_work: filters.remoteWork,
       employement_type: filters.jobType,
-      date_published: 30,
+      date_published: filters.datePublished,
+      date_published_value: filters.datePublished ? getDatePublishedValue(filters.datePublished) : 30,
       selectedLocation: searchProfile.selectedLocation,
       radius: searchProfile.radius
     })
@@ -360,7 +496,7 @@ export function JobSearchComponent() {
           search_term: filters.keyword,
           remote_work: searchProfile.remote_work && searchProfile.remote_work.length > 0 ? searchProfile.remote_work : undefined,
           employement_type: searchProfile.employement_type && searchProfile.employement_type.length > 0 ? searchProfile.employement_type : undefined,
-          date_published: 30,
+          date_published: filters.datePublished ? getDatePublishedValue(filters.datePublished) : 30,
           ...(searchProfile.selectedLocation && {
             location: {
               key: "data.location",
@@ -519,6 +655,27 @@ export function JobSearchComponent() {
 
   const handleSearch = () => {
     fetchJobs(false)
+  }
+
+  // Helper function to convert datePosted selection to numeric value (same as search profile page)
+  const getDatePublishedValue = (datePosted: string): number => {
+    console.log('getDatePublishedValue called with:', datePosted);
+    const result = (() => {
+      switch (datePosted) {
+        case 'past24h':
+          return 1; // 24 Stunden
+        case 'past3days':
+          return 3; // 3 Tage
+        case 'pastWeek':
+          return 7; // 1 Woche
+        case 'pastMonth':
+          return 30; // 1 Monat
+        default:
+          return 0; // Keine Auswahl
+      }
+    })();
+    console.log('getDatePublishedValue returning:', result);
+    return result;
   }
 
   // Helper function to get employement_type array based on selected job types
@@ -1178,15 +1335,24 @@ export function JobSearchComponent() {
                         const newFilters = {
                           ...filters,
                           keyword: searchProfile.jobTitle || '',
+                          datePublished: searchProfile.datePosted || '',
                         };
+                        
+                        console.log('Updating filters with:', {
+                          currentFilters: filters,
+                          searchProfileDatePosted: searchProfile.datePosted,
+                          newFilters: newFilters
+                        });
                         
                         // Set the new filters
                         setFilters(newFilters);
                         
-                        // Explicitly trigger job search with new parameters
-                        setTimeout(() => {
-                          fetchJobs(false);
-                        }, 100);
+                        // Set the new filters
+                        setFilters(newFilters);
+                        
+                        // Trigger job search immediately with the new filters (don't wait for state update)
+                        console.log('About to trigger fetchJobs with new filters:', newFilters);
+                        fetchJobsWithNewFilters(newFilters, false);
                         
                         // Close the drawer
                         setSearchProfileOpen(false);
