@@ -714,7 +714,7 @@ export function OnboardingModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleModalClose}>
-      <DialogContent className={`mx-4 sm:mx-auto p-0 overflow-visible rounded-2xl shadow-2xl border-3 border-[#0F973D] max-h-[80vh] ${currentStep === 3 ? 'max-w-4xl' : currentStep === 4 || currentStep === 5 || currentStep === 6 || currentStep === 7 || currentStep === 8 || currentStep === 9 ? 'max-w-4xl' : 'max-w-md'}`} showCloseButton={false}>
+      <DialogContent className={`sm:mx-auto overflow-visible rounded-2xl shadow-2xl border-3 border-[#0F973D] max-h-[80vh] ${currentStep === 3 ? 'max-w-4xl' : currentStep === 4 || currentStep === 5 || currentStep === 6 || currentStep === 7 || currentStep === 8 || currentStep === 9 ? 'max-w-4xl' : 'max-w-md'}`} showCloseButton={false}>
         <VisuallyHidden>
           <DialogTitle>Onboarding - Name eingeben</DialogTitle>
         </VisuallyHidden>
@@ -747,9 +747,9 @@ export function OnboardingModal({
           </div>
         </div>
         
-        <div className="relative p-2 rounded-b-2xl overflow-y-auto max-h-[calc(80vh-120px)]">
+        <div className="relative rounded-b-2xl overflow-y-auto max-h-[calc(80vh-120px)]">
           {/* Form Content */}
-          <div className="mt-2 mb-6 px-4 sm:px-6">
+          <div className="mt-2 mb-6">
             <StepContent
               step={currentStep}
               firstName={firstName}
@@ -774,7 +774,7 @@ export function OnboardingModal({
           </div>
 
           {/* Action Button */}
-          <div className="flex justify-center px-4 sm:px-6">
+          <div className="flex justify-center">
             {!isLoading && currentStep !== 3 && currentStep !== 4 && currentStep !== 5 && currentStep !== 6 && currentStep !== 7 && currentStep !== 8 && currentStep !== 9 && (
               <Button
                 onClick={handleContinue}

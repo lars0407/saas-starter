@@ -26,9 +26,10 @@ interface ExperienceProps {
   data: ExperienceEntry[];
   onChange: (data: ExperienceEntry[]) => void;
   isEditing?: boolean;
+  noPadding?: boolean; // New prop to control padding
 }
 
-export function Experience({ data, onChange, isEditing = true }: ExperienceProps) {
+export function Experience({ data, onChange, isEditing = true, noPadding = false }: ExperienceProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -128,17 +129,17 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    <Card className={cn("w-full", noPadding && "border-0 shadow-none")}>
+      <CardHeader className={cn(noPadding && "px-0 pt-0")}>
         <CardTitle className="flex items-center gap-2">
           <Briefcase className="h-5 w-5 text-primary" />
           Berufserfahrung 💼
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Zeig, wo du Eindruck gemacht hast – Zahlen wirken Wunder 💥
+          Deine Arbeitsstationen - von Praktikum bis Führungsposition
         </p>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className={cn("space-y-6", noPadding && "px-0")}>
         {data.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
