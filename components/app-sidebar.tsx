@@ -18,8 +18,6 @@ import {
 import useSWR from 'swr'
 import { useState } from 'react'
 import { FeedbackModal } from '@/components/feedback-modal'
-import { OnboardingModal } from '@/components/onboarding'
-import { Sparkles } from 'lucide-react'
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -110,7 +108,7 @@ const data = {
     {
       title: "KI-Tools",
       url: "/dashboard/coverletter-generate",
-      icon: Sparkles,
+      icon: Bot,
       items: [
         {
           title: "Anschreiben Generator",
@@ -159,7 +157,6 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const [onboardingOpen, setOnboardingOpen] = useState(false)
   const { data: user, error } = useSWR<XanoUser>('/api/user', fetcher, {
     revalidateOnFocus: false,
     shouldRetryOnError: false
@@ -185,35 +182,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       
-      {/* Onboarding Button - Outside SidebarContent */}
-      <div className="px-3 py-4 border-t border-gray-200 bg-yellow-50">
-        <Button
-          onClick={() => {
-            console.log('Onboarding button clicked!')
-            setOnboardingOpen(true)
-          }}
-          variant="default"
-          className="w-full justify-start gap-2 text-sm bg-[#0F973D] hover:bg-[#0D7A32] text-white font-bold"
-        >
-          <Sparkles className="h-4 w-4" />
-          🚀 Onboarding starten
-        </Button>
-      </div>
       <SidebarFooter>
-        {/* Onboarding Button in Footer */}
-        <div className="px-3 py-2 border-b border-gray-200 bg-yellow-50">
-          <Button
-            onClick={() => {
-              console.log('Onboarding button clicked!')
-              setOnboardingOpen(true)
-            }}
-            variant="default"
-            className="w-full justify-start gap-2 text-sm bg-[#0F973D] hover:bg-[#0D7A32] text-white font-bold"
-          >
-            <Sparkles className="h-4 w-4" />
-            🚀 Onboarding starten
-          </Button>
-        </div>
         <NavUser user={userData} />
       </SidebarFooter>
       <SidebarRail />
@@ -222,18 +191,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         open={feedbackOpen} 
         onOpenChange={setFeedbackOpen}
         userEmail={user?.email}
-      />
-      
-      <OnboardingModal
-        isOpen={onboardingOpen}
-        onClose={() => setOnboardingOpen(false)}
-        onComplete={(firstName, lastName) => {
-          console.log(`Onboarding completed for ${firstName} ${lastName}`)
-          setOnboardingOpen(false)
-        }}
-        speechText="Hey, cool dich zu sehen! Wie heißt du?"
-        characterSrc="/images/characters/Job-Jäger Expressions.png"
-        characterAlt="Friendly onboarding character"
       />
     </Sidebar>
   )
