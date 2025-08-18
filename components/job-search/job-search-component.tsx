@@ -1221,7 +1221,7 @@ export function JobSearchComponent() {
     <div className="h-screen max-h-screen flex flex-col space-y-6 overflow-hidden">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">KI-Suche</h1>
+        <h1 className="text-3xl font-bold">Jobsuche</h1>
         <p className="text-muted-foreground">
           Finde deinen Traumjob mit unseren intelligenten Suchfunktionen
         </p>

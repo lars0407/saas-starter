@@ -491,22 +491,12 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
         </CardContent>
       </Card>
 
-      {/* Job Description */}
+      {/* Job Details */}
       <Card>
         <CardHeader>
-          <CardTitle>Jobbeschreibung</CardTitle>
+          <CardTitle>Job Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {job.description?.description_original && (
-            <div>
-              <p className="text-muted-foreground leading-relaxed">
-                {job.description.description_original}
-              </p>
-            </div>
-          )}
-
-          <Separator />
-
           <div>
             <h3 className="font-semibold mb-2">Verantwortlichkeiten</h3>
             {formatListItems(job.description?.description_responsibilities, "Verantwortlichkeiten")}
