@@ -1,6 +1,5 @@
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { User, GraduationCap, Briefcase, Zap, AlertTriangle } from "lucide-react"
 import { PersonalInfo } from "../resume-sections/personal-info"
@@ -59,7 +58,7 @@ interface Skill {
 
 interface ProfileContentProps {
   onComplete: (profileData: any) => void
-  onSkip: () => void
+  onSkip?: () => void
   onBack?: () => void
   firstName?: string
   lastName?: string
@@ -72,7 +71,6 @@ export function ProfileContent({
   firstName,
   lastName,
 }: ProfileContentProps) {
-  const [activeTab, setActiveTab] = useState("personal")
   const [showSkipConfirmation, setShowSkipConfirmation] = useState(false)
 
   // Profile data state
@@ -98,18 +96,16 @@ export function ProfileContent({
 
   // Load data from localStorage on component mount
   React.useEffect(() => {
-    console.log('ProfileContent: Loading data from localStorage...')
-    
     // First, try to load parsed resume data if available
     try {
       const parsedResumeData = localStorage.getItem('onboarding_parsed_resume');
       if (parsedResumeData) {
         const parsed = JSON.parse(parsedResumeData);
-        console.log('ProfileContent: Found parsed resume data:', parsed);
+        console.log('ProfileContent: Loading parsed resume data:', parsed);
         
         if (parsed.basics) {
-          // Transform the parsed data to match our component format
-          const transformedPersonalInfo: PersonalInfoData = {
+          console.log('ProfileContent: Setting personal info from parsed resume:', parsed.basics);
+          setPersonalInfo({
             firstName: parsed.basics.first_name || firstName || "",
             lastName: parsed.basics.surname || lastName || "",
             email: parsed.basics.email || "",
@@ -119,14 +115,11 @@ export function ProfileContent({
             adresse_city: parsed.basics.adresse_city || "",
             adresse_postcode: parsed.basics.adresse_postcode || "",
             adresse_country: parsed.basics.adresse_country || "",
-            website: parsed.link?.find((l: any) => l.label === 'website' || l.label === 'Website')?.url || "",
-            linkedin: parsed.link?.find((l: any) => l.label === 'linkedin' || l.label === 'LinkedIn')?.url || "",
-            github: parsed.link?.find((l: any) => l.label === 'github' || l.label === 'GitHub')?.url || "",
+            website: parsed.link?.find((l: any) => l.label === 'website')?.url || "",
+            linkedin: parsed.link?.find((l: any) => l.label === 'linkedin')?.url || "",
+            github: parsed.link?.find((l: any) => l.label === 'github')?.url || "",
             summary: parsed.basics.description || "",
-          };
-          
-          console.log('ProfileContent: Setting personal info from parsed resume:', transformedPersonalInfo);
-          setPersonalInfo(transformedPersonalInfo);
+          });
           
           // Transform education data
           const transformedEducation: EducationEntry[] = (parsed.education || []).map((edu: any, index: number) => ({
@@ -134,7 +127,7 @@ export function ProfileContent({
             institution: edu.school || "",
             degree: edu.degree || "",
             field: edu.subject || "",
-            location: `${edu.location_city || ""}, ${edu.location_country || ""}`.replace(/^,\s*/, "").replace(/,\s*$/, ""),
+            location: `${edu.location_city || ''}, ${edu.location_country || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, ''),
             startDate: edu.startDate || "",
             endDate: edu.endDate || "",
             current: false,
@@ -204,8 +197,6 @@ export function ProfileContent({
     }
   }, [firstName, lastName]);
 
-
-
   const handlePersonalInfoChange = (data: PersonalInfoData) => {
     setPersonalInfo(data)
   }
@@ -247,7 +238,7 @@ export function ProfileContent({
 
   return (
     <div className="h-[60vh] flex flex-col">
-      <div className="text-center flex-shrink-0 mb-4">
+      <div className="text-center flex-shrink-0 mb-6">
         <h3 className="text-xl font-semibold text-gray-900">
           Profil erstellen
         </h3>
@@ -256,62 +247,73 @@ export function ProfileContent({
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid w-full grid-cols-4 flex-shrink-0 mb-4">
-          <TabsTrigger value="personal" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Persönlich
-          </TabsTrigger>
-          <TabsTrigger value="education" className="flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" />
-            Ausbildung
-          </TabsTrigger>
-          <TabsTrigger value="experience" className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4" />
-            Erfahrung
-          </TabsTrigger>
-          <TabsTrigger value="skills" className="flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            Fähigkeiten
-          </TabsTrigger>
-        </TabsList>
-
-        <div className="flex-1 overflow-hidden">
-          <TabsContent value="personal" className="h-full overflow-y-auto">
+      {/* Vertical layout with all sections - entire content scrollable */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="space-y-8 pb-6">
+          {/* Personal Information Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <User className="h-5 w-5 text-blue-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900">Persönlich</h4>
+            </div>
             <PersonalInfo 
               data={personalInfo} 
               onChange={handlePersonalInfoChange} 
               isEditing={true} 
             />
-          </TabsContent>
+          </div>
 
-          <TabsContent value="education" className="h-full overflow-y-auto">
+          {/* Education Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <GraduationCap className="h-5 w-5 text-green-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900">Ausbildung</h4>
+            </div>
             <Education 
               data={education} 
               onChange={handleEducationChange} 
               isEditing={true} 
             />
-          </TabsContent>
+          </div>
 
-          <TabsContent value="experience" className="h-full overflow-y-auto">
+          {/* Experience Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Briefcase className="h-5 w-5 text-purple-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900">Erfahrung</h4>
+            </div>
             <Experience 
               data={experience} 
               onChange={handleExperienceChange} 
               isEditing={true} 
             />
-          </TabsContent>
+          </div>
 
-          <TabsContent value="skills" className="h-full overflow-y-auto">
+          {/* Skills Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Zap className="h-5 w-5 text-orange-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900">Fähigkeiten</h4>
+            </div>
             <Skills 
               data={skills} 
               onChange={handleSkillsChange} 
               isEditing={true} 
             />
-          </TabsContent>
+          </div>
         </div>
-      </Tabs>
+      </div>
 
-      <div className="flex justify-between pt-4 border-t flex-shrink-0 mt-4">
+      {/* Buttons now part of the scrollable content */}
+      <div className="flex justify-between pt-4 border-t mt-6">
         <div className="flex gap-2">
           {onBack && (
             <Button variant="outline" onClick={onBack} className="text-gray-600 hover:text-gray-800">
