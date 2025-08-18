@@ -118,6 +118,22 @@ export function JobSearchComponent() {
     loadSearchProfile()
   }, [])
 
+  // Load jobs with search profile data after profile is loaded
+  useEffect(() => {
+    if (searchProfile.jobTitle || searchProfile.location || searchProfile.selectedLocation) {
+      console.log('Search profile loaded, triggering job search with profile data:', searchProfile)
+      // Update filters with search profile data
+      const newFilters = {
+        ...filters,
+        keyword: searchProfile.jobTitle || '',
+        datePublished: searchProfile.datePosted || '',
+      }
+      setFilters(newFilters)
+      // Trigger job search with profile data
+      fetchJobsWithProfileData(newFilters)
+    }
+  }, [searchProfile.jobTitle, searchProfile.location, searchProfile.selectedLocation, searchProfile.datePosted])
+
   // Sync locationSearchTerm with searchProfile.location
   useEffect(() => {
     setLocationSearchTerm(searchProfile.location)
@@ -172,6 +188,8 @@ export function JobSearchComponent() {
       console.error('Error fetching job favourites:', error)
     }
   }
+
+
 
   // Helper function to convert radius string to meters
   const convertRadiusToMeters = (radius: string): number => {
@@ -322,6 +340,92 @@ export function JobSearchComponent() {
       setLoadingMore(false)
     }
   };
+
+  // Fetch jobs with search profile data
+  const fetchJobsWithProfileData = async (profileFilters: JobSearchFilters) => {
+    console.log('fetchJobsWithProfileData called with profile filters:', profileFilters)
+    console.log('Current searchProfile:', searchProfile)
+    
+    setLoading(true)
+    setError(null)
+    
+    const currentOffset = 0 // Always start from first page when loading with profile
+    
+    console.log('API Request with profile data:', {
+      search_term: profileFilters.keyword,
+      location: searchProfile.location,
+      remote_work: searchProfile.remote_work,
+      employement_type: searchProfile.employement_type,
+      date_published: profileFilters.datePublished ? getDatePublishedValue(profileFilters.datePublished) : 30,
+      selectedLocation: searchProfile.selectedLocation,
+      radius: searchProfile.radius
+    })
+    
+    try {
+      const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v3/job/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          offset: currentOffset,
+          search_term: profileFilters.keyword,
+          remote_work: searchProfile.remote_work && searchProfile.remote_work.length > 0 ? searchProfile.remote_work : undefined,
+          employement_type: searchProfile.employement_type && searchProfile.employement_type.length > 0 ? searchProfile.employement_type : undefined,
+          date_published: profileFilters.datePublished ? getDatePublishedValue(profileFilters.datePublished) : 30,
+          ...(searchProfile.selectedLocation && {
+            location: {
+              key: "data.location",
+              geo_radius: {
+                center: {
+                  lon: searchProfile.selectedLocation.lon,
+                  lat: searchProfile.selectedLocation.lat
+                },
+                radius: convertRadiusToMeters(searchProfile.radius)
+              }
+            }
+          })
+        }),
+      })
+      if (!response.ok) throw new Error("Fehler beim Laden der Jobs.")
+      const data = await response.json()
+      
+      // Extract jobs from the new results structure
+      const newJobs = data.results ? data.results.map((result: any) => {
+        const jobData = result.payload.data
+        return {
+          ...jobData,
+          id: typeof jobData.id === 'string' ? parseInt(jobData.id) : jobData.id
+        }
+      }) : []
+      
+      // Get total count from API response
+      let totalCount = data.total || data.total_count || data.itemsTotal || data.total_results
+      
+      if (!totalCount || totalCount === 0) {
+        totalCount = newJobs.length
+      }
+      
+      console.log('Profile-based job search results:', {
+        newJobsCount: newJobs.length,
+        totalJobs: totalCount,
+        searchTerm: profileFilters.keyword,
+        datePublished: profileFilters.datePublished
+      })
+      
+      setJobs(newJobs)
+      setPage(2)
+      setSelectedJobId(null)
+      setTotalJobs(totalCount)
+      setHasMoreJobs(newJobs.length === 25)
+      
+    } catch (err: any) {
+      setError(err.message || "Unbekannter Fehler")
+      setJobs([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Fetch jobs with specific filters (for immediate use after filter updates)
   const fetchJobsWithNewFilters = async (newFilters: JobSearchFilters, isLoadMore = false) => {
