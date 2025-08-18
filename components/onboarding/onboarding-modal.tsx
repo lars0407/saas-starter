@@ -56,36 +56,28 @@ export function OnboardingModal({
 
   // Function to transform profile data to the required JSON format
   const transformProfileDataToJSONFormat = (data: any) => {
-    if (!data) return {
-      link: [],
-      skill: [],
-      basics: {},
-      courses: [],
-      language: [],
-      education: [],
-      interests: [],
-      experience: [],
-      publications: [],
-      certifications: []
-    }
+    if (!data) return {}
     
     // Transform basics
     const basics = data.basics ? {
-      email: data.basics.email || "",
-      image: data.basics.image || "",
-      gender: data.basics.gender || "",
-      surname: data.basics.lastName || "",
-      birthdate: data.basics.birthdate || "",
-      telephone: data.basics.phone || "",
       first_name: data.basics.firstName || "",
-      description: data.basics.summary || "",
-      nationality: data.basics.nationality || "",
-      title_after: data.basics.title_after || "",
+      last_name: data.basics.lastName || "",
+      email: data.basics.email || "",
+      phone: data.basics.phone || "",
       adresse_city: data.basics.adresse_city || "",
-      title_before: data.basics.title_before || "",
       adresse_street: data.basics.adresse_street || "",
       adresse_country: data.basics.adresse_country || "",
-      adresse_postcode: data.basics.adresse_postcode || ""
+      adresse_postcode: data.basics.adresse_postcode || "",
+      title_before: data.basics.title_before || "",
+      title_after: data.basics.title_after || "",
+      nationality: data.basics.nationality || "",
+      description: data.basics.summary || "",
+      birthday: data.basics.birthday || "",
+      gender: data.basics.gender || "",
+      work_permit: data.basics.work_permit || false,
+      number: data.basics.phone || "",
+      title: data.basics.title || "",
+      hobby: data.basics.hobby || ""
     } : {}
     
     // Transform links
@@ -153,6 +145,56 @@ export function OnboardingModal({
     }
   }
 
+  // Function to transform work location to remote_work array
+  const transformWorkLocationToRemoteWork = (workLocation: string): string[] => {
+    switch (workLocation) {
+      case 'remote':
+        return ['Vollständig remote']
+      case 'in-person':
+        return ['Kein Homeoffice']
+      case 'hybrid':
+        return ['Hybrid']
+      default:
+        return ['Kein Homeoffice', 'null', 'Vollständig remote', 'Hybrid', 'Teilweise Homeoffice']
+    }
+  }
+
+  // Function to transform job type to employement_type array
+  const transformJobTypeToEmployementType = (jobType: string): string[] => {
+    switch (jobType) {
+      case 'full-time':
+        return ['FULL_TIME', 'Not Applicable']
+      case 'part-time':
+        return ['PART_TIME']
+      case 'flexible':
+        return ['FULL_TIME', 'PART_TIME', 'INTERN', 'FREELANCE', 'TEMPORARY', 'Not Applicable']
+      default:
+        return ['FULL_TIME', 'Not Applicable']
+    }
+  }
+
+  // Function to parse salary expectation
+  const parseSalaryExpectation = (salaryString: string): { type: string, amount_eur: number } => {
+    if (!salaryString || salaryString === 'flexible: negotiable') {
+      return { type: "Monthly salary (gross)", amount_eur: 3500 }
+    }
+    
+    const parts = salaryString.split(': ')
+    if (parts.length === 2) {
+      const type = parts[0]
+      const amount = parseInt(parts[1]) || 3500
+      
+      // Convert yearly to monthly if needed
+      if (type === 'yearly') {
+        return { type: "Yearly salary (gross)", amount_eur: Math.round(amount / 12) }
+      } else {
+        return { type: "Monthly salary (gross)", amount_eur: amount }
+      }
+    }
+    
+    return { type: "Monthly salary (gross)", amount_eur: 3500 }
+  }
+
   // API function to save onboarding data
   const saveOnboardingToAPI = async () => {
     try {
@@ -173,43 +215,55 @@ export function OnboardingModal({
       // Transform profile data to the required JSON format
       const transformedProfileData = transformProfileDataToJSONFormat(profileData)
       
-      // Prepare the request payload with fallback structures
+      // Transform onboarding data to match new API structure
+      const remoteWorkArray = transformWorkLocationToRemoteWork(workLocation)
+      const employementTypeArray = transformJobTypeToEmployementType(jobType)
+      const jobTitleArray = jobTitle ? [jobTitle] : []
+      const salaryData = parseSalaryExpectation(salaryExpectation)
+      
+      // Prepare the request payload according to new API specification
       const payload = {
         profile_data: transformedProfileData,
-        search_profile: parsedSearchData || {
-          job_search_activity: "",
-          dream_job_title: "",
-          work_location_preference: "",
-          work_time_preference: "",
-          salary_expectation: {
-            type: "Monthly salary (gross)",
-            amount_eur: 0
-          }
+        search_profile: {
+          job_search_activity: jobSearchIntensity || "active",
+          search_term: jobTitle || "",
+          salary: salaryData.amount_eur,
+          range: "monthly",
+          roles: jobTitleArray,
+          job_title: jobTitleArray,
+          work_location_preference: workLocation || "flexible",
+          work_time_preference: jobType || "flexible",
+          employement_type: employementTypeArray,
+          remote_work: remoteWorkArray,
+          type_of_workplace: {
+            hybrid: workLocation === 'hybrid',
+            remote: workLocation === 'remote',
+            onsite: workLocation === 'in-person'
+          },
+          search_type: {
+            active: jobSearchIntensity === 'active',
+            passive: jobSearchIntensity === 'casual',
+            curious: jobSearchIntensity === 'browsing'
+          },
+          salary_expectation: salaryData,
+          date_published: Date.now(),
+          parameter: {},
+          location: {},
+          profile_id: 0
         },
-        linkedin_url: profileData?.basics?.linkedin || ""
-      }
-
-      // Validate payload structure
-      if (!payload.profile_data || typeof payload.profile_data !== 'object') {
-        console.warn('Profile data is not an object:', payload.profile_data)
-      }
-      if (!payload.search_profile || typeof payload.search_profile !== 'object') {
-        console.warn('Search profile is not an object:', payload.search_profile)
+        linkedin_url: profileData?.basics?.linkedin || "",
+        job_title: jobTitleArray,
+        remote_work: remoteWorkArray,
+        employement_type: employementTypeArray
       }
 
       console.log('Sending onboarding data to API:', payload)
       console.log('Profile data structure:', profileData)
       console.log('Search data structure:', parsedSearchData)
+      console.log('Full payload JSON:', JSON.stringify(payload, null, 2))
       
-      // Test with minimal payload to see if structure is the issue
-      const testPayload = {
-        profile_data: {},
-        search_profile: {},
-        linkedin_url: ""
-      }
-      console.log('Test payload:', testPayload)
-
-      const response = await fetch('https://api.jobjaeger.de/api:cP4KlfKj/v3/onboarding7complete', {
+      // Try with the full payload first
+      let response = await fetch('https://api.jobjaeger.de/api:cP4KlfKj/v3/onboarding7complete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -217,6 +271,30 @@ export function OnboardingModal({
         },
         body: JSON.stringify(payload)
       })
+
+      // If the first attempt fails, try with a minimal payload
+      if (!response.ok && response.status !== 401) {
+        console.log('Full payload failed, trying with minimal payload...')
+        const minimalPayload = {
+          profile_data: {},
+          search_profile: {},
+          linkedin_url: "",
+          job_title: [],
+          remote_work: [],
+          employement_type: []
+        }
+        
+        console.log('Trying minimal payload:', minimalPayload)
+        
+        response = await fetch('https://api.jobjaeger.de/api:cP4KlfKj/v3/onboarding7complete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(minimalPayload)
+        })
+      }
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -229,8 +307,11 @@ export function OnboardingModal({
           const errorResponse = await response.text()
           errorDetails = errorResponse
           console.error('API Error Response:', errorResponse)
+          console.error('Response status:', response.status)
+          console.error('Response headers:', Object.fromEntries(response.headers.entries()))
         } catch (e) {
           errorDetails = 'Could not read error response'
+          console.error('Error reading response:', e)
         }
         
         throw new Error(`API request failed: ${response.status} ${response.statusText}. Details: ${errorDetails}`)
@@ -279,14 +360,13 @@ export function OnboardingModal({
       
       // Save search-specific data in separate object
       const onboardingSearchData = {
-        job_search_activity: jobSearchIntensity || "I am actively looking for a job",
-        dream_job_title: jobTitle || "Frontend Developer",
-        work_location_preference: workLocation || "Remote / Home Office",
-        work_time_preference: jobType || "Full-time (40h/week)",
-        salary_expectation: {
-          type: "Monthly salary (gross)",
-          amount_eur: salaryExpectation ? parseInt(salaryExpectation) || 3500 : 3500
-        }
+        job_search_activity: jobSearchIntensity || "active",
+        job_title: jobTitle ? [jobTitle] : [],
+        remote_work: transformWorkLocationToRemoteWork(workLocation),
+        employement_type: transformJobTypeToEmployementType(jobType),
+        work_location_preference: workLocation || "flexible",
+        work_time_preference: jobType || "flexible",
+        salary_expectation: parseSalaryExpectation(salaryExpectation)
       }
       localStorage.setItem('onboarding_search', JSON.stringify(onboardingSearchData))
     }

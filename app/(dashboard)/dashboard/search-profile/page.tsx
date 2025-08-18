@@ -321,17 +321,19 @@ export default function SearchProfilePage() {
             importance: 0,
             address: {}
           } : null,
+          // Map job types from API arrays
           jobType: {
-            fullTime: profile.parameter?.type?.FULL_TIME || false,
-            partTime: profile.parameter?.type?.PART_TIME || false,
-            temporary: profile.parameter?.type?.TEMPORARY || false,
-            contract: profile.parameter?.type?.Freelance || false,
-            internship: profile.parameter?.type?.INTERN || false
+            fullTime: profile.employement_type?.includes('FULL_TIME') || false,
+            partTime: profile.employement_type?.includes('PART_TIME') || false,
+            temporary: profile.employement_type?.includes('TEMPORARY') || false,
+            contract: profile.employement_type?.includes('FREELANCE') || false,
+            internship: profile.employement_type?.includes('INTERN') || false
           },
+          // Map work model from API arrays/preferences
           workModel: {
-            onsite: profile.type_of_workplace?.onsite || false,
-            remote: profile.type_of_workplace?.remote || false,
-            hybrid: profile.type_of_workplace?.hybrid || false
+            onsite: profile.remote_work?.includes('Kein Homeoffice') || profile.work_location_preference === 'onsite' || false,
+            remote: profile.remote_work?.includes('Vollständig remote') || profile.work_location_preference === 'remote' || false,
+            hybrid: profile.remote_work?.includes('Hybrid') || profile.remote_work?.includes('Teilweise Homeoffice') || profile.work_location_preference === 'hybrid' || false
           },
           datePosted: getDatePostedFromValue(profile.date_published),
           employement_type: profile.employement_type || [],

@@ -114,6 +114,7 @@ export function JobSearchComponent() {
 
   // Load job favourites and search profile on component mount
   useEffect(() => {
+    
     fetchJobFavourites()
     loadSearchProfile()
   }, [])
@@ -763,7 +764,7 @@ export function JobSearchComponent() {
 
   // Helper function to convert datePosted selection to numeric value (same as search profile page)
   const getDatePublishedValue = (datePosted: string): number => {
-    console.log('getDatePublishedValue called with:', datePosted);
+    
     const result = (() => {
       switch (datePosted) {
         case 'past24h':
@@ -778,7 +779,7 @@ export function JobSearchComponent() {
           return 0; // Keine Auswahl
       }
     })();
-    console.log('getDatePublishedValue returning:', result);
+    
     return result;
   }
 
@@ -807,6 +808,7 @@ export function JobSearchComponent() {
       employementTypes.push('FULL_TIME', 'PART_TIME', 'TEMPORARY', 'FREELANCE', 'INTERN', 'Not Applicable')
     }
     
+    
     return employementTypes
   }
 
@@ -834,14 +836,22 @@ export function JobSearchComponent() {
 
   // Update employement_type and remote_work when jobType or workModel changes
   useEffect(() => {
+    
+    
     const newEmployementType = getEmployementTypeArray(searchProfile.jobType)
     const newRemoteWork = getRemoteWorkArray(searchProfile.workModel)
     
-    setSearchProfile(prev => ({
-      ...prev,
-      employement_type: newEmployementType,
-      remote_work: newRemoteWork
-    }))
+    
+    
+    setSearchProfile(prev => {
+      const updated = {
+        ...prev,
+        employement_type: newEmployementType,
+        remote_work: newRemoteWork
+      }
+      
+      return updated
+    })
   }, [searchProfile.jobType, searchProfile.workModel])
 
   // Function to fetch location suggestions from the API
@@ -1104,38 +1114,38 @@ export function JobSearchComponent() {
             importance: 0,
             address: {}
           } : null,
+          // Fix jobType mapping - use employement_type array from API
           jobType: {
-            fullTime: profile.parameter?.type?.FULL_TIME || false,
-            partTime: profile.parameter?.type?.PART_TIME || false,
-            temporary: profile.parameter?.type?.TEMPORARY || false,
-            contract: profile.parameter?.type?.Freelance || false,
-            internship: profile.parameter?.type?.INTERN || false
+            fullTime: profile.employement_type?.includes('FULL_TIME') || false,
+            partTime: profile.employement_type?.includes('PART_TIME') || false,
+            temporary: profile.employement_type?.includes('TEMPORARY') || false,
+            contract: profile.employement_type?.includes('FREELANCE') || false,
+            internship: profile.employement_type?.includes('INTERN') || false
           },
+          // Fix workModel mapping - use remote_work array and work_location_preference from API
           workModel: {
-            onsite: profile.remote_work?.includes('Kein Homeoffice') || profile.type_of_workplace?.onsite || false,
-            remote: profile.remote_work?.includes('Vollständig remote') || profile.type_of_workplace?.remote || false,
-            hybrid: profile.remote_work?.includes('Hybrid') || profile.remote_work?.includes('Teilweise Homeoffice') || profile.type_of_workplace?.hybrid || false
+            onsite: profile.remote_work?.includes('Kein Homeoffice') || profile.work_location_preference === 'onsite' || false,
+            remote: profile.remote_work?.includes('Vollständig remote') || profile.work_location_preference === 'remote' || false,
+            hybrid: profile.remote_work?.includes('Hybrid') || profile.remote_work?.includes('Teilweise Homeoffice') || profile.work_location_preference === 'hybrid' || false
           },
           datePosted: getDatePostedFromValue(profile.date_published),
           employement_type: profile.employement_type || [],
           remote_work: profile.remote_work || []
         }
 
-        console.log('Updating search profile with API data:', newSearchProfile)
+        
+        
+        // Update employement_type based on the new jobType
+        const newEmployementType = getEmployementTypeArray(newSearchProfile.jobType)
+        newSearchProfile.employement_type = newEmployementType
+        
+        // Set the complete search profile in one update
         setSearchProfile(newSearchProfile)
         
         // Also update the main filters if we have a job title
         if (newSearchProfile.jobTitle) {
           setFilters(prev => ({ ...prev, keyword: newSearchProfile.jobTitle }))
         }
-        
-        // Update employement_type based on the new jobType (but keep remote_work from API)
-        const newEmployementType = getEmployementTypeArray(newSearchProfile.jobType)
-        
-        setSearchProfile(prev => ({
-          ...prev,
-          employement_type: newEmployementType
-        }))
         
         // Update locationSearchTerm to show the loaded location
         if (profile.parameter?.place) {
@@ -1149,10 +1159,12 @@ export function JobSearchComponent() {
 
   // Handle search profile drawer open/close
   const handleSearchProfileOpenChange = (open: boolean) => {
+    console.log('Search profile drawer open/close:', open)
     setSearchProfileOpen(open)
     
     // Load search profile data when drawer opens
     if (open) {
+      console.log('Drawer opened, loading search profile...')
       loadSearchProfile()
     }
   }
@@ -1468,6 +1480,7 @@ export function JobSearchComponent() {
                   </div>
                 </SheetHeader>
                 <div className="space-y-6 mt-6">
+                  
                   {/* Job Title */}
                   <Card>
                     <CardHeader>
@@ -1617,6 +1630,7 @@ export function JobSearchComponent() {
                           <Switch
                             checked={searchProfile.workModel.remote}
                             onCheckedChange={(checked: boolean) => {
+                              console.log('Remote toggle changed to:', checked)
                               const newWorkModel = { ...searchProfile.workModel, remote: checked }
                               const newRemoteWork = getRemoteWorkArray(newWorkModel)
                               handleSearchProfileChange({
@@ -1626,7 +1640,7 @@ export function JobSearchComponent() {
                             }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
-                          <Label>Remote</Label>
+                          <Label>Remote (State: {searchProfile.workModel.remote ? 'true' : 'false'})</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Switch
