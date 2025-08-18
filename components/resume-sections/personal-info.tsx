@@ -31,10 +31,9 @@ interface PersonalInfoProps {
   onChange: (data: PersonalInfoData) => void;
   isEditing?: boolean;
   resumeData?: any; // Full resume data for AI summary generation
-  noPadding?: boolean; // New prop to control padding
 }
 
-export function PersonalInfo({ data, onChange, isEditing = true, resumeData, noPadding }: PersonalInfoProps) {
+export function PersonalInfo({ data, onChange, isEditing = true, resumeData }: PersonalInfoProps) {
   const [errors, setErrors] = useState<Partial<PersonalInfoData>>({});
 
   const handleChange = (field: keyof PersonalInfoData, value: string) => {
@@ -73,8 +72,8 @@ export function PersonalInfo({ data, onChange, isEditing = true, resumeData, noP
   };
 
   return (
-    <Card className={cn("w-full", noPadding && "border-0 shadow-none")}>
-      <CardHeader className={cn(noPadding && "px-0 pt-0")}>
+    <Card className="w-full">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="h-5 w-5 text-primary" />
           Hey, stell dich kurz vor 👋
@@ -83,7 +82,7 @@ export function PersonalInfo({ data, onChange, isEditing = true, resumeData, noP
           Deine Basics - damit Recruiter dich kennenlernen können
         </p>
       </CardHeader>
-      <CardContent className={cn("space-y-6", noPadding && "px-0")}>
+      <CardContent className="space-y-6">
         {/* Basic Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* First Name */}

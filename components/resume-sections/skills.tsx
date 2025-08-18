@@ -21,7 +21,6 @@ interface SkillsProps {
   data: Skill[];
   onChange: (data: Skill[]) => void;
   isEditing?: boolean;
-  noPadding?: boolean; // New prop to control padding
 }
 
 const SKILL_CATEGORIES = [
@@ -38,7 +37,7 @@ const SKILL_LEVELS = [
   { value: 'expert', label: 'Experte', icon: '⭐⭐⭐⭐' },
 ];
 
-export function Skills({ data, onChange, isEditing = true, noPadding = false }: SkillsProps) {
+export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [newSkill, setNewSkill] = useState<Partial<Skill>>({
@@ -173,17 +172,17 @@ export function Skills({ data, onChange, isEditing = true, noPadding = false }: 
   };
 
   return (
-    <Card className={cn("w-full", noPadding && "border-0 shadow-none")}>
-      <CardHeader className={cn(noPadding && "px-0 pt-0")}>
+    <Card className="w-full">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-primary" />
-          Fähigkeiten & Skills ⚡
+          Fähigkeiten & Skills 💪
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Deine Stärken - von technischen Skills bis Soft Skills
+          Zeig, was du drauf hast - von Tech bis Teamwork
         </p>
       </CardHeader>
-      <CardContent className={cn("space-y-6", noPadding && "px-0")}>
+             <CardContent className="space-y-6">
          {(Array.isArray(data) ? data.length : 0) === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Zap className="h-12 w-12 mx-auto mb-4 opacity-50" />

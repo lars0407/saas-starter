@@ -27,10 +27,9 @@ interface EducationProps {
   data: EducationEntry[];
   onChange: (data: EducationEntry[]) => void;
   isEditing?: boolean;
-  noPadding?: boolean; // New prop to control padding
 }
 
-export function Education({ data, onChange, isEditing = true, noPadding = false }: EducationProps) {
+export function Education({ data, onChange, isEditing = true }: EducationProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -102,8 +101,8 @@ export function Education({ data, onChange, isEditing = true, noPadding = false 
   };
 
   return (
-    <Card className={cn("w-full", noPadding && "border-0 shadow-none")}>
-      <CardHeader className={cn(noPadding && "px-0 pt-0")}>
+    <Card className="w-full">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GraduationCap className="h-5 w-5 text-primary" />
           Ausbildung 🎓
@@ -112,7 +111,7 @@ export function Education({ data, onChange, isEditing = true, noPadding = false 
           Deine Bildungsstationen - von Schule bis Uni
         </p>
       </CardHeader>
-      <CardContent className={cn("space-y-6", noPadding && "px-0")}>
+      <CardContent className="space-y-6">
         {data.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <GraduationCap className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -304,7 +303,7 @@ export function Education({ data, onChange, isEditing = true, noPadding = false 
                       type="month"
                       value={entry.endDate}
                       onChange={(e) => updateEducation(entry.id, 'endDate', e.target.value)}
-                      disabled={!isEditing}
+                      disabled={!isEditing || entry.current}
                       className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                       min="1900-01"
                       max="2100-12"
@@ -313,6 +312,8 @@ export function Education({ data, onChange, isEditing = true, noPadding = false 
                       Format: MM/YYYY
                     </p>
                   </div>
+
+
                 </div>
 
                 {/* Description */}
@@ -350,4 +351,4 @@ export function Education({ data, onChange, isEditing = true, noPadding = false 
       </CardContent>
     </Card>
   );
-}
+} 

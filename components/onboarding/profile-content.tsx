@@ -262,7 +262,6 @@ export function ProfileContent({
               data={personalInfo} 
               onChange={handlePersonalInfoChange} 
               isEditing={true} 
-              noPadding={true}
             />
           </div>
 
@@ -278,7 +277,6 @@ export function ProfileContent({
               data={education} 
               onChange={handleEducationChange} 
               isEditing={true} 
-              noPadding={true}
             />
           </div>
 
@@ -294,7 +292,6 @@ export function ProfileContent({
               data={experience} 
               onChange={handleExperienceChange} 
               isEditing={true} 
-              noPadding={true}
             />
           </div>
 
@@ -310,7 +307,6 @@ export function ProfileContent({
               data={skills} 
               onChange={handleSkillsChange} 
               isEditing={true} 
-              noPadding={true}
             />
           </div>
         </div>
