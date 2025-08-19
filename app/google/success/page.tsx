@@ -14,31 +14,38 @@ function GoogleSuccessContent() {
   // Get the values from search params
   const token = searchParams.get('token')
   const error = searchParams.get('error')
+  const message = searchParams.get('message')
   const name = searchParams.get('name')
   const email = searchParams.get('email')
 
   // Determine status and message
   let status: 'loading' | 'success' | 'error'
-  let message = ''
+  let displayMessage = ''
 
   if (error) {
     status = 'error'
-    switch (error) {
-      case 'missing_code':
-        message = 'OAuth code fehlt. Bitte versuchen Sie es erneut.'
-        break
-      case 'auth_failed':
-        message = 'Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.'
-        break
-      case 'oauth_failed':
-        message = 'Google OAuth fehlgeschlagen. Bitte versuchen Sie es erneut.'
-        break
-      default:
-        message = 'Ein unbekannter Fehler ist aufgetreten.'
+    if (message) {
+      // Use the detailed error message from the URL
+      displayMessage = decodeURIComponent(message)
+    } else {
+      // Fallback to generic error messages
+      switch (error) {
+        case 'missing_code':
+          displayMessage = 'OAuth code fehlt. Bitte versuchen Sie es erneut.'
+          break
+        case 'auth_failed':
+          displayMessage = 'Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.'
+          break
+        case 'oauth_failed':
+          displayMessage = 'Google OAuth fehlgeschlagen. Bitte versuchen Sie es erneut.'
+          break
+        default:
+          displayMessage = 'Ein unbekannter Fehler ist aufgetreten.'
+      }
     }
   } else if (token) {
     status = 'success'
-    message = `Willkommen ${name || 'zurück'}! Sie werden in Kürze weitergeleitet...`
+    displayMessage = `Willkommen ${name || 'zurück'}! Sie werden in Kürze weitergeleitet...`
     
     // Redirect to dashboard after a short delay
     setTimeout(() => {
@@ -47,7 +54,7 @@ function GoogleSuccessContent() {
   } else {
     // Default to loading state if no token and no error
     status = 'loading'
-    message = 'Authentifizierung wird verarbeitet...'
+    displayMessage = 'Authentifizierung wird verarbeitet...'
   }
 
   const handleRetry = () => {
@@ -78,7 +85,7 @@ function GoogleSuccessContent() {
               {status === 'error' && 'Authentifizierung fehlgeschlagen'}
             </CardTitle>
             <CardDescription>
-              {message}
+              {displayMessage}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">

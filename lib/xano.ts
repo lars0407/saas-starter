@@ -117,8 +117,20 @@ export const updateProfile = async (token: string, profileId: number, profileDat
 
 // Google OAuth functions
 export const initiateGoogleOAuth = async (redirectUri: string) => {
-  const res = await xanoGoogleOAuth.get(`/oauth/google/init?redirect_uri=${encodeURIComponent(redirectUri)}`);
-  return res.data;
+  try {
+    console.log('Calling Xano Google OAuth init with redirect_uri:', redirectUri);
+    const res = await xanoGoogleOAuth.get(`/oauth/google/init?redirect_uri=${encodeURIComponent(redirectUri)}`);
+    console.log('Xano response status:', res.status);
+    console.log('Xano response data:', res.data);
+    return res.data;
+  } catch (error: any) {
+    console.error('Error calling Xano Google OAuth init:', error);
+    if (error.response) {
+      console.error('Error response:', error.response.data);
+      console.error('Error status:', error.response.status);
+    }
+    throw error;
+  }
 };
 
 export const continueGoogleOAuth = async (code: string, redirectUri: string) => {
