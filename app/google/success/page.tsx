@@ -20,6 +20,49 @@ function GoogleSuccessContent() {
   const code = searchParams.get('code') // Google OAuth code
   const state = searchParams.get('state') // Google OAuth state
 
+  // Process Google OAuth code - declare before use
+  const processGoogleOAuth = async (code: string, state: string | null) => {
+    try {
+      console.log('Processing Google OAuth code:', code)
+      
+      // Call Xano API to complete OAuth
+      const redirectUri = 'https://app.jobjaeger.de/google/success/'
+      const apiUrl = `https://api.jobjaeger.de/api:U0aE1wpF/oauth/google/continue`
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code,
+          state,
+          redirect_uri: redirectUri
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      console.log('OAuth completion response:', data)
+      
+      if (data.token) {
+        // Success - redirect to main app
+        console.log('OAuth successful, redirecting to main app')
+        window.location.href = 'https://app.jobjaeger.de/'
+      } else {
+        throw new Error('No token received from OAuth completion')
+      }
+      
+    } catch (error) {
+      console.error('Error processing OAuth:', error)
+      // Redirect to error page
+      window.location.href = `/google/success?error=oauth_failed&message=${encodeURIComponent(error instanceof Error ? error.message : String(error))}`
+    }
+  }
+
   // Determine status and message
   let status: 'loading' | 'success' | 'error'
   let displayMessage = ''
@@ -72,49 +115,6 @@ function GoogleSuccessContent() {
 
   const handleGoToDashboard = () => {
     router.push('/dashboard/job-search')
-  }
-
-  // Process Google OAuth code
-  const processGoogleOAuth = async (code: string, state: string | null) => {
-    try {
-      console.log('Processing Google OAuth code:', code)
-      
-      // Call Xano API to complete OAuth
-      const redirectUri = 'https://app.jobjaeger.de/google/success/'
-      const apiUrl = `https://api.jobjaeger.de/api:U0aE1wpF/oauth/google/continue`
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code,
-          state,
-          redirect_uri: redirectUri
-        })
-      })
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-      
-      const data = await response.json()
-      console.log('OAuth completion response:', data)
-      
-      if (data.token) {
-        // Success - redirect to main app
-        console.log('OAuth successful, redirecting to main app')
-        window.location.href = 'https://app.jobjaeger.de/'
-      } else {
-        throw new Error('No token received from OAuth completion')
-      }
-      
-    } catch (error) {
-      console.error('Error processing OAuth:', error)
-      // Redirect to error page
-      window.location.href = `/google/success?error=oauth_failed&message=${encodeURIComponent(error instanceof Error ? error.message : String(error))}`
-    }
   }
 
   return (
