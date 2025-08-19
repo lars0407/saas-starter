@@ -27,7 +27,7 @@ export function GoogleOAuthButton({
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       const redirectUri = isLocalhost 
         ? `${window.location.origin}/google/success`
-        : 'http://www.app.jobjaeger.de/google/success'
+        : 'https://app.jobjaeger.de/google/success/'
       
       console.log('Using redirect_uri:', redirectUri)
       

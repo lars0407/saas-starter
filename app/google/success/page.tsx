@@ -17,6 +17,8 @@ function GoogleSuccessContent() {
   const message = searchParams.get('message')
   const name = searchParams.get('name')
   const email = searchParams.get('email')
+  const code = searchParams.get('code') // Google OAuth code
+  const state = searchParams.get('state') // Google OAuth state
 
   // Determine status and message
   let status: 'loading' | 'success' | 'error'
@@ -43,6 +45,13 @@ function GoogleSuccessContent() {
           displayMessage = 'Ein unbekannter Fehler ist aufgetreten.'
       }
     }
+  } else if (code) {
+    // Google OAuth code received - process it
+    status = 'loading'
+    displayMessage = 'Google OAuth wird verarbeitet...'
+    
+    // Process the OAuth code
+    processGoogleOAuth(code, state)
   } else if (token) {
     status = 'success'
     displayMessage = `Willkommen ${name || 'zurück'}! Sie werden in Kürze weitergeleitet...`
@@ -63,6 +72,49 @@ function GoogleSuccessContent() {
 
   const handleGoToDashboard = () => {
     router.push('/dashboard/job-search')
+  }
+
+  // Process Google OAuth code
+  const processGoogleOAuth = async (code: string, state: string | null) => {
+    try {
+      console.log('Processing Google OAuth code:', code)
+      
+      // Call Xano API to complete OAuth
+      const redirectUri = 'https://app.jobjaeger.de/google/success/'
+      const apiUrl = `https://api.jobjaeger.de/api:U0aE1wpF/oauth/google/continue`
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code,
+          state,
+          redirect_uri: redirectUri
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      console.log('OAuth completion response:', data)
+      
+      if (data.token) {
+        // Success - redirect to main app
+        console.log('OAuth successful, redirecting to main app')
+        window.location.href = 'https://app.jobjaeger.de/'
+      } else {
+        throw new Error('No token received from OAuth completion')
+      }
+      
+    } catch (error) {
+      console.error('Error processing OAuth:', error)
+      // Redirect to error page
+      window.location.href = `/google/success?error=oauth_failed&message=${encodeURIComponent(error instanceof Error ? error.message : String(error))}`
+    }
   }
 
   return (

@@ -134,7 +134,10 @@ export const initiateGoogleOAuth = async (redirectUri: string) => {
 };
 
 export const continueGoogleOAuth = async (code: string, redirectUri: string) => {
-  const res = await xanoGoogleOAuth.get(`/oauth/google/continue?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`);
+  const res = await xanoGoogleOAuth.post(`/oauth/google/continue`, {
+    code,
+    redirect_uri: redirectUri
+  });
   return res.data;
 };
 
