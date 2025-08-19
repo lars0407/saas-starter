@@ -43,7 +43,15 @@ function GoogleSuccessContent() {
       const data = await response.json()
       
       if (data.token) {
-        // Success - redirect to dashboard
+        // Success - save token and redirect to dashboard
+        // Save token to localStorage like email login
+        localStorage.setItem('authToken', data.token)
+        
+        // Also save user info if available
+        if (data.name) localStorage.setItem('userName', data.name)
+        if (data.email) localStorage.setItem('userEmail', data.email)
+        
+        // Redirect to dashboard
         window.location.href = 'https://app.jobjaeger.de/dashboard/job-search'
       } else {
         throw new Error('No token received from OAuth completion')
