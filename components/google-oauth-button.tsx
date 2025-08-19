@@ -65,13 +65,24 @@ export function GoogleOAuthButton({
       }
       
       // Look for OAuth URL in response
-      const oauthUrl = responseData.url || responseData.oauth_url || responseData.google_url || responseData.redirect_url || responseData.auth_url
+      const oauthUrl = responseData.authUrl || responseData.url || responseData.oauth_url || responseData.google_url || responseData.redirect_url || responseData.auth_url
       
       if (oauthUrl) {
         console.log('Found OAuth URL, redirecting to:', oauthUrl)
-        window.location.href = oauthUrl
+        console.log('Current window.location:', window.location.href)
+        
+        // Try to redirect to the Google OAuth URL
+        try {
+          window.location.href = oauthUrl
+          console.log('Redirect initiated to:', oauthUrl)
+        } catch (redirectError) {
+          console.error('Error during redirect:', redirectError)
+          // Fallback: try to open in new window/tab
+          window.open(oauthUrl, '_self')
+        }
       } else {
         console.error('No OAuth URL found in response')
+        console.log('Available response fields:', Object.keys(responseData))
         throw new Error(`No OAuth URL found. Response: ${JSON.stringify(responseData)}`)
       }
       
