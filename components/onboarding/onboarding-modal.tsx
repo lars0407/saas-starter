@@ -747,9 +747,9 @@ export function OnboardingModal({
           </div>
         </div>
         
-        <div className="relative p-2 rounded-b-2xl max-h-[calc(80vh-120px)]">
-          {/* Form Content */}
-          <div className="mt-2 mb-6 px-4">
+        <div className="relative p-2 rounded-b-2xl max-h-[calc(80vh-120px)] overflow-hidden">
+          {/* Form Content - Scrollable */}
+          <div className="mt-2 mb-6 px-4 overflow-y-auto max-h-[calc(80vh-200px)]">
             <StepContent
               step={currentStep}
               firstName={firstName}
@@ -773,8 +773,8 @@ export function OnboardingModal({
             />
           </div>
 
-          {/* Action Button */}
-          <div className="flex justify-center">
+          {/* Action Button - Fixed at bottom */}
+          <div className="flex justify-center pt-2 border-t border-gray-100">
             {!isLoading && currentStep !== 3 && currentStep !== 4 && currentStep !== 5 && currentStep !== 6 && currentStep !== 7 && currentStep !== 8 && currentStep !== 9 && (
               <Button
                 onClick={handleContinue}
