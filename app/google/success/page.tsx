@@ -45,8 +45,9 @@ function GoogleSuccessContent() {
       router.push('/dashboard/job-search')
     }, 2000)
   } else {
-    status = 'error'
-    message = 'Keine Authentifizierungsdaten erhalten.'
+    // Default to loading state if no token and no error
+    status = 'loading'
+    message = 'Authentifizierung wird verarbeitet...'
   }
 
   const handleRetry = () => {
