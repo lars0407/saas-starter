@@ -48,6 +48,9 @@ function GoogleSuccessContent() {
     message = 'Keine Authentifizierungsdaten erhalten.'
   }
 
+  // Ensure status is properly typed for TypeScript
+  const currentStatus: 'loading' | 'success' | 'error' = status
+
   const handleRetry = () => {
     router.push('/sign-in')
   }
@@ -66,21 +69,21 @@ function GoogleSuccessContent() {
         <Card>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              {status === 'loading' && <Loader2 className="h-12 w-12 animate-spin text-primary" />}
-              {status === 'success' && <CheckCircle className="h-12 w-12 text-green-500" />}
-              {status === 'error' && <XCircle className="h-12 w-12 text-red-500" />}
+              {currentStatus === 'loading' && <Loader2 className="h-12 w-12 animate-spin text-primary" />}
+              {currentStatus === 'success' && <CheckCircle className="h-12 w-12 text-green-500" />}
+              {currentStatus === 'error' && <XCircle className="h-12 w-12 text-red-500" />}
             </div>
             <CardTitle className="text-xl">
-              {status === 'loading' && 'Authentifizierung läuft...'}
-              {status === 'success' && 'Erfolgreich angemeldet!'}
-              {status === 'error' && 'Authentifizierung fehlgeschlagen'}
+              {currentStatus === 'loading' && 'Authentifizierung läuft...'}
+              {currentStatus === 'success' && 'Erfolgreich angemeldet!'}
+              {currentStatus === 'error' && 'Authentifizierung fehlgeschlagen'}
             </CardTitle>
             <CardDescription>
               {message}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            {status === 'error' && (
+            {currentStatus === 'error' && (
               <div className="flex flex-col gap-3">
                 <Button onClick={handleRetry} className="w-full">
                   Erneut versuchen
@@ -90,7 +93,7 @@ function GoogleSuccessContent() {
                 </Button>
               </div>
             )}
-            {status === 'success' && (
+            {currentStatus === 'success' && (
               <Button onClick={handleGoToDashboard} className="w-full">
                 Zum Dashboard
               </Button>
