@@ -43,13 +43,9 @@ function GoogleSuccessContent() {
       const data = await response.json()
       
       if (data.token) {
-        // Success - save token and redirect to dashboard
-        // Save token to localStorage like email login
-        localStorage.setItem('authToken', data.token)
-        
-        // Also save user info if available
-        if (data.name) localStorage.setItem('userName', data.name)
-        if (data.email) localStorage.setItem('userEmail', data.email)
+        // Success - save token as cookie and redirect to dashboard
+        // Set the token as a cookie
+        document.cookie = `token=${data.token}; path=/; secure; samesite=strict; max-age=${3600 * 24 * 30}`; // Set for 30 days
         
         // Redirect to dashboard
         window.location.href = 'https://app.jobjaeger.de/dashboard/job-search'
