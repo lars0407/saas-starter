@@ -25,9 +25,9 @@ function GoogleSuccessContent() {
     try {
       console.log('Processing Google OAuth code:', code)
       
-      // Call Xano API to complete OAuth
+      // Call Xano API to complete OAuth and get auth token
       const redirectUri = 'https://app.jobjaeger.de/google/success/'
-      const apiUrl = `https://api.jobjaeger.de/api:U0aE1wpF/oauth/google/continue`
+      const apiUrl = `https://api.jobjaeger.de/api:U0aE1wpF/oauth/google/login`
       
       const response = await fetch(apiUrl, {
         method: 'POST',
