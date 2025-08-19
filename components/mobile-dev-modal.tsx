@@ -14,13 +14,27 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 const MOBILE_MODAL_KEY = "mobile_dev_modal_shown"
 
+// Helper function to check if user is authenticated
+const isAuthenticated = (): boolean => {
+  if (typeof window === 'undefined') return false
+  
+  try {
+    return document.cookie
+      .split('; ')
+      .find(row => row.startsWith('token='))
+      ?.split('=')[1] !== undefined
+  } catch (error) {
+    return false
+  }
+}
+
 export function MobileDevModal() {
   const [isOpen, setIsOpen] = useState(false)
   const isMobile = useIsMobile()
 
   useEffect(() => {
-    // Only show on mobile devices
-    if (!isMobile) return
+    // Only show on mobile devices AND for authenticated users
+    if (!isMobile || !isAuthenticated()) return
 
     // Check if modal has been shown before
     const hasBeenShown = localStorage.getItem(MOBILE_MODAL_KEY)
@@ -41,7 +55,8 @@ export function MobileDevModal() {
     localStorage.setItem(MOBILE_MODAL_KEY, "true")
   }
 
-  if (!isMobile) return null
+  // Don't render anything if not mobile or not authenticated
+  if (!isMobile || !isAuthenticated()) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
