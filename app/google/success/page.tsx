@@ -39,7 +39,7 @@ function GoogleSuccessContent() {
       
       // Call Xano API to complete OAuth and get auth token
       const redirectUri = 'https://app.jobjaeger.de/google/success/'
-      const apiUrl = `https://api.jobjaeger.de/api:U0aE1wpF/oauth/google/login`
+      const apiUrl = `https://api.jobjaeger.de/api:U0aE1wpF/oauth/google/continue`
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -48,7 +48,6 @@ function GoogleSuccessContent() {
         },
         body: JSON.stringify({
           code,
-          state,
           redirect_uri: redirectUri
         })
       })
@@ -61,15 +60,15 @@ function GoogleSuccessContent() {
       console.log('OAuth completion response:', data)
       
       if (data.token) {
-        // Success - redirect to main app
-        console.log('OAuth successful, redirecting to main app')
+        // Success - redirect to dashboard
+        console.log('OAuth successful, redirecting to dashboard')
         
         // Show success message before redirect
-        alert('Google OAuth erfolgreich! Weiterleitung zur Hauptseite...')
+        alert('Google OAuth erfolgreich! Weiterleitung zum Dashboard...')
         
         // Delay redirect to see logs
         setTimeout(() => {
-          window.location.href = 'https://app.jobjaeger.de/'
+          window.location.href = 'https://app.jobjaeger.de/dashboard/job-search'
         }, 3000)
       } else {
         throw new Error('No token received from OAuth completion')
@@ -94,29 +93,7 @@ function GoogleSuccessContent() {
 
   console.log('Determining status...')
 
-  if (error) {
-    console.log('Status: ERROR')
-    status = 'error'
-    if (message) {
-      // Use the detailed error message from the URL
-      displayMessage = decodeURIComponent(message)
-    } else {
-      // Fallback to generic error messages
-      switch (error) {
-        case 'missing_code':
-          displayMessage = 'OAuth code fehlt. Bitte versuchen Sie es erneut.'
-          break
-        case 'auth_failed':
-          displayMessage = 'Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.'
-          break
-        case 'oauth_failed':
-          displayMessage = 'Google OAuth fehlgeschlagen. Bitte versuchen Sie es erneut.'
-          break
-        default:
-          displayMessage = 'Ein unbekannter Fehler ist aufgetreten.'
-      }
-    }
-  } else if (code) {
+  if (code) {
     console.log('Status: CODE RECEIVED - Processing OAuth')
     // Google OAuth code received - process it
     status = 'loading'
@@ -160,28 +137,16 @@ function GoogleSuccessContent() {
             <div className="flex justify-center mb-4">
               {status === 'loading' && <Loader2 className="h-12 w-12 animate-spin text-primary" />}
               {status === 'success' && <CheckCircle className="h-12 w-12 text-green-500" />}
-              {status === 'error' && <XCircle className="h-12 w-12 text-red-500" />}
             </div>
             <CardTitle className="text-xl">
               {status === 'loading' && 'Authentifizierung läuft...'}
               {status === 'success' && 'Erfolgreich angemeldet!'}
-              {status === 'error' && 'Authentifizierung fehlgeschlagen'}
             </CardTitle>
             <CardDescription>
               {displayMessage}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            {status === 'error' && (
-              <div className="flex flex-col gap-3">
-                <Button onClick={handleRetry} className="w-full">
-                  Erneut versuchen
-                </Button>
-                <Button variant="outline" onClick={() => router.push('/sign-in')} className="w-full">
-                  Zurück zur Anmeldung
-                </Button>
-              </div>
-            )}
             {status === 'success' && (
               <Button onClick={handleGoToDashboard} className="w-full">
                 Zum Dashboard
