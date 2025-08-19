@@ -20,6 +20,18 @@ function GoogleSuccessContent() {
   const code = searchParams.get('code') // Google OAuth code
   const state = searchParams.get('state') // Google OAuth state
 
+  // Debug: Log all search params
+  console.log('Search params:', {
+    token,
+    error,
+    message,
+    name,
+    email,
+    code,
+    state,
+    allParams: Object.fromEntries(searchParams.entries())
+  })
+
   // Process Google OAuth code - declare before use
   const processGoogleOAuth = async (code: string, state: string | null) => {
     try {
@@ -51,15 +63,28 @@ function GoogleSuccessContent() {
       if (data.token) {
         // Success - redirect to main app
         console.log('OAuth successful, redirecting to main app')
-        window.location.href = 'https://app.jobjaeger.de/'
+        
+        // Show success message before redirect
+        alert('Google OAuth erfolgreich! Weiterleitung zur Hauptseite...')
+        
+        // Delay redirect to see logs
+        setTimeout(() => {
+          window.location.href = 'https://app.jobjaeger.de/'
+        }, 3000)
       } else {
         throw new Error('No token received from OAuth completion')
       }
       
     } catch (error) {
       console.error('Error processing OAuth:', error)
-      // Redirect to error page
-      window.location.href = `/google/success?error=oauth_failed&message=${encodeURIComponent(error instanceof Error ? error.message : String(error))}`
+      
+      // Show error message before redirect
+      alert(`OAuth Fehler: ${error instanceof Error ? error.message : String(error)}`)
+      
+      // Delay redirect to see logs
+      setTimeout(() => {
+        window.location.href = `/google/success?error=oauth_failed&message=${encodeURIComponent(error instanceof Error ? error.message : String(error))}`
+      }, 3000)
     }
   }
 
@@ -67,7 +92,10 @@ function GoogleSuccessContent() {
   let status: 'loading' | 'success' | 'error'
   let displayMessage = ''
 
+  console.log('Determining status...')
+
   if (error) {
+    console.log('Status: ERROR')
     status = 'error'
     if (message) {
       // Use the detailed error message from the URL
@@ -89,6 +117,7 @@ function GoogleSuccessContent() {
       }
     }
   } else if (code) {
+    console.log('Status: CODE RECEIVED - Processing OAuth')
     // Google OAuth code received - process it
     status = 'loading'
     displayMessage = 'Google OAuth wird verarbeitet...'
@@ -96,6 +125,7 @@ function GoogleSuccessContent() {
     // Process the OAuth code
     processGoogleOAuth(code, state)
   } else if (token) {
+    console.log('Status: TOKEN RECEIVED - Success')
     status = 'success'
     displayMessage = `Willkommen ${name || 'zurück'}! Sie werden in Kürze weitergeleitet...`
     
@@ -104,6 +134,7 @@ function GoogleSuccessContent() {
       router.push('/dashboard/job-search')
     }, 2000)
   } else {
+    console.log('Status: DEFAULT - Loading')
     // Default to loading state if no token and no error
     status = 'loading'
     displayMessage = 'Authentifizierung wird verarbeitet...'
