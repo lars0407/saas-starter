@@ -6,6 +6,12 @@ export const xano = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// Google OAuth API
+export const xanoGoogleOAuth = axios.create({
+  baseURL: "https://api.jobjaeger.de/api:U0aE1wpF",
+  headers: { "Content-Type": "application/json" },
+});
+
 // Jobtracker API
 export const xanoJobtracker = axios.create({
   baseURL: "https://api.jobjaeger.de/api:9BqVCxJj",
@@ -106,5 +112,26 @@ export const updateProfile = async (token: string, profileId: number, profileDat
     { data: profileData },
     { headers: { Authorization: `Bearer ${token}` } }
   );
+  return res.data;
+}; 
+
+// Google OAuth functions
+export const initiateGoogleOAuth = async (redirectUri: string) => {
+  const res = await xanoGoogleOAuth.get(`/oauth/google/init?redirect_uri=${encodeURIComponent(redirectUri)}`);
+  return res.data;
+};
+
+export const continueGoogleOAuth = async (code: string, redirectUri: string) => {
+  const res = await xanoGoogleOAuth.get(`/oauth/google/continue?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`);
+  return res.data;
+};
+
+export const loginWithGoogle = async (code: string, redirectUri: string) => {
+  const res = await xanoGoogleOAuth.get(`/oauth/google/login?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`);
+  return res.data;
+};
+
+export const signUpWithGoogle = async (code: string, redirectUri: string) => {
+  const res = await xanoGoogleOAuth.get(`/oauth/google/signup?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`);
   return res.data;
 }; 

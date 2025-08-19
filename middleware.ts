@@ -8,6 +8,11 @@ export function middleware(request: NextRequest) {
   const protectedRoutes = ['/dashboard', '/api/user'];
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   
+  // Allow Google OAuth routes
+  if (pathname.startsWith('/api/auth/google') || pathname.startsWith('/google/success')) {
+    return NextResponse.next();
+  }
+  
   if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
