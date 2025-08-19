@@ -14,7 +14,7 @@ export function GoogleOAuthButton({
   className,
   disabled = false 
 }: GoogleOAuthButtonProps) {
-  const handleGoogleOAuth = (e: React.MouseEvent) => {
+  const handleGoogleOAuth = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     
@@ -22,12 +22,64 @@ export function GoogleOAuthButton({
     
     console.log('Google OAuth button clicked')
     
-    // Redirect to our Google OAuth initiation endpoint
-    const redirectUri = `${window.location.origin}/google/success`
-    const oauthUrl = `/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`
-    
-    console.log('Redirecting to:', oauthUrl)
-    window.location.href = oauthUrl
+    try {
+      // Use the correct redirect URI based on environment
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      const redirectUri = isLocalhost 
+        ? `${window.location.origin}/google/success`
+        : 'http://www.app.jobjaeger.de/google/success'
+      
+      console.log('Using redirect_uri:', redirectUri)
+      
+      // Call Xano API with redirect_uri as query parameter
+      const apiUrl = `https://api.jobjaeger.de/api:U0aE1wpF/oauth/google/init?redirect_uri=${encodeURIComponent(redirectUri)}`
+      
+      console.log('Calling Xano API:', apiUrl)
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      })
+      
+      console.log('Response status:', response.status)
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+      
+      const responseText = await response.text()
+      console.log('Raw response text:', responseText)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      // Parse JSON response
+      let responseData
+      try {
+        responseData = JSON.parse(responseText)
+        console.log('Parsed response:', responseData)
+      } catch (parseError) {
+        console.error('Failed to parse JSON:', parseError)
+        throw new Error(`Invalid JSON response: ${responseText.substring(0, 200)}`)
+      }
+      
+      // Look for OAuth URL in response
+      const oauthUrl = responseData.url || responseData.oauth_url || responseData.google_url || responseData.redirect_url || responseData.auth_url
+      
+      if (oauthUrl) {
+        console.log('Found OAuth URL, redirecting to:', oauthUrl)
+        window.location.href = oauthUrl
+      } else {
+        console.error('No OAuth URL found in response')
+        throw new Error(`No OAuth URL found. Response: ${JSON.stringify(responseData)}`)
+      }
+      
+    } catch (error) {
+      console.error('Error calling Xano API:', error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      window.location.href = `/google/success?error=oauth_failed&message=${encodeURIComponent(errorMessage)}`
+    }
   }
 
   const buttonText = variant === "login" ? "Mit Google anmelden" : "Mit Google registrieren"
