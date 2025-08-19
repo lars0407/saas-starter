@@ -65,24 +65,62 @@ export function GoogleOAuthButton({
       }
       
       // Look for OAuth URL in response
+      console.log('Searching for OAuth URL in response...')
+      console.log('Response data keys:', Object.keys(responseData))
+      console.log('Response data values:', responseData)
+      
       const oauthUrl = responseData.authUrl || responseData.url || responseData.oauth_url || responseData.google_url || responseData.redirect_url || responseData.auth_url
+      
+      console.log('Found OAuth URL:', oauthUrl)
       
       if (oauthUrl) {
         console.log('Found OAuth URL, redirecting to:', oauthUrl)
         console.log('Current window.location:', window.location.href)
         
-        // Try to redirect to the Google OAuth URL
+        // Force redirect to Google OAuth URL
+        console.log('Initiating redirect...')
+        
+        // Try immediate redirect first
         try {
-          window.location.href = oauthUrl
-          console.log('Redirect initiated to:', oauthUrl)
-        } catch (redirectError) {
-          console.error('Error during redirect:', redirectError)
-          // Fallback: try to open in new window/tab
-          window.open(oauthUrl, '_self')
+          console.log('Attempting immediate redirect...')
+          
+          // Method 1: Force redirect with timeout
+          setTimeout(() => {
+            console.log('Executing redirect after timeout...')
+            window.location.href = oauthUrl
+          }, 100)
+          
+          // Method 2: Also try window.open as backup
+          setTimeout(() => {
+            console.log('Trying window.open as backup...')
+            const newWindow = window.open(oauthUrl, '_self')
+            if (!newWindow) {
+              console.error('window.open failed, trying location.replace...')
+              window.location.replace(oauthUrl)
+            }
+          }, 200)
+          
+          console.log('Redirect methods scheduled')
+          
+        } catch (error) {
+          console.error('Redirect error:', error)
+          
+          // Fallback: show manual redirect option
+          const shouldRedirect = window.confirm(
+            `Google OAuth URL gefunden: ${oauthUrl}\n\nMöchten Sie zu Google weitergeleitet werden?`
+          )
+          
+          if (shouldRedirect) {
+            window.location.href = oauthUrl
+          } else {
+            // Show the URL for manual navigation
+            alert(`Bitte navigieren Sie manuell zu:\n${oauthUrl}`)
+          }
         }
       } else {
         console.error('No OAuth URL found in response')
         console.log('Available response fields:', Object.keys(responseData))
+        console.log('Full response data:', responseData)
         throw new Error(`No OAuth URL found. Response: ${JSON.stringify(responseData)}`)
       }
       
