@@ -20,6 +20,34 @@ interface AIAssistantProps {
   };
 }
 
+// Funktion zur Formatierung der Nachrichten
+const formatMessage = (content: string) => {
+  // Ersetze **text** mit <strong>text</strong>
+  let formatted = content.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-800">$1</strong>');
+  
+  // Ersetze *text* mit <em>text</em>
+  formatted = formatted.replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>');
+  
+  // Ersetze - text mit • text für Listen
+  formatted = formatted.replace(/^- (.+)$/gm, '<div class="flex items-start space-x-2 mb-1"><span class="text-green-500 font-bold mt-0.5">•</span><span>$1</span></div>');
+  
+  // Ersetze 1) text mit nummerierte Listen
+  formatted = formatted.replace(/^(\d+\))\s+(.+)$/gm, '<div class="flex items-start space-x-2 mb-1"><span class="font-semibold text-green-600 min-w-[2rem]">$1</span><span>$2</span></div>');
+  
+  // Ersetze Überschriften (Zeilen die mit # beginnen)
+  formatted = formatted.replace(/^# (.+)$/gm, '<h3 class="text-lg font-bold text-gray-800 mb-2 mt-2 border-b border-gray-200 pb-1">$1</h3>');
+  formatted = formatted.replace(/^## (.+)$/gm, '<h4 class="text-base font-semibold text-gray-700 mb-1 mt-1">$1</h4>');
+  
+  // Intelligente Zeilenumbrüche - nur zwischen Absätzen
+  formatted = formatted.replace(/\n\n/g, '</p><p class="mb-2">');
+  formatted = formatted.replace(/\n/g, ' ');
+  
+  // Wrappe den gesamten Inhalt in <p> Tags
+  formatted = `<p class="mb-2">${formatted}</p>`;
+  
+  return formatted;
+};
+
 export default function AIAssistant({ className, context }: AIAssistantProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -300,13 +328,21 @@ export default function AIAssistant({ className, context }: AIAssistantProps) {
                      >
                        <div
                          className={cn(
-                           "max-w-xs px-4 py-2 rounded-2xl text-sm",
+                           message.role === 'user' ? "max-w-xs" : "max-w-md",
+                           "px-4 py-3 rounded-2xl text-sm",
                            message.role === 'user'
                              ? 'bg-green-500 text-white'
-                             : 'bg-gray-100 text-gray-900'
+                             : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
                          )}
                        >
-                         {message.content}
+                         {message.role === 'assistant' ? (
+                           <div 
+                             className="leading-relaxed"
+                             dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
+                           />
+                         ) : (
+                           message.content
+                         )}
                        </div>
                      </div>
                    ))
