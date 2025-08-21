@@ -18,7 +18,20 @@ import { JobDetailComponent } from "@/components/job-search"
 
 export default function JobDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const jobId = parseInt(params.id as string, 10);
+
+  useEffect(() => {
+    // Redirect mobile users to job search page
+    if (window.innerWidth < 1024) { // lg breakpoint
+      router.push('/dashboard/job-search');
+    }
+  }, [router]);
+
+  // Don't render anything on mobile - redirect will happen
+  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+    return null;
+  }
 
   return (
     <>
@@ -32,15 +45,11 @@ export default function JobDetailPage() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="/dashboard">
-                  Dashboard
-                </BreadcrumbLink>
+                <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="/dashboard/job-search">
-                  Jobsuche
-                </BreadcrumbLink>
+                <BreadcrumbLink href="/dashboard/job-search">Jobsuche</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>

@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { Job } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { JobDetailComponent } from "./job-detail-component"
+import { MobileJobDetailDrawer } from "./mobile-job-detail-drawer"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -55,6 +56,9 @@ export function JobSearchComponent() {
   const [isNearBottom, setIsNearBottom] = useState(false)
   const [observerTarget, setObserverTarget] = useState<HTMLDivElement | null>(null)
   const [searchProfileOpen, setSearchProfileOpen] = useState(false)
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   
   // Search Profile State
   const [searchProfile, setSearchProfile] = useState({
@@ -117,6 +121,22 @@ export function JobSearchComponent() {
     
     fetchJobFavourites()
     loadSearchProfile()
+  }, [])
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 1024)
+    }
+    
+    // Check on mount
+    checkIsMobile()
+    
+    // Add event listener for resize
+    window.addEventListener('resize', checkIsMobile)
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIsMobile)
   }, [])
 
   // Load jobs with search profile data after profile is loaded
@@ -1286,6 +1306,15 @@ export function JobSearchComponent() {
 
   const handleJobClick = (jobId: number) => {
     setSelectedJobId(jobId)
+    // Find the job object
+    const job = jobs.find(j => j.id === jobId)
+    if (job) {
+      setSelectedJob(job)
+    }
+    // Open mobile drawer on mobile devices
+    if (isMobile) { // lg breakpoint
+      setMobileDrawerOpen(true)
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -1331,22 +1360,22 @@ export function JobSearchComponent() {
     })
   }
 
-  const selectedJob = jobs.find(job => job.id === selectedJobId)
+
 
   return (
-    <div className="h-screen max-h-screen flex flex-col space-y-6 overflow-hidden">
+    <div className="h-screen max-h-screen flex flex-col space-y-3 md:space-y-6 overflow-hidden min-h-0 pb-4 md:pb-0">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">Jobsuche</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl md:text-3xl font-bold">Jobsuche</h1>
+        <p className="text-sm md:text-base text-muted-foreground hidden sm:block">
           Finde deinen Traumjob mit unseren intelligenten Suchfunktionen
         </p>
       </div>
 
       {/* Search Bar */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4">
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -1383,7 +1412,7 @@ export function JobSearchComponent() {
                   // Delay hiding dropdown to allow clicking on suggestions
                   setTimeout(() => setShowLocationDropdown(false), 200)
                 }}
-                className="pl-10 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:ring-2 focus:ring-opacity-20 focus:outline-none"
+                className="pl-10 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:ring-opacity-20 focus:outline-none"
                 style={{
                   '--tw-ring-color': '#0F973D',
                   '--tw-border-opacity': '1',
@@ -1426,22 +1455,51 @@ export function JobSearchComponent() {
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 px-3 md:px-4 py-2 md:py-2 text-sm md:text-base"
                 >
                   <Filter className="h-4 w-4" />
-                  Filter
+                  <span className="hidden sm:inline">Filter</span>
                 </Button>
               </SheetTrigger>
-                              <SheetContent side="right" className="overflow-y-auto !w-[600px] px-6" style={{ width: '600px', minWidth: '600px', maxWidth: '600px' }}>
-                <SheetHeader className="sticky top-0 bg-white border-b pb-4 z-10">
+                                                <SheetContent
+                    side={isMobile ? "bottom" : "right"}
+                    className={cn(
+                      "overflow-y-auto",
+                      isMobile
+                        ? "h-[90vh] max-h-[90vh] w-full rounded-t-xl border-t-4 border-t-[#0F973D] px-4"
+                        : "!w-[600px] px-6"
+                    )}
+                    style={isMobile ? {} : { width: '600px', minWidth: '600px', maxWidth: '600px' }}
+                  >
+                <SheetHeader className={cn(
+                  "sticky top-0 bg-white border-b pb-4 z-10",
+                  isMobile ? "pb-3" : "pb-4"
+                )}>
                   <div className="flex items-center justify-between">
-                    <SheetTitle className="flex items-center gap-2">
+                    <SheetTitle className={cn(
+                      "flex items-center gap-2",
+                      isMobile ? "text-lg" : "text-xl"
+                    )}>
                       <Settings className="h-5 w-5 text-[#0F973D]" />
-                      Suchprofil & Filter
+                      <span className={isMobile ? "text-base" : "text-xl"}>
+                        {isMobile ? "Filter" : "Suchprofil & Filter"}
+                      </span>
                     </SheetTitle>
-                                        <Button
-                      className="bg-[#0F973D] hover:bg-[#0F973D]/90"
-                      onClick={async () => {
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSearchProfileOpen(false)}
+                        className="h-9 w-9 p-0 rounded-full hover:bg-gray-100"
+                      >
+                        <X className="h-5 w-5 stroke-2" />
+                      </Button>
+                      <Button
+                        className={cn(
+                          "bg-[#0F973D] hover:bg-[#0F973D]/90",
+                          isMobile ? "px-3 py-2 text-sm" : "px-4 py-2"
+                        )}
+                        onClick={async () => {
                         console.log('Saving search profile:', searchProfile);
                         
                         // Save search profile to API
@@ -1477,21 +1535,31 @@ export function JobSearchComponent() {
                       <Save className="h-4 w-4 mr-2" />
                       Speichern
                     </Button>
+                    </div>
                   </div>
                 </SheetHeader>
-                <div className="space-y-6 mt-6">
+                <div className={cn(
+                  "mt-6",
+                  isMobile ? "space-y-4" : "space-y-6"
+                )}>
                   
                   {/* Job Title */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
+                    <CardHeader className={isMobile ? "pb-3" : "pb-6"}>
+                      <CardTitle className={cn(
+                        "flex items-center gap-2",
+                        isMobile ? "text-base" : "text-lg"
+                      )}>
                         <Briefcase className="h-5 w-5 text-[#0F973D]" />
                         Job Titel
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className={cn(
+                      "space-y-4",
+                      isMobile ? "px-4 pb-4" : "px-6 pb-6"
+                    )}>
                       <div className="space-y-2">
-                        <Label>Job Titel</Label>
+                        <Label className={isMobile ? "text-sm" : "text-base"}>Job Titel</Label>
                         <Input
                           id="jobTitle"
                           placeholder="Job Titel eingeben..."
@@ -1501,7 +1569,10 @@ export function JobSearchComponent() {
                               jobTitle: e.target.value 
                             });
                           }}
-                          className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:outline-none"
+                          className={cn(
+                            "focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:outline-none",
+                            isMobile ? "py-2 text-sm" : "py-2 text-base"
+                          )}
                           style={{
                             '--tw-ring-color': '#0F973D',
                             '--tw-border-opacity': '1',
@@ -1514,15 +1585,27 @@ export function JobSearchComponent() {
 
                   {/* Job Type */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
+                    <CardHeader className={isMobile ? "pb-3" : "pb-6"}>
+                      <CardTitle className={cn(
+                        "flex items-center gap-2",
+                        isMobile ? "text-base" : "text-lg"
+                      )}>
                         <Briefcase className="h-5 w-5 text-[#0F973D]" />
                         Job Type
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-2">
+                    <CardContent className={cn(
+                      "space-y-4",
+                      isMobile ? "px-4 pb-4" : "px-6 pb-6"
+                    )}>
+                      <div className={cn(
+                        "space-y-3",
+                        isMobile ? "space-y-2" : "space-y-3"
+                      )}>
+                        <div className={cn(
+                          "flex items-center space-x-2",
+                          isMobile ? "py-1" : "py-0"
+                        )}>
                           <Switch
                             checked={searchProfile.jobType.fullTime}
                             onCheckedChange={(checked: boolean) => {
@@ -1535,9 +1618,12 @@ export function JobSearchComponent() {
                             }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
-                          <Label>Vollzeit</Label>
+                          <Label className={isMobile ? "text-sm" : "text-base"}>Vollzeit</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className={cn(
+                          "flex items-center space-x-2",
+                          isMobile ? "py-1" : "py-0"
+                        )}>
                           <Switch
                             checked={searchProfile.jobType.partTime}
                             onCheckedChange={(checked: boolean) => {
@@ -1550,9 +1636,12 @@ export function JobSearchComponent() {
                             }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
-                          <Label>Teilzeit</Label>
+                          <Label className={isMobile ? "text-sm" : "text-base"}>Teilzeit</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className={cn(
+                          "flex items-center space-x-2",
+                          isMobile ? "py-1" : "py-0"
+                        )}>
                           <Switch
                             checked={searchProfile.jobType.temporary}
                             onCheckedChange={(checked: boolean) => {
@@ -1565,9 +1654,12 @@ export function JobSearchComponent() {
                             }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
-                          <Label>Befristet</Label>
+                          <Label className={isMobile ? "text-sm" : "text-base"}>Befristet</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className={cn(
+                          "flex items-center space-x-2",
+                          isMobile ? "py-1" : "py-0"
+                        )}>
                           <Switch
                             checked={searchProfile.jobType.contract}
                             onCheckedChange={(checked: boolean) => {
@@ -1580,9 +1672,12 @@ export function JobSearchComponent() {
                             }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
-                          <Label>Vertrag</Label>
+                          <Label className={isMobile ? "text-sm" : "text-base"}>Vertrag</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className={cn(
+                          "flex items-center space-x-2",
+                          isMobile ? "py-1" : "py-0"
+                        )}>
                           <Switch
                             checked={searchProfile.jobType.internship}
                             onCheckedChange={(checked: boolean) => {
@@ -1595,7 +1690,7 @@ export function JobSearchComponent() {
                             }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
-                          <Label>Praktikum</Label>
+                          <Label className={isMobile ? "text-sm" : "text-base"}>Praktikum</Label>
                         </div>
                       </div>
                     </CardContent>
@@ -1603,15 +1698,27 @@ export function JobSearchComponent() {
 
                   {/* Work Model */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
+                    <CardHeader className={isMobile ? "pb-3" : "pb-6"}>
+                      <CardTitle className={cn(
+                        "flex items-center gap-2",
+                        isMobile ? "text-base" : "text-lg"
+                      )}>
                         <Globe className="h-5 w-5 text-[#0F973D]" />
                         Arbeitsmodell
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-2">
+                    <CardContent className={cn(
+                      "space-y-4",
+                      isMobile ? "px-4 pb-4" : "px-6 pb-6"
+                    )}>
+                      <div className={cn(
+                        "space-y-3",
+                        isMobile ? "space-y-2" : "space-y-3"
+                      )}>
+                        <div className={cn(
+                          "flex items-center space-x-2",
+                          isMobile ? "py-1" : "py-0"
+                        )}>
                           <Switch
                             checked={searchProfile.workModel.onsite}
                             onCheckedChange={(checked: boolean) => {
@@ -1624,9 +1731,12 @@ export function JobSearchComponent() {
                             }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
-                          <Label>Vor Ort</Label>
+                          <Label className={isMobile ? "text-sm" : "text-base"}>Vor Ort</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className={cn(
+                          "flex items-center space-x-2",
+                          isMobile ? "py-1" : "py-0"
+                        )}>
                           <Switch
                             checked={searchProfile.workModel.remote}
                             onCheckedChange={(checked: boolean) => {
@@ -1640,9 +1750,12 @@ export function JobSearchComponent() {
                             }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
-                          <Label>Remote (State: {searchProfile.workModel.remote ? 'true' : 'false'})</Label>
+                          <Label className={isMobile ? "text-sm" : "text-base"}>Remote</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className={cn(
+                          "flex items-center space-x-2",
+                          isMobile ? "py-1" : "py-0"
+                        )}>
                           <Switch
                             checked={searchProfile.workModel.hybrid}
                             onCheckedChange={(checked: boolean) => {
@@ -1655,7 +1768,7 @@ export function JobSearchComponent() {
                             }}
                             className="data-[state=checked]:bg-[#0F973D]"
                           />
-                          <Label>Hybrid</Label>
+                          <Label className={isMobile ? "text-sm" : "text-base"}>Hybrid</Label>
                         </div>
                       </div>
                     </CardContent>
@@ -1663,15 +1776,24 @@ export function JobSearchComponent() {
 
                   {/* Location */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
+                    <CardHeader className={isMobile ? "pb-3" : "pb-6"}>
+                      <CardTitle className={cn(
+                        "flex items-center gap-2",
+                        isMobile ? "text-base" : "text-lg"
+                      )}>
                         <MapPin className="h-5 w-5 text-[#0F973D]" />
                         Standort
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Standort</Label>
+                    <CardContent className={cn(
+                      "space-y-4",
+                      isMobile ? "px-4 pb-4" : "px-6 pb-6"
+                    )}>
+                      <div className={cn(
+                        "space-y-2",
+                        isMobile ? "space-y-2" : "space-y-2"
+                      )}>
+                        <Label className={isMobile ? "text-sm" : "text-base"}>Standort</Label>
                         <div className="flex items-center gap-2">
                           <div className="flex-1 relative">
                             <Input
@@ -1697,7 +1819,10 @@ export function JobSearchComponent() {
                                 setTimeout(() => setShowLocationDropdown(false), 200)
                               }}
                               placeholder="Standort eingeben..."
-                              className="w-full focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:outline-none"
+                              className={cn(
+                                "w-full focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus:outline-none",
+                                isMobile ? "py-2 text-sm" : "py-2 text-base"
+                              )}
                               style={{
                                 '--tw-ring-color': '#0F973D',
                                 '--tw-border-opacity': '1',
@@ -1743,7 +1868,10 @@ export function JobSearchComponent() {
                               }, 100);
                             }
                           }}>
-                            <SelectTrigger className="w-24 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]">
+                            <SelectTrigger className={cn(
+                              "focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D]",
+                              isMobile ? "w-20 py-2 text-sm" : "w-24 py-2 text-base"
+                            )}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -1763,31 +1891,55 @@ export function JobSearchComponent() {
 
                   {/* Date Posted */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
+                    <CardHeader className={isMobile ? "pb-3" : "pb-6"}>
+                      <CardTitle className={cn(
+                        "flex items-center gap-2",
+                        isMobile ? "text-base" : "text-lg"
+                      )}>
                         <Calendar className="h-5 w-5 text-[#0F973D]" />
                         Veröffentlichungsdatum
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-3">
+                    <CardContent className={cn(
+                      "space-y-4",
+                      isMobile ? "px-4 pb-4" : "px-6 pb-6"
+                    )}>
+                      <div className={cn(
+                        "space-y-3",
+                        isMobile ? "space-y-2" : "space-y-3"
+                      )}>
                         <RadioGroup value={searchProfile.datePosted} onValueChange={(value) => setSearchProfile(prev => ({ ...prev, datePosted: value }))}>
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
+                          <div className={cn(
+                            "space-y-2",
+                            isMobile ? "space-y-1" : "space-y-2"
+                          )}>
+                            <div className={cn(
+                              "flex items-center space-x-2",
+                              isMobile ? "py-1" : "py-0"
+                            )}>
                               <RadioGroupItem value="past24h" id="past24h" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
-                              <Label htmlFor="past24h">Letzte 24 Stunden</Label>
+                              <Label htmlFor="past24h" className={isMobile ? "text-sm" : "text-base"}>Letzte 24 Stunden</Label>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className={cn(
+                              "flex items-center space-x-2",
+                              isMobile ? "py-1" : "py-0"
+                            )}>
                               <RadioGroupItem value="past3days" id="past3days" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
-                              <Label htmlFor="past3days">Letzte 3 Tage</Label>
+                              <Label htmlFor="past3days" className={isMobile ? "text-sm" : "text-base"}>Letzte 3 Tage</Label>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className={cn(
+                              "flex items-center space-x-2",
+                              isMobile ? "py-1" : "py-0"
+                            )}>
                               <RadioGroupItem value="pastWeek" id="pastWeek" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
-                              <Label htmlFor="pastWeek">Letzte Woche</Label>
+                              <Label htmlFor="pastWeek" className={isMobile ? "text-sm" : "text-base"}>Letzte Woche</Label>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="pastMonth" id="pastMonth" className="focus:ring-2 focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
-                              <Label htmlFor="pastMonth">Letzter Monat</Label>
+                            <div className={cn(
+                              "flex items-center space-x-2",
+                              isMobile ? "py-1" : "py-0"
+                            )}>
+                              <RadioGroupItem value="pastMonth" id="pastMonth" className="focus:ring-[#0F973D] data-[state=checked]:bg-[#0F973D]" />
+                              <Label htmlFor="pastMonth" className={isMobile ? "text-sm" : "text-base"}>Letzter Monat</Label>
                             </div>
                           </div>
                         </RadioGroup>
@@ -1813,26 +1965,34 @@ export function JobSearchComponent() {
       </Card>
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-        {/* Left Column - Job List */}
-        <div className="lg:col-span-1 flex flex-col space-y-4 min-h-0">
-      <div className="flex items-center justify-between">
-             <h2 className="text-lg font-semibold">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6 flex-1 min-h-0">
+        {/* Left Column - Job List - Full width on mobile */}
+        <div className="lg:col-span-1 flex flex-col space-y-2 md:space-y-4 min-h-0 overflow-hidden">
+          {/* Mobile-only title */}
+          <div className="lg:hidden mb-2 md:mb-4">
+            <h2 className="text-xl font-semibold">Jobs</h2>
+            <p className="text-sm text-muted-foreground">
+              Tippe auf einen Job, um die Details zu sehen
+            </p>
+          </div>
+          
+          <div className="flex items-center justify-between">
+             <h2 className="text-lg font-semibold hidden lg:block">
                {loading ? "Lade Jobs..." : "Jobs gefunden"}
              </h2>
             <Select>
-              <SelectTrigger className="w-32 focus:border-[#0F973D] focus:ring-[#0F973D]">
+              <SelectTrigger className="w-28 md:w-32 focus:border-[#0F973D] focus:ring-[#0F973D]">
                 <SelectValue placeholder="Sortieren" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="relevance">Relevanz</SelectItem>
-              <SelectItem value="date">Datum</SelectItem>
-              <SelectItem value="salary">Gehalt</SelectItem>
-            </SelectContent>
-          </Select>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="relevance">Relevanz</SelectItem>
+                <SelectItem value="date">Datum</SelectItem>
+                <SelectItem value="salary">Gehalt</SelectItem>
+              </SelectContent>
+            </Select>
       </div>
 
-                     <div className="flex-1 overflow-y-auto space-y-4 job-list-container">
+                     <div className="flex-1 overflow-y-auto space-y-2 md:space-y-4 job-list-container scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 min-h-0 max-h-[calc(100vh-320px)] md:max-h-none">
         {loading ? (
           // Loading skeletons
           Array.from({ length: 3 }).map((_, index) => (
@@ -1871,7 +2031,7 @@ export function JobSearchComponent() {
                  )}
                  onClick={() => handleJobClick(job.id)}
                >
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex items-start gap-3">
                   {/* Company Logo */}
                      <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -1891,7 +2051,7 @@ export function JobSearchComponent() {
                   </div>
 
                   {/* Job Details */}
-                    <div className="flex-1 space-y-2 min-w-0">
+                    <div className="flex-1 space-y-1 md:space-y-2 min-w-0">
                     <div className="flex items-start justify-between">
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold text-base hover:text-[#0F973D] truncate">
@@ -1916,7 +2076,7 @@ export function JobSearchComponent() {
                     </div>
 
                                            {/* Job Meta */}
-                       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                       <div className="flex flex-wrap gap-2 md:gap-3 text-xs text-muted-foreground">
                          <div className="flex items-center gap-1">
                            <MapPin className="h-3 w-3" />
                            {job.job_city}
@@ -1924,7 +2084,7 @@ export function JobSearchComponent() {
                        </div>
 
                                            {/* Tags */}
-                       <div className="flex flex-wrap gap-1">
+                       <div className="flex flex-wrap gap-1 md:gap-1">
                          {job.job_employement_type && job.job_employement_type !== 'null' && job.job_employement_type !== 'Not Applicable' && (
                            <Badge variant="outline" className="text-xs">
                              {translateEmploymentType(job.job_employement_type)}
@@ -2001,8 +2161,8 @@ export function JobSearchComponent() {
           </div>
         </div>
 
-        {/* Right Column - Job Details */}
-        <div className="lg:col-span-2 flex flex-col space-y-4 min-h-0">
+        {/* Right Column - Job Details - Hidden on mobile */}
+        <div className="hidden lg:flex lg:col-span-2 flex-col space-y-4 min-h-0">
           <h2 className="text-lg font-semibold">Job Details</h2>
           <div className="flex-1 overflow-y-auto">
             {loading ? (
@@ -2140,6 +2300,15 @@ export function JobSearchComponent() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Job Detail Drawer */}
+      <MobileJobDetailDrawer
+        job={selectedJob || null}
+        isOpen={mobileDrawerOpen}
+        onOpenChange={setMobileDrawerOpen}
+        isSaved={selectedJob ? savedJobs.has(selectedJob.id) : false}
+        onToggleSaved={() => selectedJob && toggleSavedJob(selectedJob.id)}
+      />
     </div>
   )
 } 

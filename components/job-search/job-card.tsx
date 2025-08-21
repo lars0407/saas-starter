@@ -42,7 +42,7 @@ export function JobCard({ job, className, index = 0 }: JobCardProps) {
         className
       )}
     >
-        <CardContent className="pt-0 px-2 md:px-4 pb-1 space-y-1">
+        <CardContent className="pt-0 px-2 md:px-4 pb-0 space-y-0.5">
           {/* Status Badge - Above Title */}
           {!job.isActive && (
             <Badge variant="destructive" className="text-xs px-1 py-0.5">

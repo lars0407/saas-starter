@@ -1,5 +1,5 @@
 export { JobSearchComponent } from './job-search-component';
-
+export { MobileJobDetailDrawer } from './mobile-job-detail-drawer';
 
 export { JobDetailComponent } from './job-detail-component';
 export { JobtrackerBoard } from './jobtracker-board';
