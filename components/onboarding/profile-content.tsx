@@ -237,8 +237,8 @@ export function ProfileContent({
   }
 
   return (
-    <div className="h-[60vh] flex flex-col">
-      <div className="text-center flex-shrink-0 mb-6">
+    <div className="space-y-6">
+      <div className="text-center mb-6">
         <h3 className="text-xl font-semibold text-gray-900">
           Profil erstellen
         </h3>
@@ -247,68 +247,66 @@ export function ProfileContent({
         </p>
       </div>
 
-      {/* Vertical layout with all sections - entire content scrollable */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="space-y-8 pb-6">
-          {/* Personal Information Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <User className="h-5 w-5 text-blue-600" />
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900">Persönlich</h4>
+      {/* All sections in a single scrollable flow */}
+      <div className="space-y-8 pb-6">
+        {/* Personal Information Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <User className="h-5 w-5 text-blue-600" />
             </div>
-            <PersonalInfo 
-              data={personalInfo} 
-              onChange={handlePersonalInfoChange} 
-              isEditing={true} 
-            />
+            <h4 className="text-lg font-semibold text-gray-900">Persönlich</h4>
           </div>
+          <PersonalInfo 
+            data={personalInfo} 
+            onChange={handlePersonalInfoChange} 
+            isEditing={true} 
+          />
+        </div>
 
-          {/* Education Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <GraduationCap className="h-5 w-5 text-green-600" />
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900">Ausbildung</h4>
+        {/* Education Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <GraduationCap className="h-5 w-5 text-green-600" />
             </div>
-            <Education 
-              data={education} 
-              onChange={handleEducationChange} 
-              isEditing={true} 
-            />
+            <h4 className="text-lg font-semibold text-gray-900">Ausbildung</h4>
           </div>
+          <Education 
+            data={education} 
+            onChange={handleEducationChange} 
+            isEditing={true} 
+          />
+        </div>
 
-          {/* Experience Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Briefcase className="h-5 w-5 text-purple-600" />
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900">Erfahrung</h4>
+        {/* Experience Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Briefcase className="h-5 w-5 text-purple-600" />
             </div>
-            <Experience 
-              data={experience} 
-              onChange={handleExperienceChange} 
-              isEditing={true} 
-            />
+            <h4 className="text-lg font-semibold text-gray-900">Erfahrung</h4>
           </div>
+          <Experience 
+            data={experience} 
+            onChange={handleExperienceChange} 
+            isEditing={true} 
+          />
+        </div>
 
-          {/* Skills Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Zap className="h-5 w-5 text-orange-600" />
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900">Fähigkeiten</h4>
+        {/* Skills Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <Zap className="h-5 w-5 text-orange-600" />
             </div>
-            <Skills 
-              data={skills} 
-              onChange={handleSkillsChange} 
-              isEditing={true} 
-            />
+            <h4 className="text-lg font-semibold text-gray-900">Fähigkeiten</h4>
           </div>
+          <Skills 
+            data={skills} 
+            onChange={handleSkillsChange} 
+            isEditing={true} 
+          />
         </div>
       </div>
 
