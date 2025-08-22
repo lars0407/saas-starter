@@ -328,6 +328,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
                     onChange={(e) => updateEducation(entry.id, 'description', e.target.value)}
                     rows={2}
                     disabled={!isEditing}
+                    className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                   />
                   <p className="text-xs text-muted-foreground">
                     Optional - was war besonders spannend?

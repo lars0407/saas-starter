@@ -325,6 +325,7 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
                     onChange={(e) => updateExperience(entry.id, 'description', e.target.value)}
                     rows={3}
                     disabled={!isEditing}
+                    className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
                   />
                 </div>
 

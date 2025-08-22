@@ -331,6 +331,7 @@ export function PersonalInfo({ data, onChange, isEditing = true, resumeData }: P
             onChange={(e) => handleChange('summary', e.target.value)}
             rows={3}
             disabled={!isEditing}
+            className="focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
           />
           <p className="text-xs text-muted-foreground">
             Optional - macht dein Profil persönlicher
