@@ -134,7 +134,7 @@ export function ResumeUploadForm({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       <div className="text-center mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
           Lebenslauf hochladen
