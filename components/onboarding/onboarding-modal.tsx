@@ -444,6 +444,17 @@ export function OnboardingModal({
     }
   }, [currentStep, isOpen, firstName, lastName, resumeData, profileData, jobSearchIntensity, jobTitle, workLocation, jobType, salaryExpectation, characterIndex])
 
+  // Auto-scroll to top when step changes
+  useEffect(() => {
+    if (isOpen) {
+      // Find the scrollable form content area and scroll to top
+      const formContent = document.querySelector('[data-step-content]')
+      if (formContent) {
+        formContent.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+  }, [currentStep, isOpen])
+
   // Clear localStorage when onboarding is completed
   const clearOnboardingData = () => {
     if (typeof window !== 'undefined') {
@@ -749,7 +760,7 @@ export function OnboardingModal({
         
         <div className="relative p-2 rounded-b-2xl max-h-[calc(80vh-120px)] overflow-hidden">
           {/* Form Content - Scrollable */}
-          <div className="mt-2 mb-6 px-4 overflow-y-auto max-h-[calc(80vh-200px)]">
+          <div className="mt-2 mb-6 px-4 overflow-y-auto max-h-[calc(80vh-200px)]" data-step-content>
             <StepContent
               step={currentStep}
               firstName={firstName}
