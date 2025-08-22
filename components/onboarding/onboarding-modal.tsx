@@ -36,8 +36,8 @@ export function OnboardingModal({
   characterSrc = "/images/characters/Job-Jäger Expressions.png", // Jobjäger character
   characterAlt = "Friendly character",
 }: OnboardingModalProps) {
-  const [firstName, setFirstName] = useState("Max")
-  const [lastName, setLastName] = useState("Mustermann")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const [currentStep, setCurrentStep] = useState(1)
   const [characterIndex, setCharacterIndex] = useState(0)
   const [resumeData, setResumeData] = useState<any>(null)
@@ -461,8 +461,8 @@ export function OnboardingModal({
   // const resetOnboarding = () => {
   //   clearOnboardingData()
   //   setCurrentStep(1)
-  //   setFirstName("Max")
-  //   setLastName("Mustermann")
+  //   setFirstName("")
+  //   setLastName("")
   //   setResumeData(null)
   //   setProfileData(null)
   //   setJobSearchIntensity("")
@@ -780,7 +780,7 @@ export function OnboardingModal({
                 onClick={handleContinue}
                 className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
               >
-                {currentStep === 1 ? `weiter als ${firstName || "Max"}` : 
+                {currentStep === 1 ? (firstName && lastName ? `weiter als ${firstName} ${lastName}` : "Weiter") : 
                  currentStep === 2 ? "Weiter" : "Onboarding abschließen"}
               </Button>
             )}
