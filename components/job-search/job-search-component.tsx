@@ -726,6 +726,16 @@ export function JobSearchComponent() {
     }
   }, [jobs, selectedJobId])
 
+  // Auto-select the job when selectedJobId changes
+  useEffect(() => {
+    if (selectedJobId && jobs.length > 0) {
+      const job = jobs.find(j => j.id === selectedJobId)
+      if (job) {
+        setSelectedJob(job)
+      }
+    }
+  }, [selectedJobId, jobs])
+
   // Intersection Observer for infinite scroll
   useEffect(() => {
     if (!observerTarget || loadingMore || !hasMoreJobs || jobs.length === 0) return
