@@ -111,7 +111,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
           Deine Bildungsstationen - von Schule bis Uni
         </p>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-0 md:px-6">
         {data.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <GraduationCap className="h-12 w-12 mx-auto mb-4 opacity-50" />
