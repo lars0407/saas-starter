@@ -182,7 +182,7 @@ export function Skills({ data, onChange, isEditing = true }: SkillsProps) {
           Zeig, was du drauf hast - von Tech bis Teamwork
         </p>
       </CardHeader>
-             <CardContent className="space-y-6">
+             <CardContent className="space-y-6 px-0 md:px-6">
          {(Array.isArray(data) ? data.length : 0) === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Zap className="h-12 w-12 mx-auto mb-4 opacity-50" />

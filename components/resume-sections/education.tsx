@@ -343,7 +343,7 @@ export function Education({ data, onChange, isEditing = true }: EducationProps) 
           <Button
             onClick={addEducation}
             variant="outline"
-            className="w-full"
+            className="w-[calc(100%-2rem)] md:w-full mx-4 md:mx-0"
           >
             <Plus className="h-4 w-4 mr-2" />
             Neue Ausbildung hinzufügen

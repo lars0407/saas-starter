@@ -138,7 +138,7 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
           Zeig, wo du Eindruck gemacht hast – Zahlen wirken Wunder 💥
         </p>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-0 md:px-6">
         {data.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -390,7 +390,7 @@ export function Experience({ data, onChange, isEditing = true }: ExperienceProps
           <Button
             onClick={addExperience}
             variant="outline"
-            className="w-full"
+            className="w-[calc(100%-2rem)] md:w-full mx-4 md:mx-0"
           >
             <Plus className="h-4 w-4 mr-2" />
             Neue Station hinzufügen
