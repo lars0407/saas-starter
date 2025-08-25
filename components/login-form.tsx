@@ -62,21 +62,9 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6">
-            {/* Google OAuth Button - Outside the form */}
-            <div className="flex flex-col gap-4">
-              <GoogleOAuthButton variant="login" />
-            </div>
-            
-            {/* Separator */}
-            <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-              <span className="bg-card text-muted-foreground relative z-10 px-2">
-                Oder weiter mit
-              </span>
-            </div>
-            
-            {/* Email/Password Form */}
-            <form onSubmit={handleLogin}>
+          <form onSubmit={handleLogin}>
+            <div className="grid gap-6">
+              {/* Email/Password Form - First and primary */}
               <div className="grid gap-6">
                 <div className="grid gap-3">
                   <Label htmlFor="email">E-Mail</Label>
@@ -121,15 +109,28 @@ export function LoginForm({
                 >
                   {loading ? "Anmelden..." : "Einloggen"}
                 </Button>
-                <div className="text-center text-sm">
-                  Noch kein Konto?{" "}
-                  <a href="/sign-up" className="underline underline-offset-4">
-                    Registrieren
-                  </a>
-                </div>
               </div>
-            </form>
-          </div>
+              
+              {/* Separator */}
+              <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+                <span className="bg-card text-muted-foreground relative z-10 px-2">
+                  Oder weiter mit
+                </span>
+              </div>
+              
+              {/* Google OAuth Button - Secondary option */}
+              <div className="flex flex-col gap-4">
+                <GoogleOAuthButton variant="login" />
+              </div>
+              
+              <div className="text-center text-sm">
+                Noch kein Konto?{" "}
+                <a href="/sign-up" className="underline underline-offset-4">
+                  Registrieren
+                </a>
+              </div>
+            </div>
+          </form>
         </CardContent>
       </Card>
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">

@@ -59,14 +59,7 @@ export default function SignUpPage() {
             <CardContent>
               <form onSubmit={handleSignUp}>
                 <div className="grid gap-6">
-                  <div className="flex flex-col gap-4">
-                    <GoogleOAuthButton variant="signup" />
-                  </div>
-                  <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                    <span className="bg-card text-muted-foreground relative z-10 px-2">
-                      Oder weiter mit
-                    </span>
-                  </div>
+                  {/* Email/Password Form - First and primary */}
                   <div className="grid gap-6">
                     <div className="grid gap-3">
                       <Label htmlFor="email">E-Mail</Label>
@@ -102,6 +95,19 @@ export default function SignUpPage() {
                       {loading ? "Registrieren..." : "Registrieren"}
                     </Button>
                   </div>
+                  
+                  {/* Separator */}
+                  <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+                    <span className="bg-card text-muted-foreground relative z-10 px-2">
+                      Oder weiter mit
+                    </span>
+                  </div>
+                  
+                  {/* Google OAuth Button - Secondary option */}
+                  <div className="flex flex-col gap-4">
+                    <GoogleOAuthButton variant="signup" />
+                  </div>
+                  
                   <div className="text-center text-sm">
                     Bereits ein Konto?{" "}
                     <Link href="/sign-in" className="underline underline-offset-4">
