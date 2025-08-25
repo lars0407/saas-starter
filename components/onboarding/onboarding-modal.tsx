@@ -61,7 +61,7 @@ export function OnboardingModal({
     // Transform basics
     const basics = data.basics ? {
       first_name: data.basics.firstName || "",
-      last_name: data.basics.lastName || "",
+      surname: data.basics.lastName || "",
       email: data.basics.email || "",
       phone: data.basics.phone || "",
       adresse_city: data.basics.adresse_city || "",
@@ -75,7 +75,7 @@ export function OnboardingModal({
       birthday: data.basics.birthday || "",
       gender: data.basics.gender || "",
       work_permit: data.basics.work_permit || false,
-      number: data.basics.phone || "",
+      telephone: data.basics.phone || "",
       title: data.basics.title || "",
       hobby: data.basics.hobby || ""
     } : {}
