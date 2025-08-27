@@ -20,7 +20,8 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  FileText
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -433,6 +434,15 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
               <Button variant="ghost" size="sm">
                 <Share2 className="h-4 w-4" />
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleApply}
+                className="text-[#0F973D] hover:text-[#0F973D]/80 hover:bg-[#0F973D]/10"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Bewerben
+              </Button>
             </div>
           </div>
 
@@ -475,14 +485,16 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
             <Badge variant="outline">{formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet</Badge>
           </div>
 
+
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
                          <Button 
                onClick={handleApply}
                className="bg-[#0F973D] hover:bg-[#0F973D]/90 flex-1"
              >
-               <ExternalLink className="h-4 w-4 mr-2" />
-               Jetzt bewerben
+               <FileText className="h-4 w-4 mr-2" />
+               Bewerbungsunterlagen erstellen
              </Button>
             <Button variant="outline" onClick={handleAddToTracker}>
               {isSaved ? "Aus Jobtracker entfernen" : "Zum Jobtracker hinzufügen"}
