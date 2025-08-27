@@ -446,32 +446,7 @@ export function MobileJobDetailDrawer({
           )}
         </div>
 
-        {/* Auto-Generate Application Button */}
-        <div className="border-t bg-transparent">
-          <div className="flex justify-center py-3">
-            <Button 
-              onClick={() => {
-                // Navigate to application generation page with job data
-                const jobData = encodeURIComponent(JSON.stringify({
-                  jobId: job.id,
-                  jobTitle: job.title,
-                  company: job.company?.employer_name,
-                  location: `${job.job_city}, ${job.job_state}`
-                }))
-                window.open(`/dashboard/coverletter-generate?job=${jobData}`, '_blank')
-              }}
-              className="w-full max-w-md bg-gradient-to-r from-[#0F973D] to-[#0F973D]/80 hover:from-[#0F973D]/90 hover:to-[#0F973D]/70 text-white font-semibold py-4 px-6 rounded-lg shadow-lg"
-            >
-              <div className="flex items-center justify-between w-full">
-                <span className="text-lg">Maximiere deine Chancen</span>
-                <div className="bg-white/20 rounded-lg px-4 py-2 flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  <span className="font-medium">Bewerbung erstellen</span>
-                </div>
-              </div>
-            </Button>
-          </div>
-        </div>
+
 
         {/* Apply Button - Fixed at bottom */}
         <div className="border-t bg-transparent">

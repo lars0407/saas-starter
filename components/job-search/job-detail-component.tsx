@@ -427,18 +427,25 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
                 variant="ghost"
                 size="sm"
                 onClick={handleAddToTracker}
-                className={cn(isSaved && "text-[#0F973D]")}
+                className={cn(
+                  isSaved && "text-[#0F973D]",
+                  "hover:bg-gray-100"
+                )}
               >
                 <Bookmark className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="hover:bg-gray-100"
+              >
                 <Share2 className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleApply}
-                className="text-[#0F973D] hover:text-[#0F973D]/80 hover:bg-[#0F973D]/10"
+                className="text-[#0F973D] hover:text-[#0F973D]/80 hover:bg-gray-100"
               >
                 <ExternalLink className="h-4 w-4" />
                 Bewerben
