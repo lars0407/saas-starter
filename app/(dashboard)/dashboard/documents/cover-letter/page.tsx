@@ -132,24 +132,52 @@ export default function CoverLetterPage() {
         .find(row => row.startsWith('token='))
         ?.split('=')[1]
 
+      if (!token) {
+        throw new Error("No authentication token found")
+      }
+
+      console.log("Attempting to delete cover letter with ID:", id)
+      console.log("Using token:", token ? "Token present" : "No token")
+
       const response = await fetch(
-        `https://api.jobjaeger.de/api:SiRHLF4Y/documents/${id}`,
+        `https://api.jobjaeger.de/api:SiRHLF4Y/documents/delete`,
         {
-          method: "DELETE",
+          method: "POST",
           headers: {
-            ...(token && { "Authorization": `Bearer ${token}` })
-          }
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ document_id: id })
         }
       )
 
+      console.log("Delete response status:", response.status)
+      console.log("Delete response headers:", Object.fromEntries(response.headers.entries()))
+
       if (!response.ok) {
-        throw new Error("Failed to delete document")
+        let errorMessage = "Failed to delete cover letter"
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorData.error || errorMessage
+        } catch (parseError) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`
+        }
+        throw new Error(errorMessage)
       }
+
+      // Check if response has content before trying to parse
+      const responseText = await response.text()
+      console.log("Delete response body:", responseText)
 
       // Refresh the current page
       fetchDocuments(activeTab, currentPage)
+      
+      // Show success message
+      toast.success("Anschreiben erfolgreich gelöscht! 🗑️")
     } catch (error) {
-      console.error("Error deleting document:", error)
+      console.error("Error deleting cover letter:", error)
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+      toast.error(`Fehler beim Löschen: ${errorMessage}`)
       throw error
     }
   }

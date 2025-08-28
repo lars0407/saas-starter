@@ -127,6 +127,47 @@ export default function DocumentsPage() {
     setCurrentPage(page)
   }
 
+  const testApiConnection = async () => {
+    try {
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      console.log("Testing API connection...")
+      console.log("Token present:", !!token)
+      console.log("Token value:", token ? `${token.substring(0, 10)}...` : "None")
+
+      if (!token) {
+        toast.error("No authentication token found")
+        return
+      }
+
+      // Test a simple GET request first
+      const testResponse = await fetch(
+        `https://api.jobjaeger.de/api:SiRHLF4Y/documents?offset=0&variant=human&limit=1`,
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      )
+
+      console.log("Test GET response status:", testResponse.status)
+      console.log("Test GET response headers:", Object.fromEntries(testResponse.headers.entries()))
+
+      if (testResponse.ok) {
+        toast.success("API connection successful! ✅")
+      } else {
+        toast.error(`API test failed: ${testResponse.status} ${testResponse.statusText}`)
+      }
+    } catch (error) {
+      console.error("API connection test error:", error)
+      toast.error(`API connection test failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
   const handleDelete = async (id: number) => {
     try {
       const token = document.cookie
@@ -134,24 +175,52 @@ export default function DocumentsPage() {
         .find(row => row.startsWith('token='))
         ?.split('=')[1]
 
+      if (!token) {
+        throw new Error("No authentication token found")
+      }
+
+      console.log("Attempting to delete document with ID:", id)
+      console.log("Using token:", token ? "Token present" : "No token")
+
       const response = await fetch(
-        `https://api.jobjaeger.de/api:SiRHLF4Y/documents/${id}`,
+        `https://api.jobjaeger.de/api:SiRHLF4Y/documents/delete`,
         {
-          method: "DELETE",
+          method: "POST",
           headers: {
-            ...(token && { "Authorization": `Bearer ${token}` })
-          }
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ document_id: id })
         }
       )
 
+      console.log("Delete response status:", response.status)
+      console.log("Delete response headers:", Object.fromEntries(response.headers.entries()))
+
       if (!response.ok) {
-        throw new Error("Failed to delete document")
+        let errorMessage = "Failed to delete document"
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorData.error || errorMessage
+        } catch (parseError) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`
+        }
+        throw new Error(errorMessage)
       }
+
+      // Check if response has content before trying to parse
+      const responseText = await response.text()
+      console.log("Delete response body:", responseText)
 
       // Refresh the current page
       fetchDocuments(activeTab, currentPage)
+      
+      // Show success message
+      toast.success("Dokument erfolgreich gelöscht! 🗑️")
     } catch (error) {
       console.error("Error deleting document:", error)
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+      toast.error(`Fehler beim Löschen: ${errorMessage}`)
       throw error
     }
   }

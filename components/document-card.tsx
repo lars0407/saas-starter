@@ -51,9 +51,10 @@ export function DocumentCard({ document, onEdit, onDelete, onView, showDelete = 
     setIsDeleting(true)
     try {
       await onDelete(document.id)
-      toast.success("Dokument erfolgreich gelöscht! 🗑️")
+      // Success toast is now handled in the parent component
     } catch (error) {
-      toast.error("Fehler beim Löschen des Dokuments")
+      console.error("Document card delete error:", error)
+      // Error toast is now handled in the parent component
     } finally {
       setIsDeleting(false)
     }

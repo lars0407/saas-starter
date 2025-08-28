@@ -306,12 +306,14 @@ export function MobileJobDetailDrawer({
         ?.split('=')[1]
 
       const response = await fetch(
-        `https://api.jobjaeger.de/api:SiRHLF4Y/documents/${id}`,
+        `https://api.jobjaeger.de/api:SiRHLF4Y/documents/delete`,
         {
-          method: "DELETE",
+          method: "POST",
           headers: {
-            ...(token && { "Authorization": `Bearer ${token}` })
-          }
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ document_id: id })
         }
       )
 
