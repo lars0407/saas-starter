@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { 
   MapPin, 
   Building2, 
@@ -30,7 +30,23 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Job } from "@/lib/types"
 import { cn } from "@/lib/utils"
+
+interface Document {
+  id: number
+  created_at: number
+  updated_at: number
+  type: "resume" | "cover letter"
+  preview_link: string
+  name: string
+  storage_path: string
+  variant: "human" | "ai"
+  url: string
+}
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { DocumentCard } from "@/components/document-card"
+import { DocumentPreviewCard } from "@/components/job-search/document-preview-card"
+import { DocumentSkeleton } from "@/components/document-skeleton"
 
 interface MobileJobDetailDrawerProps {
   job: Job | null
@@ -48,8 +64,267 @@ export function MobileJobDetailDrawer({
   onToggleSaved 
 }: MobileJobDetailDrawerProps) {
   const [showFullDescription, setShowFullDescription] = useState(false)
+  const [documentsModalOpen, setDocumentsModalOpen] = useState(false)
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [documentsLoading, setDocumentsLoading] = useState(false)
+  const [jobDocuments, setJobDocuments] = useState<Document[]>([])
+  const [jobDocumentsLoading, setJobDocumentsLoading] = useState(false)
+  const [generatingDocuments, setGeneratingDocuments] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState("")
+  const [jobTrackerCreated, setJobTrackerCreated] = useState(false)
+  const topRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (job?.id) {
+      fetchJobDocuments(job.id)
+      // Auto-scroll to top when new job is loaded in mobile drawer
+      setTimeout(() => {
+        const drawerContent = document.querySelector('[data-radix-scroll-area-viewport]')
+        if (drawerContent) {
+          drawerContent.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+        // Also try to scroll the top ref if available
+        if (topRef.current) {
+          topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
+  }, [job?.id])
 
   if (!job) return null
+
+  const generateDocuments = async (documentId: number) => {
+    if (!job?.id) return
+    
+    setGeneratingDocuments(true)
+    setDocumentsModalOpen(false) // Close the modal
+    
+    // Start cycling through loading messages
+    const loadingMessages = [
+      "Analysiere Job-Profile... 🔍",
+      "Brainstorme deine Stärken... 💪",
+      "Generiere Lebenslauf... 📝",
+      "Erstelle Anschreiben... ✍️",
+      "Finalisiere Bewerbung... 🚀"
+    ]
+    
+    let messageIndex = 0
+    const messageInterval = setInterval(() => {
+      setLoadingMessage(loadingMessages[messageIndex])
+      messageIndex = (messageIndex + 1) % loadingMessages.length
+    }, 2000) // Change message every 2 seconds
+    
+    try {
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        console.error("No auth token found")
+        setGeneratingDocuments(false)
+        return
+      }
+
+      const response = await fetch(
+        `https://api.jobjaeger.de/api:SiRHLF4Y/application/generate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            job_id: job.id,
+            document_id: documentId
+          })
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate documents: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log("Document generation response:", data)
+      
+      if (data.success) {
+        // Success! Refresh the job documents
+        await fetchJobDocuments(job.id)
+        
+        // If we have a job tracker in the response, update the saved state
+        if (data.job_tracker) {
+          // Update the job tracker state to show the job is now saved
+          console.log("Job tracker created:", data.job_tracker)
+          setJobTrackerCreated(true)
+          // You might want to call a callback to update the parent component's saved state
+          if (onToggleSaved) {
+            onToggleSaved()
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error generating documents:", error)
+    } finally {
+      clearInterval(messageInterval)
+      setGeneratingDocuments(false)
+      setLoadingMessage("")
+    }
+  }
+
+  const fetchJobDocuments = async (jobId: number) => {
+    setJobDocumentsLoading(true)
+    try {
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        setJobDocuments([])
+        return
+      }
+
+            const response = await fetch(
+        `https://api.jobjaeger.de/api:9BqVCxJj/job_tracker/documents/job/id`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            job_id: jobId
+          })
+        }
+      )
+
+      if (!response.ok) {
+        // Silently handle errors - don't show anything to user
+        setJobDocuments([])
+        return
+      }
+
+      const data = await response.json()
+      console.log("Job documents API response:", data)
+      
+      if (data && data.document_list) {
+        // Transform the API response to match our Document interface
+        const transformedDocuments = data.document_list.map((doc: any) => ({
+          id: doc.id,
+          created_at: Date.now(), // Use current time as fallback
+          updated_at: Date.now(), // Use current time as fallback
+          type: doc.type,
+          preview_link: doc.link,
+          name: doc.type === 'resume' ? 'Lebenslauf' : 'Anschreiben',
+          storage_path: doc.link,
+          variant: "ai" as const, // Assuming generated documents are AI variant
+          url: doc.link
+        }))
+        setJobDocuments(transformedDocuments)
+      } else {
+        setJobDocuments([])
+      }
+    } catch (error) {
+      // Silently handle errors - don't show anything to user
+      console.error("Error fetching job documents:", error)
+      setJobDocuments([])
+    } finally {
+      setJobDocumentsLoading(false)
+    }
+  }
+
+  const fetchDocuments = async () => {
+    setDocumentsLoading(true)
+    try {
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      const response = await fetch(
+        `https://api.jobjaeger.de/api:SiRHLF4Y/documents?offset=0&variant=human`,
+        {
+          headers: {
+            ...(token && { "Authorization": `Bearer ${token}` })
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch documents: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log("Documents API response:", data)
+      
+      if (data && data.document) {
+        const documents = data.document.items || []
+        setDocuments(documents)
+      } else {
+        setDocuments([])
+      }
+    } catch (error) {
+      console.error("Error fetching documents:", error)
+      setDocuments([])
+    } finally {
+      setDocumentsLoading(false)
+    }
+  }
+
+  const handleOpenDocumentsModal = () => {
+    setDocumentsModalOpen(true)
+    fetchDocuments()
+  }
+
+  const handleViewDocument = (id: number) => {
+    const document = documents.find(doc => doc.id === id)
+    if (!document) return
+
+    const downloadUrl = document.url
+    if (!downloadUrl) return
+
+    window.open(downloadUrl, '_blank')
+  }
+
+  const handleEditDocument = (id: number) => {
+    const document = documents.find(doc => doc.id === id)
+    if (!document) return
+
+    if (document.type === 'resume') {
+      window.location.href = `/dashboard/resume-generate?id=${id}`
+    } else if (document.type === 'cover letter') {
+      window.location.href = `/dashboard/coverletter-generate?id=${id}`
+    }
+  }
+
+  const handleDeleteDocument = async (id: number) => {
+    try {
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      const response = await fetch(
+        `https://api.jobjaeger.de/api:SiRHLF4Y/documents/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            ...(token && { "Authorization": `Bearer ${token}` })
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error("Failed to delete document")
+      }
+
+      // Refresh documents
+      fetchDocuments()
+    } catch (error) {
+      console.error("Error deleting document:", error)
+    }
+  }
 
   const formatListItems = (htmlString: string, sectionName: string) => {
     if (!htmlString || htmlString === 'null' || htmlString === 'undefined') {
@@ -305,7 +580,78 @@ export function MobileJobDetailDrawer({
         </SheetHeader>
 
         {/* Job Content */}
-        <div className="flex-1 overflow-y-auto space-y-6 pt-4">
+        <div className="flex-1 overflow-y-auto space-y-6 pt-4" ref={topRef}>
+          {/* Job Documents Section - Debug Mode */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Job Documents Debug Section</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Debug Info:</strong>
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  Job ID: {job.id}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  Documents Count: {jobDocuments.length}
+                </p>
+                <p className="text-sm text-gray-1">
+                  Loading: {jobDocumentsLoading ? 'Yes' : 'No'}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  Generating: {generatingDocuments ? 'Yes' : 'No'}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Documents: {JSON.stringify(jobDocuments, null, 2)}
+                </p>
+              </div>
+              
+              {jobDocuments.length > 0 ? (
+                <div className="flex flex-wrap gap-4">
+                  {jobDocuments.map((doc) => (
+                    <div key={doc.id} className="w-full sm:w-auto">
+                      <DocumentCard
+                        document={doc}
+                        showDelete={false}
+                        onView={(id) => {
+                          // Handle view if needed
+                          console.log('View document:', id)
+                        }}
+                        onEdit={(id) => {
+                          // Open document for editing in new tab
+                          const document = jobDocuments.find(doc => doc.id === id)
+                          if (document) {
+                            if (document.type === 'resume') {
+                              window.open(`/dashboard/resume-generate?id=${id}`, '_blank')
+                            } else if (document.type === 'cover letter') {
+                              window.open(`/dashboard/coverletter-generate?id=${id}`, '_blank')
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                    ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  {generatingDocuments ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0F973D]"></div>
+                      <div className="text-center">
+                        <p className="text-lg font-medium text-gray-900 mb-1">
+                          {loadingMessage || "Starte Generierung..."}
+                        </p>
+                        <p className="text-sm text-gray-600">Das dauert nur ein paar Sekunden! ⚡</p>
+                      </div>
+                    </div>
+                  ) : jobDocumentsLoading ? 'Loading documents...' : 'No documents found'}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Job Details */}
           <Card>
             <CardHeader>
@@ -452,15 +798,79 @@ export function MobileJobDetailDrawer({
         <div className="border-t bg-transparent">
           <div className="flex justify-center py-4">
             <Button 
-              onClick={handleApply}
-              className="bg-[#0F973D] hover:bg-[#0F973D]/90 text-white font-semibold py-3 px-8"
+              onClick={handleOpenDocumentsModal}
+              disabled={jobDocuments.length > 0}
+              className={cn(
+                "text-white font-semibold py-3 px-8",
+                jobDocuments.length > 0 
+                  ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
+                  : "bg-[#0F973D] hover:bg-[#0F973D]/90"
+              )}
             >
               <FileText className="h-4 w-4 mr-2" />
-              Bewerbungsunterlagen erstellen
+              {jobDocuments.length > 0 ? 
+                (jobTrackerCreated ? "Job gespeichert & Bewerbung erstellt 🎉" : "Bewerbungsunterlagen bereits erstellt") 
+                : "Bewerbungsunterlagen erstellen"}
             </Button>
           </div>
         </div>
       </SheetContent>
+
+      {/* Documents Modal */}
+      <Dialog open={documentsModalOpen} onOpenChange={setDocumentsModalOpen}>
+        <DialogContent className="max-w-7xl w-[98vw] max-h-[90vh]">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-2xl font-bold text-center">
+              Wähle deinen Base-Lebenslauf 🚀
+            </DialogTitle>
+            <p className="text-center text-muted-foreground mt-2">
+              Pick dein bestehendes CV als Grundlage für die KI-Generierung
+            </p>
+          </DialogHeader>
+          
+          <div className="overflow-y-auto max-h-[60vh]">
+            {documentsLoading ? (
+              <div className="flex gap-4 overflow-x-auto pb-4">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <DocumentSkeleton key={index} className="min-w-[300px] flex-shrink-0" />
+                ))}
+              </div>
+            ) : documents.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="mx-auto h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                  <FileText className="h-12 w-12 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Noch kein Base-Lebenslauf vorhanden 😅
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  Erstelle deinen ersten Lebenslauf, um mit der KI-Generierung zu starten
+                </p>
+                <Button 
+                  onClick={() => {
+                    setDocumentsModalOpen(false)
+                    window.location.href = '/dashboard/resume-generate'
+                  }}
+                  className="bg-[#0F973D] hover:bg-[#0D7A32] text-white"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Lebenslauf erstellen
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-4 overflow-x-auto pb-4">
+                {documents.map((document) => (
+                  <div key={document.id} onClick={() => generateDocuments(document.id)} className="flex-shrink-0">
+                    <DocumentPreviewCard
+                      document={document}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Sheet>
   )
 }

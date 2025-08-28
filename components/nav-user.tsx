@@ -8,7 +8,6 @@ import {
   LogOut,
   Sparkles,
   Settings,
-  Activity,
   MessageSquare,
   HelpCircle,
 } from "lucide-react"
@@ -146,12 +145,7 @@ export function NavUser({
                   Account Settings
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/activity" className="flex items-center">
-                  <Activity className="mr-2 h-4 w-4" />
-                  Activity
-                </Link>
-              </DropdownMenuItem>
+
               <DropdownMenuItem 
                 onClick={() => setFeedbackOpen(true)}
                 disabled={!xanoUser}

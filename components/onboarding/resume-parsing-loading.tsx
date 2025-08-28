@@ -1,6 +1,6 @@
 import React from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Loader2, FileText, Sparkles } from "lucide-react"
+import { FileText, Sparkles } from "lucide-react"
 
 interface ResumeParsingLoadingProps {
   fileName?: string
@@ -39,20 +39,6 @@ export function ResumeParsingLoading({ fileName }: ResumeParsingLoadingProps) {
             Datei: <span className="font-mono">{fileName}</span>
           </p>
         )}
-      </div>
-
-      {/* Loading Animation */}
-      <div className="flex justify-center">
-        <div className="relative">
-          <img 
-            src="/images/utility/loading.gif" 
-            alt="Loading animation" 
-            className="w-32 h-32"
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 text-[#0F973D] animate-spin" />
-          </div>
-        </div>
       </div>
 
       {/* Dynamic Loading Text */}

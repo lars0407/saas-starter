@@ -37,9 +37,10 @@ interface DocumentCardProps {
   onEdit?: (id: number) => void
   onDelete?: (id: number) => void
   onView?: (id: number) => void
+  showDelete?: boolean
 }
 
-export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCardProps) {
+export function DocumentCard({ document, onEdit, onDelete, onView, showDelete = true }: DocumentCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { downloadDocument, isLoading: isDownloading } = useDocumentDownload()
@@ -116,7 +117,7 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
               </div>
             </div>
 
-            {/* Document Info in Middle */}
+                        {/* Document Info in Middle */}
             <div className="flex-1 min-w-0">
               <div className="mb-1">
                 <h3 className="text-sm font-semibold text-gray-900 truncate">
@@ -164,16 +165,18 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
                   <Download className="mr-1 h-3 w-3" />
                   {isDownloading ? "Download..." : "Download"}
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="h-7 px-2 text-xs justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="mr-1 h-3 w-3" />
-                  {isDeleting ? "Löschen..." : "Löschen"}
-                </Button>
+                {showDelete && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="h-7 px-2 text-xs justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="mr-1 h-3 w-3" />
+                    {isDeleting ? "Löschen..." : "Löschen"}
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -186,7 +189,7 @@ export function DocumentCard({ document, onEdit, onDelete, onView }: DocumentCar
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         onEdit={onEdit}
-        onDelete={onDelete}
+        onDelete={showDelete ? onDelete : undefined}
       />
     </>
   )
