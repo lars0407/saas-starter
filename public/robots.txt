@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Disallow internal admin areas
+Disallow: /internal/
+Disallow: /internal
+
+# Disallow other sensitive areas
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+Disallow: /private/
