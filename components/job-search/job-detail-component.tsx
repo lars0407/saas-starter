@@ -792,33 +792,13 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
       </Card>
 
       {/* Job Documents Section - Debug Mode */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Job Documents Debug Section</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-2">
-              <strong>Debug Info:</strong>
-            </p>
-            <p className="text-sm text-gray-600 mb-1">
-              Job ID: {job.id}
-            </p>
-            <p className="text-sm text-gray-600 mb-1">
-              Documents Count: {jobDocuments.length}
-            </p>
-            <p className="text-sm text-gray-600 mb-1">
-              Loading: {jobDocumentsLoading ? 'Yes' : 'No'}
-            </p>
-            <p className="text-sm text-gray-600 mb-1">
-              Generating: {generatingDocuments ? 'Yes' : 'No'}
-            </p>
-            <p className="text-sm text-gray-600">
-              Documents: {JSON.stringify(jobDocuments, null, 2)}
-            </p>
-          </div>
-          
-                        {jobDocuments.length > 0 ? (
+      {(jobDocuments.length > 0 || generatingDocuments) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Dokumente</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {jobDocuments.length > 0 ? (
                 <div className="flex flex-wrap gap-4">
                   {jobDocuments.map((doc) => (
                     <div key={doc.id} className="w-full sm:w-auto">
@@ -845,22 +825,23 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
                   ))}
                 </div>
               ) : (
-            <div className="text-center py-4 text-gray-500">
-              {generatingDocuments ? (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0F973D]"></div>
-                  <div className="text-center">
-                    <p className="text-lg font-medium text-gray-900 mb-1">
-                      {loadingMessage || "Starte Generierung..."}
-                    </p>
-                    <p className="text-sm text-gray-600">Das dauert nur ein paar Sekunden! ⚡</p>
-                  </div>
+                <div className="text-center py-4 text-gray-500">
+                  {generatingDocuments ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0F973D]"></div>
+                      <div className="text-center">
+                        <p className="text-lg font-medium text-gray-900 mb-1">
+                          {loadingMessage || "Starte Generierung..."}
+                        </p>
+                        <p className="text-sm text-gray-600">Das dauert nur ein paar Sekunden! ⚡</p>
+                      </div>
+                    </div>
+                  ) : jobDocumentsLoading ? 'Loading documents...' : 'No documents found'}
                 </div>
-              ) : jobDocumentsLoading ? 'Loading documents...' : 'No documents found'}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Job Details */}
       <Card>

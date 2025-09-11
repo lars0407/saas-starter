@@ -584,33 +584,13 @@ export function MobileJobDetailDrawer({
         {/* Job Content */}
         <div className="flex-1 overflow-y-auto space-y-6 pt-4" ref={topRef}>
           {/* Job Documents Section - Debug Mode */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Job Documents Debug Section</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-2">
-                  <strong>Debug Info:</strong>
-                </p>
-                <p className="text-sm text-gray-600 mb-1">
-                  Job ID: {job.id}
-                </p>
-                <p className="text-sm text-gray-600 mb-1">
-                  Documents Count: {jobDocuments.length}
-                </p>
-                <p className="text-sm text-gray-1">
-                  Loading: {jobDocumentsLoading ? 'Yes' : 'No'}
-                </p>
-                <p className="text-sm text-gray-600 mb-1">
-                  Generating: {generatingDocuments ? 'Yes' : 'No'}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Documents: {JSON.stringify(jobDocuments, null, 2)}
-                </p>
-              </div>
-              
-              {jobDocuments.length > 0 ? (
+          {(jobDocuments.length > 0 || generatingDocuments) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Dokumente</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {jobDocuments.length > 0 ? (
                 <div className="flex flex-wrap gap-4">
                   {jobDocuments.map((doc) => (
                     <div key={doc.id} className="w-full sm:w-auto">
@@ -651,8 +631,9 @@ export function MobileJobDetailDrawer({
                   ) : jobDocumentsLoading ? 'Loading documents...' : 'No documents found'}
                 </div>
               )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Job Details */}
           <Card>
