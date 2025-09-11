@@ -243,7 +243,7 @@ export function MobileJobDetailDrawer({
         ?.split('=')[1]
 
       const response = await fetch(
-        `https://api.jobjaeger.de/api:SiRHLF4Y/documents?offset=0&variant=human`,
+        `https://api.jobjaeger.de/api:SiRHLF4Y/documents?offset=0&variant=human&type=resume`,
         {
           headers: {
             ...(token && { "Authorization": `Bearer ${token}` })
