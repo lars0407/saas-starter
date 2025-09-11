@@ -3,12 +3,7 @@
 import * as React from "react"
 import {
   Users,
-  Settings,
-  BarChart3,
   Shield,
-  Activity,
-  Database,
-  AlertTriangle,
   Home,
   LogOut,
 } from "lucide-react"
@@ -64,30 +59,6 @@ const getAdminNavItems = (pathname: string) => [
     url: "/internal/users",
     icon: Users,
     isActive: pathname === "/internal/users",
-  },
-  {
-    title: "System Health",
-    url: "/internal/system",
-    icon: Activity,
-    isActive: pathname === "/internal/system",
-  },
-  {
-    title: "Analytics",
-    url: "/internal/analytics",
-    icon: BarChart3,
-    isActive: pathname === "/internal/analytics",
-  },
-  {
-    title: "Database",
-    url: "/internal/database",
-    icon: Database,
-    isActive: pathname === "/internal/database",
-  },
-  {
-    title: "Settings",
-    url: "/internal/settings",
-    icon: Settings,
-    isActive: pathname === "/internal/settings",
   },
 ];
 
