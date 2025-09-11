@@ -44,6 +44,15 @@ export function DocumentPreviewCard({ document, onClick }: DocumentPreviewCardPr
           onClick && "hover:scale-105"
         )}
         onClick={onClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (!onClick) return
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            onClick()
+          }
+        }}
       >
         <CardContent className="p-0">
           <div className="relative w-32 h-40">
@@ -62,8 +71,18 @@ export function DocumentPreviewCard({ document, onClick }: DocumentPreviewCardPr
               fallbackMessage=""
               downloadMessage=""
               placeholderMessage=""
-              className="w-full h-full -mt-6 -mb-6"
+              className="w-full h-full -mt-6 -mb-6 pointer-events-none"
             />
+
+            {/* Invisible overlay to ensure clicks anywhere are captured */}
+            {onClick && (
+              <button
+                type="button"
+                aria-label="Dokument auswählen"
+                className="absolute inset-0 bg-transparent"
+                onClick={onClick}
+              />
+            )}
           </div>
         </CardContent>
       </Card>
