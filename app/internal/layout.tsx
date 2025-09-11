@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/xano';
 import { isAdminUser } from '@/lib/admin-utils';
+import { AdminSidebar } from '@/components/admin-sidebar';
+import {
+  SidebarInset,
+  SidebarProvider,
+} from '@/components/ui/sidebar';
 import Head from 'next/head';
 
 export default function InternalLayout({ children }: { children: React.ReactNode }) {
@@ -65,9 +70,14 @@ export default function InternalLayout({ children }: { children: React.ReactNode
         <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex, nocache" />
         <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex, nocache" />
       </Head>
-      <div className="min-h-screen bg-gray-50">
-        {children}
-      </div>
+      <SidebarProvider>
+        <AdminSidebar />
+        <SidebarInset>
+          <div className="min-h-screen bg-gray-50">
+            {children}
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
     </>
   );
 }
