@@ -1,9 +1,14 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 
-export function DocumentSkeleton() {
+interface DocumentSkeletonProps {
+  className?: string
+}
+
+export function DocumentSkeleton({ className }: DocumentSkeletonProps) {
   return (
-    <Card>
+    <Card className={cn(className)}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-2">
