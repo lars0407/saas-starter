@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { 
   Play, 
   Pause, 
@@ -17,12 +18,20 @@ import {
   DollarSign,
   User,
   Send,
-  Bot
+  Bot,
+  Link,
+  Briefcase,
+  MapPin as LocationIcon,
+  Euro
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -195,6 +204,27 @@ export default function AgentChatPage() {
   const [events, setEvents] = useState<AgentEvent[]>(demoEvents);
   const [isRunning, setIsRunning] = useState(true);
   const [remainingSteps, setRemainingSteps] = useState(3);
+  const [showForm, setShowForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('details');
+  
+  // Form state for job details
+  const [jobDetails, setJobDetails] = useState({
+    title: '',
+    company: '',
+    description: '',
+    url: ''
+  });
+
+  const searchParams = useSearchParams();
+  const jobId = searchParams.get('id');
+
+  useEffect(() => {
+    // Show form if no ID parameter is present
+    if (!jobId) {
+      setShowForm(true);
+      setIsRunning(false);
+    }
+  }, [jobId]);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('de-DE', { 
@@ -260,6 +290,28 @@ export default function AgentChatPage() {
     setRemainingSteps(0);
   };
 
+  const handleInputChange = (field: string, value: string) => {
+    setJobDetails(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleStartApplication = () => {
+    // TODO: Implement application start logic
+    console.log('Starting application with job details:', jobDetails);
+    setShowForm(false);
+    setIsRunning(true);
+  };
+
+  const isFormValid = () => {
+    if (activeTab === 'details') {
+      return jobDetails.title && jobDetails.company;
+    } else {
+      return jobDetails.url;
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-screen">
       {/* Header */}
@@ -288,8 +340,107 @@ export default function AgentChatPage() {
 
       {/* Chat Container */}
       <div className="flex-1 flex flex-col bg-gray-50">
+        {/* Job Application Form */}
+        {showForm && (
+          <div className="flex-1 flex items-center justify-center px-24 py-8">
+            <Card className="max-w-4xl w-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-6 w-6 text-[#0F973D]" />
+                  Job-Bewerbung starten
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Geben Sie die Job-Details ein oder fügen Sie eine Job-URL hinzu, um mit der automatischen Bewerbung zu beginnen.
+                </p>
+              </CardHeader>
+              <CardContent>
+                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                   <TabsList className="grid w-full grid-cols-2">
+                     <TabsTrigger value="details" className="flex items-center gap-2">
+                       <FileText className="h-4 w-4" />
+                       Job-Details
+                     </TabsTrigger>
+                     <TabsTrigger value="url" className="flex items-center gap-2" disabled>
+                       <Link className="h-4 w-4" />
+                       Job-URL (Coming Soon)
+                     </TabsTrigger>
+                   </TabsList>
+
+                  <TabsContent value="details" className="space-y-6 mt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Job-Titel *</Label>
+                        <Input
+                          id="title"
+                          placeholder="z.B. Senior Software Engineer"
+                          value={jobDetails.title}
+                          onChange={(e) => handleInputChange('title', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="company">Unternehmen *</Label>
+                        <Input
+                          id="company"
+                          placeholder="z.B. TechCorp GmbH"
+                          value={jobDetails.company}
+                          onChange={(e) => handleInputChange('company', e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Job-Beschreibung</Label>
+                      <Textarea
+                        id="description"
+                        placeholder="Beschreiben Sie die Stelle..."
+                        value={jobDetails.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        rows={4}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="jobUrl">Job-URL (optional)</Label>
+                      <Input
+                        id="jobUrl"
+                        placeholder="https://www.linkedin.com/jobs/view/..."
+                        value={jobDetails.url}
+                        onChange={(e) => handleInputChange('url', e.target.value)}
+                        type="url"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Optional: Fügen Sie die URL der Job-Stelle hinzu für zusätzliche Informationen.
+                      </p>
+                    </div>
+                  </TabsContent>
+
+                </Tabs>
+
+                <div className="flex justify-end gap-4 mt-8">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowForm(false)}
+                  >
+                    Abbrechen
+                  </Button>
+                  <Button
+                    onClick={handleStartApplication}
+                    disabled={!isFormValid()}
+                    className="bg-[#0F973D] hover:bg-[#0F973D]/90"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Bewerbung starten
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {!showForm && (
+          <div className="flex-1 overflow-y-auto px-24 py-4 space-y-4">
           {events.map((event) => (
             <div key={event.id} className={`flex gap-3 p-4 rounded-lg border ${getEventStyle(event)}`}>
               <div className="flex-shrink-0">
@@ -354,10 +505,12 @@ export default function AgentChatPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Floating Control Menu */}
-        <div className="fixed bottom-6 right-6 z-50">
+        {!showForm && (
+          <div className="fixed bottom-6 right-6 z-50">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -395,10 +548,12 @@ export default function AgentChatPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
+          </div>
+        )}
 
         {/* Status Bar */}
-        <div className="bg-white border-t p-4">
+        {!showForm && (
+          <div className="bg-white border-t p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -417,7 +572,8 @@ export default function AgentChatPage() {
               </Badge>
             </div>
           </div>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

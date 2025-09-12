@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { useRouter } from 'next/navigation';
 
 interface Job {
   id: string;
@@ -120,6 +121,11 @@ export default function JobjaegerAgentPage() {
   const [prioritizeRemote, setPrioritizeRemote] = useState(false);
   const [matchingRate, setMatchingRate] = useState('all');
   const [applicationsRemaining, setApplicationsRemaining] = useState(0);
+  const router = useRouter();
+
+  const handleStartApplication = () => {
+    router.push('/dashboard/agent-chat');
+  };
 
   const getMatchingRateColor = (rate: string) => {
     switch (rate) {
@@ -162,9 +168,18 @@ export default function JobjaegerAgentPage() {
           sobald sie gepostet werden. Er passt Lebensläufe für jede Rolle an, umgeht ATS-Filter und stellt sicher, 
           dass Sie mit optimierten Bewerbungen, die mehr Interviews landen, an erster Stelle stehen.
         </p>
-        <Button variant="link" className="p-0 h-auto text-[#0F973D]">
-          Tutorials anzeigen
-        </Button>
+        <div className="flex items-center gap-4">
+          <Button 
+            onClick={handleStartApplication}
+            className="bg-[#0F973D] hover:bg-[#0F973D]/90 text-white px-6 py-3 text-lg font-semibold"
+          >
+            <Play className="h-5 w-5 mr-2" />
+            Bewerbung starten
+          </Button>
+          <Button variant="link" className="p-0 h-auto text-[#0F973D]">
+            Tutorials anzeigen
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -311,9 +326,9 @@ export default function JobjaegerAgentPage() {
             <CardContent className="p-6">
               <div className="text-center py-8">
                 <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">E-Mail-Integration</h3>
+                <h3 className="text-lg font-semibold mb-2">Coming Soon</h3>
                 <p className="text-muted-foreground">
-                  Verbinden Sie Ihre E-Mail, um Bewerbungsantworten und Kommunikation zu verfolgen.
+                  Diese Funktion wird bald verfügbar sein.
                 </p>
               </div>
             </CardContent>
@@ -325,9 +340,9 @@ export default function JobjaegerAgentPage() {
             <CardContent className="p-6">
               <div className="text-center py-8">
                 <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Jobjäger Agent Profil</h3>
+                <h3 className="text-lg font-semibold mb-2">Coming Soon</h3>
                 <p className="text-muted-foreground">
-                  Konfigurieren Sie Ihre Präferenzen und Einstellungen für den Jobjäger Agent.
+                  Diese Funktion wird bald verfügbar sein.
                 </p>
               </div>
             </CardContent>
