@@ -384,6 +384,7 @@ export default function AgentChatPage() {
 
       // Try to call API (with fallback for development)
       let apiSuccess = false;
+      let apiData: any = null;
       try {
         // Check if we have an ID parameter in the URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -410,9 +411,28 @@ export default function AgentChatPage() {
         });
 
         if (response.ok) {
-          const data = await response.json();
-          console.log('API Response:', data);
+          apiData = await response.json();
+          console.log('API Response:', apiData);
           apiSuccess = true;
+          
+          // Process the real API response
+          if (apiData.events && apiData.events.length > 0) {
+            // Clear existing events and add real ones from API
+            setEvents([]);
+            
+            // Add each event from the API response
+            apiData.events.forEach((event: any, index: number) => {
+              setTimeout(() => {
+                addEvent({
+                  id: event.event_id.toString(),
+                  type: 'action',
+                  timestamp: new Date(event.timestamp),
+                  content: `✅ ${event.event_type.replace(/_/g, ' ')} - ${event.event_status}`,
+                  status: event.event_status === 'done' ? 'success' : 'pending'
+                });
+              }, index * 500); // Stagger events by 500ms each
+            });
+          }
         } else {
           console.warn('API returned error, falling back to simulation');
         }
@@ -431,40 +451,43 @@ export default function AgentChatPage() {
           : 'Bewerbung gestartet (Demo-Modus)! Der Agent beginnt mit der automatischen Job-Suche...'
       });
 
-      // Start the agent process
-      startLoadingEvent('action', 'Jobs werden gesucht...');
-      
-      // Simulate job search process
-      setTimeout(() => {
-        stopLoadingEvent();
-        addEvent({
-          id: (Date.now() + 1).toString(),
-          type: 'action',
-          timestamp: new Date(),
-          content: '✅ 3 passende Jobs gefunden',
-          status: 'success',
-          metadata: {
-            jobTitle: jobDetails.title,
-            location: 'Berlin, Deutschland',
-            salary: '€75,000 - €95,000'
-          }
-        });
-
-        // Continue with more simulation events
+      // Only add simulation events if API didn't provide real events
+      if (!apiSuccess || !apiData?.events || apiData.events.length === 0) {
+        // Start the agent process
+        startLoadingEvent('action', 'Jobs werden gesucht...');
+        
+        // Simulate job search process
         setTimeout(() => {
-          startLoadingEvent('action', 'Lebenslauf wird angepasst...');
+          stopLoadingEvent();
+          addEvent({
+            id: (Date.now() + 1).toString(),
+            type: 'action',
+            timestamp: new Date(),
+            content: '✅ 3 passende Jobs gefunden',
+            status: 'success',
+            metadata: {
+              jobTitle: jobDetails.title,
+              location: 'Berlin, Deutschland',
+              salary: '€75,000 - €95,000'
+            }
+          });
+
+          // Continue with more simulation events
           setTimeout(() => {
-            stopLoadingEvent();
-            addEvent({
-              id: (Date.now() + 2).toString(),
-              type: 'action',
-              timestamp: new Date(),
-              content: '✅ Lebenslauf erfolgreich angepasst',
-              status: 'success'
-            });
-          }, 1500);
+            startLoadingEvent('action', 'Lebenslauf wird angepasst...');
+            setTimeout(() => {
+              stopLoadingEvent();
+              addEvent({
+                id: (Date.now() + 2).toString(),
+                type: 'action',
+                timestamp: new Date(),
+                content: '✅ Lebenslauf erfolgreich angepasst',
+                status: 'success'
+              });
+            }, 1500);
+          }, 2000);
         }, 2000);
-      }, 2000);
+      }
 
     } catch (error) {
       console.error('Error starting application:', error);
@@ -798,56 +821,28 @@ export default function AgentChatPage() {
           </div>
         )}
 
-         {/* Status Bar */}
-         {!showForm && (
-           <div className="bg-white border-t p-4">
-           <div className="flex items-center justify-between">
-             <div className="flex items-center gap-4">
-               <div className="flex items-center gap-2">
-                 <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                 <span className="text-sm text-gray-600">
-                   {isRunning ? 'Agent läuft' : 'Agent pausiert'}
-                 </span>
-               </div>
-               <span className="text-sm text-gray-500">
-                 {events.length} Events
-               </span>
-             </div>
-             <div className="flex items-center gap-2">
-               <Badge variant="outline" className="text-xs">
-                 {remainingSteps} Schritte verbleibend
-               </Badge>
-             </div>
-           </div>
-           </div>
-         )}
-
          {/* Floating Status Container */}
          {!showForm && (
            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-             <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-lg overflow-hidden min-w-[400px]">
+             <div className="flex items-center justify-between bg-white border border-gray-200 rounded-full shadow-lg overflow-hidden min-w-[400px]">
                {/* Status Indicator */}
-               <div className="flex items-center gap-3 px-6 py-3 border-r border-gray-200">
+               <div className="flex items-center gap-3 px-6 py-3">
                  <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500' : 'bg-yellow-500'}`} />
                  <span className="text-sm font-medium text-gray-700">
                    {isRunning ? 'Wird ausgeführt' : 'Pausiert'}
                  </span>
                </div>
                
-               {/* Progress Info */}
-               <div className="flex items-center gap-3 px-6 py-3 bg-[#0F973D] text-white">
-                 <div className="w-2 h-2 rounded-full bg-green-300" />
-                 <span className="text-sm font-medium">
-                   {remainingSteps} Jobs verbleibend
-                 </span>
-               </div>
-               
                {/* Start/Stop Button */}
                <button
                  onClick={isRunning ? handleStop : handleStart}
-                 className="flex items-center gap-2 px-6 py-3 hover:bg-gray-50 transition-colors"
+                 className={`flex items-center gap-2 px-6 py-3 transition-colors ${
+                   isRunning 
+                     ? 'hover:bg-gray-50' 
+                     : 'bg-[#0F973D] text-white hover:bg-[#0E8A36]'
+                 }`}
                >
-                 <span className="text-sm font-medium text-gray-700">
+                 <span className="text-sm font-medium">
                    {isRunning ? 'Stoppen' : 'Starten'}
                  </span>
                  {isRunning ? (
@@ -856,12 +851,13 @@ export default function AgentChatPage() {
                      <div className="w-0.5 h-3 bg-gray-500"></div>
                    </div>
                  ) : (
-                   <Play className="h-3 w-3 text-gray-500" />
+                   <Play className="h-3 w-3" />
                  )}
                </button>
              </div>
            </div>
          )}
+
       </div>
     </div>
   );
