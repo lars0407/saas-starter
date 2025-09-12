@@ -201,16 +201,21 @@ const demoEvents: AgentEvent[] = [
 ];
 
 export default function AgentChatPage() {
-  const [events, setEvents] = useState<AgentEvent[]>(demoEvents);
-  const [isRunning, setIsRunning] = useState(true);
+  const [events, setEvents] = useState<AgentEvent[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
   const [remainingSteps, setRemainingSteps] = useState(3);
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingEvent, setLoadingEvent] = useState<{
+    type: 'message' | 'action' | 'status' | 'error';
+    content: string;
+    metadata?: any;
+  } | null>(null);
   
   // Form state for job details
   const [jobDetails, setJobDetails] = useState({
     title: '',
-    company: '',
     description: '',
     url: ''
   });
@@ -279,15 +284,74 @@ export default function AgentChatPage() {
 
   const handleStart = () => {
     setIsRunning(true);
+    // Start loading state for initial message
+    startLoadingEvent('message', 'Agent wird gestartet...');
+    
+    // Demo: Simulate backend response after 2 seconds
+    setTimeout(() => {
+      stopLoadingEvent();
+      addEvent({
+        id: Date.now().toString(),
+        type: 'message',
+        timestamp: new Date(),
+        content: 'Agent erfolgreich gestartet! Ich beginne mit der Job-Suche...'
+      });
+      
+      // Start next loading event
+      startLoadingEvent('action', 'Jobs werden gesucht...');
+      
+      setTimeout(() => {
+        stopLoadingEvent();
+        addEvent({
+          id: (Date.now() + 1).toString(),
+          type: 'action',
+          timestamp: new Date(),
+          content: '✅ 3 passende Jobs gefunden',
+          status: 'success',
+          metadata: {
+            jobTitle: 'Senior Software Engineer',
+            company: 'TechCorp GmbH',
+            location: 'Berlin, Deutschland',
+            salary: '€75,000 - €95,000'
+          }
+        });
+      }, 2000);
+    }, 2000);
   };
 
   const handlePause = () => {
     setIsRunning(false);
+    stopLoadingEvent();
   };
 
   const handleStop = () => {
     setIsRunning(false);
     setRemainingSteps(0);
+    stopLoadingEvent();
+  };
+
+  const startLoadingEvent = (type: 'message' | 'action' | 'status' | 'error', content: string, metadata?: any) => {
+    setIsLoading(true);
+    setLoadingEvent({ type, content, metadata });
+  };
+
+  const stopLoadingEvent = () => {
+    setIsLoading(false);
+    setLoadingEvent(null);
+  };
+
+  const addEvent = (event: AgentEvent) => {
+    setEvents(prev => [...prev, event]);
+  };
+
+  const updateLastEvent = (updates: Partial<AgentEvent>) => {
+    setEvents(prev => {
+      const newEvents = [...prev];
+      if (newEvents.length > 0) {
+        newEvents[newEvents.length - 1] = { ...newEvents[newEvents.length - 1], ...updates };
+      }
+      return newEvents;
+    });
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -297,16 +361,127 @@ export default function AgentChatPage() {
     }));
   };
 
-  const handleStartApplication = () => {
-    // TODO: Implement application start logic
-    console.log('Starting application with job details:', jobDetails);
-    setShowForm(false);
-    setIsRunning(true);
+  const handleStartApplication = async () => {
+    try {
+      // Start loading state
+      startLoadingEvent('message', 'Bewerbung wird gestartet...');
+      setShowForm(false);
+      setIsRunning(true);
+
+      // Get auth token
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return null;
+      };
+
+      const authToken = getCookie('token');
+      
+      if (!authToken) {
+        throw new Error('Kein Authentifizierungstoken gefunden. Bitte melden Sie sich erneut an.');
+      }
+
+      // Try to call API (with fallback for development)
+      let apiSuccess = false;
+      try {
+        // Check if we have an ID parameter in the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const applicationId = urlParams.get('id');
+        
+        const requestBody: any = {
+          title: jobDetails.title,
+          description: jobDetails.description,
+          url: jobDetails.url
+        };
+        
+        // Only include application_agent_id if URL parameter exists
+        if (applicationId) {
+          requestBody.application_agent_id = parseInt(applicationId);
+        }
+
+        const response = await fetch('https://api.jobjaeger.de/api:BP7K6-ZQ/v2/agent/application/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('API Response:', data);
+          apiSuccess = true;
+        } else {
+          console.warn('API returned error, falling back to simulation');
+        }
+      } catch (apiError) {
+        console.warn('API call failed, falling back to simulation:', apiError);
+      }
+
+      // Stop loading and add success event
+      stopLoadingEvent();
+      addEvent({
+        id: Date.now().toString(),
+        type: 'message',
+        timestamp: new Date(),
+        content: apiSuccess 
+          ? 'Bewerbung erfolgreich gestartet! Der Agent beginnt mit der automatischen Job-Suche...'
+          : 'Bewerbung gestartet (Demo-Modus)! Der Agent beginnt mit der automatischen Job-Suche...'
+      });
+
+      // Start the agent process
+      startLoadingEvent('action', 'Jobs werden gesucht...');
+      
+      // Simulate job search process
+      setTimeout(() => {
+        stopLoadingEvent();
+        addEvent({
+          id: (Date.now() + 1).toString(),
+          type: 'action',
+          timestamp: new Date(),
+          content: '✅ 3 passende Jobs gefunden',
+          status: 'success',
+          metadata: {
+            jobTitle: jobDetails.title,
+            location: 'Berlin, Deutschland',
+            salary: '€75,000 - €95,000'
+          }
+        });
+
+        // Continue with more simulation events
+        setTimeout(() => {
+          startLoadingEvent('action', 'Lebenslauf wird angepasst...');
+          setTimeout(() => {
+            stopLoadingEvent();
+            addEvent({
+              id: (Date.now() + 2).toString(),
+              type: 'action',
+              timestamp: new Date(),
+              content: '✅ Lebenslauf erfolgreich angepasst',
+              status: 'success'
+            });
+          }, 1500);
+        }, 2000);
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error starting application:', error);
+      stopLoadingEvent();
+      addEvent({
+        id: Date.now().toString(),
+        type: 'error',
+        timestamp: new Date(),
+        content: `Fehler beim Starten der Bewerbung: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`
+      });
+      setIsRunning(false);
+    }
   };
 
   const isFormValid = () => {
     if (activeTab === 'details') {
-      return jobDetails.title && jobDetails.company;
+      return jobDetails.title && jobDetails.description;
     } else {
       return jobDetails.url;
     }
@@ -370,35 +545,36 @@ export default function AgentChatPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="title">Job-Titel *</Label>
-                        <Input
-                          id="title"
-                          placeholder="z.B. Senior Software Engineer"
-                          value={jobDetails.title}
-                          onChange={(e) => handleInputChange('title', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="company">Unternehmen *</Label>
-                        <Input
-                          id="company"
-                          placeholder="z.B. TechCorp GmbH"
-                          value={jobDetails.company}
-                          onChange={(e) => handleInputChange('company', e.target.value)}
-                        />
+                         <Input
+                           id="title"
+                           placeholder="z.B. Senior Software Engineer"
+                           value={jobDetails.title}
+                           onChange={(e) => handleInputChange('title', e.target.value)}
+                           className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:outline-none focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+                           style={{ 
+                             '--tw-ring-color': '#0F973D',
+                             '--tw-border-color': '#0F973D'
+                           } as React.CSSProperties}
+                         />
                       </div>
                     </div>
 
 
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Job-Beschreibung</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Beschreiben Sie die Stelle..."
-                        value={jobDetails.description}
-                        onChange={(e) => handleInputChange('description', e.target.value)}
-                        rows={4}
-                      />
-                    </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="description">Job-Beschreibung *</Label>
+                       <Textarea
+                         id="description"
+                         placeholder="Beschreiben Sie die Stelle..."
+                         value={jobDetails.description}
+                         onChange={(e) => handleInputChange('description', e.target.value)}
+                         rows={4}
+                         className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:outline-none focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+                         style={{ 
+                           '--tw-ring-color': '#0F973D',
+                           '--tw-border-color': '#0F973D'
+                         } as React.CSSProperties}
+                       />
+                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="jobUrl">Job-URL (optional)</Label>
@@ -408,6 +584,11 @@ export default function AgentChatPage() {
                         value={jobDetails.url}
                         onChange={(e) => handleInputChange('url', e.target.value)}
                         type="url"
+                        className="focus:border-[#0F973D] focus:ring-[#0F973D] focus:ring-2 focus:outline-none focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
+                        style={{ 
+                          '--tw-ring-color': '#0F973D',
+                          '--tw-border-color': '#0F973D'
+                        } as React.CSSProperties}
                       />
                       <p className="text-sm text-muted-foreground">
                         Optional: Fügen Sie die URL der Job-Stelle hinzu für zusätzliche Informationen.
@@ -438,75 +619,141 @@ export default function AgentChatPage() {
           </div>
         )}
 
-        {/* Chat Messages */}
-        {!showForm && (
-          <div className="flex-1 overflow-y-auto px-24 py-4 space-y-4">
-          {events.map((event) => (
-            <div key={event.id} className={`flex gap-3 p-4 rounded-lg border ${getEventStyle(event)}`}>
-              <div className="flex-shrink-0">
-                {getEventIcon(event)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium text-gray-900">
-                    {event.type === 'message' ? 'Jobjäger Agent' : 'System'}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {formatTime(event.timestamp)}
-                  </span>
-                  {event.status && (
-                    <Badge 
-                      variant={event.status === 'success' ? 'default' : event.status === 'error' ? 'destructive' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {event.status === 'success' ? 'Erfolgreich' : event.status === 'error' ? 'Fehler' : 'In Bearbeitung'}
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-sm text-gray-700">{event.content}</p>
-                
-                {/* Job Metadata */}
-                {event.metadata && (
-                  <div className="mt-3 p-3 bg-white rounded-md border">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                      {event.metadata.jobTitle && (
-                        <div className="flex items-center gap-1">
-                          <FileText className="h-3 w-3 text-gray-500" />
-                          <span className="font-medium">{event.metadata.jobTitle}</span>
-                        </div>
-                      )}
-                      {event.metadata.company && (
-                        <div className="flex items-center gap-1">
-                          <Building2 className="h-3 w-3 text-gray-500" />
-                          <span>{event.metadata.company}</span>
-                        </div>
-                      )}
-                      {event.metadata.location && (
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3 text-gray-500" />
-                          <span>{event.metadata.location}</span>
-                        </div>
-                      )}
-                      {event.metadata.salary && (
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3 text-gray-500" />
-                          <span>{event.metadata.salary}</span>
-                        </div>
-                      )}
-                      {event.metadata.applicationId && (
-                        <div className="flex items-center gap-1">
-                          <User className="h-3 w-3 text-gray-500" />
-                          <span className="font-mono">{event.metadata.applicationId}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-          </div>
-        )}
+         {/* Chat Messages */}
+         {!showForm && (
+           <div className="flex-1 overflow-y-auto px-24 py-4 space-y-4">
+           {events.map((event) => (
+             <div key={event.id} className={`flex gap-3 p-4 rounded-lg border ${getEventStyle(event)}`}>
+               <div className="flex-shrink-0">
+                 {getEventIcon(event)}
+               </div>
+               <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-2 mb-1">
+                   <span className="text-sm font-medium text-gray-900">
+                     {event.type === 'message' ? 'Jobjäger Agent' : 'System'}
+                   </span>
+                   <span className="text-xs text-gray-500">
+                     {formatTime(event.timestamp)}
+                   </span>
+                   {event.status && (
+                     <Badge 
+                       variant={event.status === 'success' ? 'default' : event.status === 'error' ? 'destructive' : 'secondary'}
+                       className="text-xs"
+                     >
+                       {event.status === 'success' ? 'Erfolgreich' : event.status === 'error' ? 'Fehler' : 'In Bearbeitung'}
+                     </Badge>
+                   )}
+                 </div>
+                 <p className="text-sm text-gray-700">{event.content}</p>
+                 
+                 {/* Job Metadata */}
+                 {event.metadata && (
+                   <div className="mt-3 p-3 bg-white rounded-md border">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                       {event.metadata.jobTitle && (
+                         <div className="flex items-center gap-1">
+                           <FileText className="h-3 w-3 text-gray-500" />
+                           <span className="font-medium">{event.metadata.jobTitle}</span>
+                         </div>
+                       )}
+                       {event.metadata.company && (
+                         <div className="flex items-center gap-1">
+                           <Building2 className="h-3 w-3 text-gray-500" />
+                           <span>{event.metadata.company}</span>
+                         </div>
+                       )}
+                       {event.metadata.location && (
+                         <div className="flex items-center gap-1">
+                           <MapPin className="h-3 w-3 text-gray-500" />
+                           <span>{event.metadata.location}</span>
+                         </div>
+                       )}
+                       {event.metadata.salary && (
+                         <div className="flex items-center gap-1">
+                           <DollarSign className="h-3 w-3 text-gray-500" />
+                           <span>{event.metadata.salary}</span>
+                         </div>
+                       )}
+                       {event.metadata.applicationId && (
+                         <div className="flex items-center gap-1">
+                           <User className="h-3 w-3 text-gray-500" />
+                           <span className="font-mono">{event.metadata.applicationId}</span>
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 )}
+               </div>
+             </div>
+           ))}
+
+           {/* Loading Event */}
+           {isLoading && loadingEvent && (
+             <div className={`flex gap-3 p-4 rounded-lg border ${getEventStyle({ type: loadingEvent.type, status: 'pending' } as AgentEvent)}`}>
+               <div className="flex-shrink-0">
+                 {loadingEvent.type === 'message' ? (
+                   <Bot className="h-5 w-5 text-blue-500 animate-pulse" />
+                 ) : (
+                   <Clock className="h-5 w-5 text-yellow-500 animate-pulse" />
+                 )}
+               </div>
+               <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-2 mb-1">
+                   <span className="text-sm font-medium text-gray-900">
+                     {loadingEvent.type === 'message' ? 'Jobjäger Agent' : 'System'}
+                   </span>
+                   <span className="text-xs text-gray-500">
+                     {formatTime(new Date())}
+                   </span>
+                   <Badge variant="secondary" className="text-xs">
+                     In Bearbeitung
+                   </Badge>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <p className="text-sm text-gray-700">{loadingEvent.content}</p>
+                   <div className="flex space-x-1">
+                     <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" />
+                     <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                     <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                   </div>
+                 </div>
+                 
+                 {/* Loading Metadata */}
+                 {loadingEvent.metadata && (
+                   <div className="mt-3 p-3 bg-white rounded-md border">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                       {loadingEvent.metadata.jobTitle && (
+                         <div className="flex items-center gap-1">
+                           <FileText className="h-3 w-3 text-gray-500" />
+                           <span className="font-medium">{loadingEvent.metadata.jobTitle}</span>
+                         </div>
+                       )}
+                       {loadingEvent.metadata.company && (
+                         <div className="flex items-center gap-1">
+                           <Building2 className="h-3 w-3 text-gray-500" />
+                           <span>{loadingEvent.metadata.company}</span>
+                         </div>
+                       )}
+                       {loadingEvent.metadata.location && (
+                         <div className="flex items-center gap-1">
+                           <MapPin className="h-3 w-3 text-gray-500" />
+                           <span>{loadingEvent.metadata.location}</span>
+                         </div>
+                       )}
+                       {loadingEvent.metadata.salary && (
+                         <div className="flex items-center gap-1">
+                           <DollarSign className="h-3 w-3 text-gray-500" />
+                           <span>{loadingEvent.metadata.salary}</span>
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 )}
+               </div>
+             </div>
+           )}
+           </div>
+         )}
 
         {/* Floating Control Menu */}
         {!showForm && (
@@ -551,29 +798,70 @@ export default function AgentChatPage() {
           </div>
         )}
 
-        {/* Status Bar */}
-        {!showForm && (
-          <div className="bg-white border-t p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                <span className="text-sm text-gray-600">
-                  {isRunning ? 'Agent läuft' : 'Agent pausiert'}
-                </span>
-              </div>
-              <span className="text-sm text-gray-500">
-                {events.length} Events
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                {remainingSteps} Schritte verbleibend
-              </Badge>
-            </div>
-          </div>
-          </div>
-        )}
+         {/* Status Bar */}
+         {!showForm && (
+           <div className="bg-white border-t p-4">
+           <div className="flex items-center justify-between">
+             <div className="flex items-center gap-4">
+               <div className="flex items-center gap-2">
+                 <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                 <span className="text-sm text-gray-600">
+                   {isRunning ? 'Agent läuft' : 'Agent pausiert'}
+                 </span>
+               </div>
+               <span className="text-sm text-gray-500">
+                 {events.length} Events
+               </span>
+             </div>
+             <div className="flex items-center gap-2">
+               <Badge variant="outline" className="text-xs">
+                 {remainingSteps} Schritte verbleibend
+               </Badge>
+             </div>
+           </div>
+           </div>
+         )}
+
+         {/* Floating Status Container */}
+         {!showForm && (
+           <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+             <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-lg overflow-hidden min-w-[400px]">
+               {/* Status Indicator */}
+               <div className="flex items-center gap-3 px-6 py-3 border-r border-gray-200">
+                 <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                 <span className="text-sm font-medium text-gray-700">
+                   {isRunning ? 'Wird ausgeführt' : 'Pausiert'}
+                 </span>
+               </div>
+               
+               {/* Progress Info */}
+               <div className="flex items-center gap-3 px-6 py-3 bg-[#0F973D] text-white">
+                 <div className="w-2 h-2 rounded-full bg-green-300" />
+                 <span className="text-sm font-medium">
+                   {remainingSteps} Jobs verbleibend
+                 </span>
+               </div>
+               
+               {/* Start/Stop Button */}
+               <button
+                 onClick={isRunning ? handleStop : handleStart}
+                 className="flex items-center gap-2 px-6 py-3 hover:bg-gray-50 transition-colors"
+               >
+                 <span className="text-sm font-medium text-gray-700">
+                   {isRunning ? 'Stoppen' : 'Starten'}
+                 </span>
+                 {isRunning ? (
+                   <div className="flex gap-0.5">
+                     <div className="w-0.5 h-3 bg-gray-500"></div>
+                     <div className="w-0.5 h-3 bg-gray-500"></div>
+                   </div>
+                 ) : (
+                   <Play className="h-3 w-3 text-gray-500" />
+                 )}
+               </button>
+             </div>
+           </div>
+         )}
       </div>
     </div>
   );
