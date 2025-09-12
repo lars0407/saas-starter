@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Send, 
   RefreshCw, 
@@ -13,7 +13,8 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  Zap
+  Zap,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +33,58 @@ interface Job {
   matchingRate: 'Hoch' | 'Mittel' | 'Niedrig';
   status: 'Beworben' | 'Ausstehend' | 'Abgelehnt';
   appliedDate?: string;
+}
+
+interface Application {
+  id: number;
+  created_at: number;
+  job_id: number;
+  user_id: number;
+  updated_at: number | null;
+  status: string;
+  mode: string;
+  events: Array<{
+    event_id: number;
+    timestamp: number;
+    event_type: string;
+    event_status: string;
+  }>;
+  settings: any;
+  stop: boolean;
+  job_tracker_id: number;
+  job: Array<{
+    id: number;
+    created_at: number;
+    title: string;
+    job_city: string;
+    job_state: string;
+    job_country: string;
+    job_employement_type: string;
+    salary: string;
+    seniority: string;
+    job_origin: string;
+    job_expiration: number | null;
+    job_identifier: number;
+    job_posted: number | null;
+    apply_link: string;
+    applicants_number: string;
+    working_hours: string;
+    remote_work: string;
+    source: string;
+    auto_apply: boolean;
+    recruitment_agency: boolean;
+    description: {
+      description_original: string;
+      description_responsibilities: string;
+      description_qualification: string;
+      description_benefits: string;
+    };
+    recruiter: {
+      recruiter_name: string;
+      recruiter_title: string;
+      recruiter_url: string;
+    };
+  }>;
 }
 
 const mockJobs: Job[] = [
@@ -121,10 +174,78 @@ export default function JobjaegerAgentPage() {
   const [prioritizeRemote, setPrioritizeRemote] = useState(false);
   const [matchingRate, setMatchingRate] = useState('all');
   const [applicationsRemaining, setApplicationsRemaining] = useState(0);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [isLoadingApplications, setIsLoadingApplications] = useState(false);
+  const [activeTab, setActiveTab] = useState('matched-jobs');
   const router = useRouter();
 
   const handleStartApplication = () => {
     router.push('/dashboard/agent-chat');
+  };
+
+  const loadApplications = async () => {
+    setIsLoadingApplications(true);
+    try {
+      // Get auth token
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return null;
+      };
+
+      const authToken = getCookie('token');
+      
+      if (!authToken) {
+        throw new Error('Kein Authentifizierungstoken gefunden. Bitte melden Sie sich erneut an.');
+      }
+
+      const response = await fetch('https://api.jobjaeger.de/api:BP7K6-ZQ/application_agent', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Applications loaded:', data);
+        
+        // Handle different response formats
+        if (Array.isArray(data)) {
+          setApplications(data);
+        } else if (data && Array.isArray(data.items)) {
+          setApplications(data.items);
+        } else if (data && Array.isArray(data.applications)) {
+          setApplications(data.applications);
+        } else if (data && Array.isArray(data.data)) {
+          setApplications(data.data);
+        } else {
+          console.warn('Unexpected API response format:', data);
+          setApplications([]);
+        }
+      } else {
+        console.error('Failed to load applications:', response.status);
+        setApplications([]);
+      }
+    } catch (error) {
+      console.error('Error loading applications:', error);
+      setApplications([]);
+    } finally {
+      setIsLoadingApplications(false);
+    }
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === 'applications') {
+      loadApplications();
+    }
+  };
+
+  const handleApplicationClick = (applicationId: number) => {
+    router.push(`/dashboard/agent-chat?id=${applicationId}`);
   };
 
   const getMatchingRateColor = (rate: string) => {
@@ -183,7 +304,7 @@ export default function JobjaegerAgentPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="matched-jobs" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="matched-jobs" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -309,14 +430,111 @@ export default function JobjaegerAgentPage() {
 
         <TabsContent value="applications" className="space-y-6">
           <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Noch keine Bewerbungen</h3>
-                <p className="text-muted-foreground">
-                  Ihre Job-Bewerbungen werden hier angezeigt, sobald Sie mit dem Bewerben beginnen.
-                </p>
-              </div>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Ihre Bewerbungen
+                {isLoadingApplications && <Loader2 className="h-4 w-4 animate-spin" />}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingApplications ? (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                  <p className="text-muted-foreground">Bewerbungen werden geladen...</p>
+                </div>
+              ) : !Array.isArray(applications) || applications.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Noch keine Bewerbungen</h3>
+                  <p className="text-muted-foreground">
+                    Ihre Job-Bewerbungen werden hier angezeigt, sobald Sie mit dem Bewerben beginnen.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-medium">Position</th>
+                        <th className="text-left py-3 px-4 font-medium">Status</th>
+                        <th className="text-left py-3 px-4 font-medium">Erstellt</th>
+                        <th className="text-left py-3 px-4 font-medium">Standort</th>
+                        <th className="text-left py-3 px-4 font-medium">Letzte Aktivität</th>
+                        <th className="text-left py-3 px-4 font-medium">Aktionen</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {applications.map((application) => (
+                        <tr 
+                          key={application.id} 
+                          className="border-b hover:bg-gray-50 cursor-pointer"
+                          onClick={() => handleApplicationClick(application.id)}
+                        >
+                          <td className="py-4 px-4">
+                            <div className="font-medium">
+                              {application.job[0]?.title || 'Unbekannte Position'}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              ID: {application.id}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <Badge 
+                              variant={application.status === 'created' ? 'default' : 'secondary'}
+                              className={application.status === 'created' ? 'bg-green-100 text-green-800' : ''}
+                            >
+                              {application.status}
+                            </Badge>
+                          </td>
+                          <td className="py-4 px-4 text-muted-foreground">
+                            {new Date(application.created_at).toLocaleDateString('de-DE')}
+                          </td>
+                          <td className="py-4 px-4 text-muted-foreground">
+                            {application.job[0]?.job_city && application.job[0]?.job_country 
+                              ? `${application.job[0].job_city}, ${application.job[0].job_country}`
+                              : 'Nicht angegeben'
+                            }
+                          </td>
+                          <td className="py-4 px-4">
+                            {application.events && application.events.length > 0 ? (
+                              <div className="space-y-1">
+                                {application.events.slice(-1).map((event, index) => (
+                                  <div key={index} className="flex items-center gap-2 text-sm">
+                                    <div className={`w-2 h-2 rounded-full ${
+                                      event.event_status === 'done' ? 'bg-green-500' : 'bg-yellow-500'
+                                    }`} />
+                                    <span className="text-muted-foreground">
+                                      {event.event_type.replace(/_/g, ' ')}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">Keine Aktivität</span>
+                            )}
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleApplicationClick(application.id);
+                                }}
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Details
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

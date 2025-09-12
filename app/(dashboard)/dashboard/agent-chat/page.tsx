@@ -22,7 +22,8 @@ import {
   Link,
   Briefcase,
   MapPin as LocationIcon,
-  Euro
+  Euro,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,6 +62,58 @@ interface AgentEvent {
     salary?: string;
     applicationId?: string;
   };
+}
+
+interface ApplicationDetails {
+  id: number;
+  created_at: number;
+  job_id: number;
+  user_id: number;
+  updated_at: number | null;
+  status: string;
+  mode: string;
+  events: Array<{
+    event_id: number;
+    timestamp: number;
+    event_type: string;
+    event_status: string;
+  }>;
+  settings: any;
+  stop: boolean;
+  job_tracker_id: number;
+  job: Array<{
+    id: number;
+    created_at: number;
+    title: string;
+    job_city: string;
+    job_state: string;
+    job_country: string;
+    job_employement_type: string;
+    salary: string;
+    seniority: string;
+    job_origin: string;
+    job_expiration: number | null;
+    job_identifier: number;
+    job_posted: number | null;
+    apply_link: string;
+    applicants_number: string;
+    working_hours: string;
+    remote_work: string;
+    source: string;
+    auto_apply: boolean;
+    recruitment_agency: boolean;
+    description: {
+      description_original: string;
+      description_responsibilities: string;
+      description_qualification: string;
+      description_benefits: string;
+    };
+    recruiter: {
+      recruiter_name: string;
+      recruiter_title: string;
+      recruiter_url: string;
+    };
+  }>;
 }
 
 const demoEvents: AgentEvent[] = [
@@ -212,6 +265,8 @@ export default function AgentChatPage() {
     content: string;
     metadata?: any;
   } | null>(null);
+  const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(null);
+  const [isLoadingApplication, setIsLoadingApplication] = useState(false);
   
   // Form state for job details
   const [jobDetails, setJobDetails] = useState({
@@ -223,11 +278,68 @@ export default function AgentChatPage() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get('id');
 
+  const loadApplicationDetails = async (applicationId: string) => {
+    setIsLoadingApplication(true);
+    try {
+      // Get auth token
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return null;
+      };
+
+      const authToken = getCookie('token');
+      
+      if (!authToken) {
+        throw new Error('Kein Authentifizierungstoken gefunden. Bitte melden Sie sich erneut an.');
+      }
+
+      const response = await fetch(`https://api.jobjaeger.de/api:BP7K6-ZQ/application_agent/${applicationId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Application details loaded:', data);
+        setApplicationDetails(data);
+        
+        // Convert API events to AgentEvent format and add them
+        if (data.events && Array.isArray(data.events)) {
+          const convertedEvents: AgentEvent[] = data.events.map((event: any) => ({
+            id: event.event_id.toString(),
+            type: 'action' as const,
+            timestamp: new Date(event.timestamp),
+            content: `✅ ${event.event_type.replace(/_/g, ' ')} - ${event.event_status}`,
+            status: event.event_status === 'done' ? 'success' : 'pending'
+          }));
+          setEvents(convertedEvents);
+        }
+      } else {
+        console.error('Failed to load application details:', response.status);
+        setApplicationDetails(null);
+      }
+    } catch (error) {
+      console.error('Error loading application details:', error);
+      setApplicationDetails(null);
+    } finally {
+      setIsLoadingApplication(false);
+    }
+  };
+
   useEffect(() => {
     // Show form if no ID parameter is present
     if (!jobId) {
       setShowForm(true);
       setIsRunning(false);
+    } else {
+      // Load application details if ID is present
+      loadApplicationDetails(jobId);
+      setShowForm(false);
     }
   }, [jobId]);
 
@@ -642,8 +754,18 @@ export default function AgentChatPage() {
           </div>
         )}
 
+         {/* Loading State for Application Details */}
+         {!showForm && isLoadingApplication && (
+           <div className="flex-1 flex items-center justify-center">
+             <div className="text-center">
+               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+               <p className="text-muted-foreground">Anwendungsdetails werden geladen...</p>
+             </div>
+           </div>
+         )}
+
          {/* Chat Messages */}
-         {!showForm && (
+         {!showForm && !isLoadingApplication && (
            <div className="flex-1 overflow-y-auto px-24 py-4 space-y-4">
            {events.map((event) => (
              <div key={event.id} className={`flex gap-3 p-4 rounded-lg border ${getEventStyle(event)}`}>
@@ -779,7 +901,7 @@ export default function AgentChatPage() {
          )}
 
         {/* Floating Control Menu */}
-        {!showForm && (
+        {!showForm && !isLoadingApplication && (
           <div className="fixed bottom-6 right-6 z-50">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -822,7 +944,7 @@ export default function AgentChatPage() {
         )}
 
          {/* Floating Status Container */}
-         {!showForm && (
+         {!showForm && !isLoadingApplication && (
            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
              <div className="flex items-center justify-between bg-white border border-gray-200 rounded-full shadow-lg overflow-hidden min-w-[400px]">
                {/* Status Indicator */}
