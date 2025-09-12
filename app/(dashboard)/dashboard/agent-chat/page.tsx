@@ -390,9 +390,9 @@ export default function AgentChatPage() {
         const applicationId = urlParams.get('id');
         
         const requestBody: any = {
-          title: jobDetails.title,
-          description: jobDetails.description,
-          url: jobDetails.url
+          job_title: jobDetails.title,
+          job_description: jobDetails.description,
+          job_url: jobDetails.url
         };
         
         // Only include application_agent_id if URL parameter exists
