@@ -34,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -315,6 +316,7 @@ function AgentChatContent() {
     description: '',
     url: ''
   });
+  const [autoMode, setAutoMode] = useState(true);
 
   const searchParams = useSearchParams();
   const jobId = searchParams.get('id');
@@ -419,24 +421,24 @@ function AgentChatContent() {
     if (eventType) {
       const [, action, status] = eventType;
       const actionMap: { [key: string]: string } = {
-        'job imported': 'Job wurde erfolgreich importiert',
-        'resume created': 'Lebenslauf wurde erstellt',
-        'coverletter created': 'Anschreiben wurde erstellt',
-        'application submitted': 'Bewerbung wurde eingereicht',
-        'job search': 'Job-Suche wurde durchgeführt',
-        'document generation': 'Dokument wurde generiert'
+        'job imported': '📥 Job erfolgreich importiert',
+        'resume created': '📄 Lebenslauf erstellt',
+        'coverletter created': '✍️ Anschreiben erstellt',
+        'application submitted': '🎯 Bewerbung eingereicht',
+        'job search': '🔍 Job-Suche durchgeführt',
+        'document generation': '📝 Dokument generiert'
       };
       
       const translatedAction = actionMap[action.toLowerCase()] || action;
       return {
         action: translatedAction,
-        status: status === 'done' ? 'Abgeschlossen' : 'In Bearbeitung'
+        status: status === 'done' ? '✅ Fertig' : '⏳ Läuft...'
       };
     }
     
     return {
       action: event.content,
-      status: event.status === 'success' ? 'Erfolgreich' : event.status === 'error' ? 'Fehler' : 'In Bearbeitung'
+      status: event.status === 'success' ? '✅ Fertig' : event.status === 'error' ? '❌ Fehler' : '⏳ Läuft...'
     };
   };
 
@@ -745,10 +747,10 @@ function AgentChatContent() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Briefcase className="h-6 w-6 text-[#0F973D]" />
-                  Job-Bewerbung starten
+                  🚀 Job-Bewerbung starten
                 </CardTitle>
                 <p className="text-muted-foreground">
-                  Geben Sie die Job-Details ein oder fügen Sie eine Job-URL hinzu, um mit der automatischen Bewerbung zu beginnen.
+                  Gib einfach die Job-Details ein oder füg eine URL hinzu - wir machen den Rest! 💪
                 </p>
               </CardHeader>
               <CardContent>
@@ -756,18 +758,31 @@ function AgentChatContent() {
                    <TabsList className="grid w-full grid-cols-2">
                      <TabsTrigger value="details" className="flex items-center gap-2">
                        <FileText className="h-4 w-4" />
-                       Job-Details
+                       📝 Job-Details
                      </TabsTrigger>
                      <TabsTrigger value="url" className="flex items-center gap-2" disabled>
                        <Link className="h-4 w-4" />
-                       Job-URL (Coming Soon)
+                       🔗 Job-URL (Soon™)
                      </TabsTrigger>
                    </TabsList>
 
                   <TabsContent value="details" className="space-y-6 mt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="title">Job-Titel *</Label>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="title">🎯 Job-Titel *</Label>
+                          <div className="flex items-center gap-2">
+                            <Label htmlFor="auto-mode" className="text-sm text-muted-foreground">
+                              🤖 Auto-Modus
+                            </Label>
+                            <Switch
+                              id="auto-mode"
+                              checked={autoMode}
+                              onCheckedChange={setAutoMode}
+                              className="data-[state=checked]:bg-[#0F973D]"
+                            />
+                          </div>
+                        </div>
                          <Input
                            id="title"
                            placeholder="z.B. Senior Software Engineer"
@@ -784,10 +799,10 @@ function AgentChatContent() {
 
 
                      <div className="space-y-2">
-                       <Label htmlFor="description">Job-Beschreibung *</Label>
+                       <Label htmlFor="description">📋 Job-Beschreibung *</Label>
                        <Textarea
                          id="description"
-                         placeholder="Beschreiben Sie die Stelle..."
+                         placeholder="Erzähl uns was über die Stelle..."
                          value={jobDetails.description}
                          onChange={(e) => handleInputChange('description', e.target.value)}
                          rows={4}
@@ -800,7 +815,7 @@ function AgentChatContent() {
                      </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="jobUrl">Job-URL (optional)</Label>
+                      <Label htmlFor="jobUrl">🔗 Job-URL (optional)</Label>
                       <Input
                         id="jobUrl"
                         placeholder="https://www.linkedin.com/jobs/view/..."
@@ -814,7 +829,7 @@ function AgentChatContent() {
                         } as React.CSSProperties}
                       />
                       <p className="text-sm text-muted-foreground">
-                        Optional: Fügen Sie die URL der Job-Stelle hinzu für zusätzliche Informationen.
+                        💡 Pro-Tipp: Füg die URL hinzu für extra Infos über die Stelle!
                       </p>
                     </div>
                   </TabsContent>
@@ -826,7 +841,7 @@ function AgentChatContent() {
                     variant="outline"
                     onClick={() => setShowForm(false)}
                   >
-                    Abbrechen
+                    ❌ Abbrechen
                   </Button>
                   <Button
                     onClick={handleStartApplication}
@@ -834,7 +849,7 @@ function AgentChatContent() {
                     className="bg-[#0F973D] hover:bg-[#0F973D]/90"
                   >
                     <Play className="h-4 w-4 mr-2" />
-                    Bewerbung starten
+                    🚀 Bewerbung starten
                   </Button>
                 </div>
               </CardContent>
@@ -1196,7 +1211,7 @@ function AgentChatContent() {
                <div className="flex items-center gap-3 px-6 py-3">
                  <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500' : 'bg-yellow-500'}`} />
                  <span className="text-sm font-medium text-gray-700">
-                   {isRunning ? 'Wird ausgeführt' : 'Pausiert'}
+                   {isRunning ? '🚀 Läuft' : '⏸️ Pausiert'}
                  </span>
                </div>
                
@@ -1210,7 +1225,7 @@ function AgentChatContent() {
                  }`}
                >
                  <span className="text-sm font-medium">
-                   {isRunning ? 'Stoppen' : 'Starten'}
+                   {isRunning ? '⏹️ Stoppen' : '▶️ Starten'}
                  </span>
                  {isRunning ? (
                    <div className="flex gap-0.5">
