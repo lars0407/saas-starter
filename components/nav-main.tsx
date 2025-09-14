@@ -37,11 +37,11 @@ export function NavMain({
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
+        {items.map((item, index) => (
           item.items && item.items.length > 0 ? (
             // Render as collapsible dropdown if items exist
             <Collapsible
-              key={item.title}
+              key={`${item.title}-${index}`}
               asChild
               defaultOpen={item.isActive}
               className="group/collapsible"
@@ -56,8 +56,8 @@ export function NavMain({
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    {item.items.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.title}>
+                    {item.items.map((subItem, subIndex) => (
+                      <SidebarMenuSubItem key={`${item.title}-${subItem.title}-${subIndex}`}>
                         <SidebarMenuSubButton asChild>
                           <a 
                             href={subItem.url}
@@ -75,7 +75,7 @@ export function NavMain({
             </Collapsible>
           ) : (
             // Render as simple link button if no items
-            <SidebarMenuItem key={item.title}>
+            <SidebarMenuItem key={`${item.title}-${index}`}>
               <SidebarMenuButton asChild tooltip={item.title}>
                 <a href={item.url}>
                   {item.icon && <item.icon />}

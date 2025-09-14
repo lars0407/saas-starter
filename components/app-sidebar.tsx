@@ -14,9 +14,12 @@ import {
   SquareTerminal,
   Kanban,
   User,
+  Zap,
+  Play,
 } from "lucide-react"
 import useSWR from 'swr'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { FeedbackModal } from '@/components/feedback-modal'
 
 import { NavMain } from "@/components/nav-main"
@@ -75,6 +78,11 @@ const data = {
     },
   ],
   navMain: [
+        {
+          title: "Jobjäger",
+          url: "/dashboard/agent",
+          icon: Zap,
+        },
         {
           title: "Jobsuche",
           url: "/dashboard/job-search",
@@ -157,10 +165,15 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const router = useRouter()
   const { data: user, error } = useSWR<XanoUser>('/api/user', fetcher, {
     revalidateOnFocus: false,
     shouldRetryOnError: false
   });
+
+  const handleStartApplication = () => {
+    router.push('/dashboard/agent-chat');
+  };
 
   // Transform Xano user data to match NavUser component expectations
   const userData = user ? {
@@ -179,6 +192,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <JobjaegerLogo />
       </SidebarHeader>
       <SidebarContent>
+        <div className="p-4">
+          <Button 
+            onClick={handleStartApplication}
+            className="w-full bg-[#0F973D] hover:bg-[#0F973D]/90 text-white font-semibold"
+          >
+            <Play className="h-4 w-4 mr-2" />
+            Bewerbung starten
+          </Button>
+        </div>
         <NavMain items={data.navMain} />
       </SidebarContent>
       

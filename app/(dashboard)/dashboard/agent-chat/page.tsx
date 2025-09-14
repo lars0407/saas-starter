@@ -65,55 +65,94 @@ interface AgentEvent {
 }
 
 interface ApplicationDetails {
-  id: number;
-  created_at: number;
-  job_id: number;
-  user_id: number;
-  updated_at: number | null;
-  status: string;
-  mode: string;
-  events: Array<{
-    event_id: number;
-    timestamp: number;
-    event_type: string;
-    event_status: string;
-  }>;
-  settings: any;
-  stop: boolean;
-  job_tracker_id: number;
-  job: Array<{
+  application: {
     id: number;
     created_at: number;
-    title: string;
-    job_city: string;
-    job_state: string;
-    job_country: string;
-    job_employement_type: string;
-    salary: string;
-    seniority: string;
-    job_origin: string;
-    job_expiration: number | null;
-    job_identifier: number;
-    job_posted: number | null;
-    apply_link: string;
-    applicants_number: string;
-    working_hours: string;
-    remote_work: string;
-    source: string;
-    auto_apply: boolean;
-    recruitment_agency: boolean;
-    description: {
-      description_original: string;
-      description_responsibilities: string;
-      description_qualification: string;
-      description_benefits: string;
+    job_id: number;
+    user_id: number;
+    updated_at: number | null;
+    status: string;
+    mode: string;
+    events: Array<{
+      event_id: number;
+      timestamp: number;
+      event_type: string;
+      event_status: string;
+    }>;
+    settings: any;
+    stop: boolean;
+    job_tracker_id: number;
+    document_id: number;
+    job: Array<{
+      id: number;
+      created_at: number;
+      uuid: string | null;
+      company_id: number;
+      title: string;
+      job_city: string;
+      job_state: string;
+      job_country: string;
+      job_employement_type: string;
+      salary: string;
+      seniority: string;
+      job_origin: string;
+      job_expiration: number | null;
+      job_identifier: number;
+      job_posted: number | null;
+      apply_link: string;
+      applicants_number: string;
+      working_hours: string;
+      remote_work: string;
+      source: string;
+      auto_apply: boolean;
+      recruitment_agency: boolean;
+      description: {
+        description_original: string;
+        description_responsibilities: string;
+        description_qualification: string;
+        description_benefits: string;
+      };
+      recruiter: {
+        recruiter_name: string;
+        recruiter_title: string;
+        recruiter_url: string;
+      };
+      company: {
+        id: number;
+        created_at: number;
+        uuid: string | null;
+        employer_name: string;
+        employer_logo: string;
+        employer_website: string;
+        employer_company_type: string;
+        employer_linkedin: string;
+        company_identifier: number;
+        about: string;
+        short_description: string;
+        founded: string;
+        company_size: string;
+      };
+    }>;
+  };
+  documents: {
+    document_list: Array<{
+      id: number;
+      type: string;
+      link: string;
+      job_tracker_id: number;
+    }>;
+    job_tracker: {
+      id: number;
+      created_at: number;
+      user_id: number;
+      job_id: number;
+      status: string;
+      joboffer_received: boolean;
+      application_date: number | null;
+      notes: string;
+      interview_question: any[];
     };
-    recruiter: {
-      recruiter_name: string;
-      recruiter_title: string;
-      recruiter_url: string;
-    };
-  }>;
+  };
 }
 
 const demoEvents: AgentEvent[] = [
@@ -309,8 +348,8 @@ export default function AgentChatPage() {
         setApplicationDetails(data);
         
         // Convert API events to AgentEvent format and add them
-        if (data.events && Array.isArray(data.events)) {
-          const convertedEvents: AgentEvent[] = data.events.map((event: any) => ({
+        if (data.application?.events && Array.isArray(data.application.events)) {
+          const convertedEvents: AgentEvent[] = data.application.events.map((event: any) => ({
             id: event.event_id.toString(),
             type: 'action' as const,
             timestamp: new Date(event.timestamp),
@@ -370,6 +409,33 @@ export default function AgentChatPage() {
       default:
         return <MessageSquare className="h-5 w-5 text-gray-500" />;
     }
+  };
+
+  const getEventDescription = (event: AgentEvent) => {
+    // Extract event type from content if it's from API
+    const eventType = event.content.match(/✅ (.+) - (.+)/);
+    if (eventType) {
+      const [, action, status] = eventType;
+      const actionMap: { [key: string]: string } = {
+        'job imported': 'Job wurde erfolgreich importiert',
+        'resume created': 'Lebenslauf wurde erstellt',
+        'coverletter created': 'Anschreiben wurde erstellt',
+        'application submitted': 'Bewerbung wurde eingereicht',
+        'job search': 'Job-Suche wurde durchgeführt',
+        'document generation': 'Dokument wurde generiert'
+      };
+      
+      const translatedAction = actionMap[action.toLowerCase()] || action;
+      return {
+        action: translatedAction,
+        status: status === 'done' ? 'Abgeschlossen' : 'In Bearbeitung'
+      };
+    }
+    
+    return {
+      action: event.content,
+      status: event.status === 'success' ? 'Erfolgreich' : event.status === 'error' ? 'Fehler' : 'In Bearbeitung'
+    };
   };
 
   const getEventStyle = (event: AgentEvent) => {
@@ -764,32 +830,185 @@ export default function AgentChatPage() {
            </div>
          )}
 
+         {/* Job Information Card */}
+         {!showForm && !isLoadingApplication && applicationDetails && (
+           <div className="px-24 py-4">
+             <Card className="mb-4">
+               <CardHeader>
+                 <CardTitle className="flex items-center gap-2">
+                   <Briefcase className="h-5 w-5" />
+                   Job-Informationen
+                 </CardTitle>
+               </CardHeader>
+               <CardContent>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="space-y-3">
+                     <div>
+                       <Label className="text-sm font-medium text-muted-foreground">Position</Label>
+                       <p className="text-lg font-semibold">{applicationDetails.application?.job?.[0]?.title || 'Unbekannte Position'}</p>
+                     </div>
+                     <div>
+                       <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                       <Badge 
+                         variant={applicationDetails.application?.status === 'created' ? 'default' : 'secondary'}
+                         className={applicationDetails.application?.status === 'created' ? 'bg-green-100 text-green-800' : ''}
+                       >
+                         {applicationDetails.application?.status}
+                       </Badge>
+                     </div>
+                     <div>
+                       <Label className="text-sm font-medium text-muted-foreground">Erstellt am</Label>
+                       <p className="text-sm">{new Date(applicationDetails.application?.created_at || 0).toLocaleDateString('de-DE', {
+                         year: 'numeric',
+                         month: 'long',
+                         day: 'numeric',
+                         hour: '2-digit',
+                         minute: '2-digit'
+                       })}</p>
+                     </div>
+                   </div>
+                   <div className="space-y-3">
+                     <div>
+                       <Label className="text-sm font-medium text-muted-foreground">Standort</Label>
+                       <p className="text-sm">
+                         {applicationDetails.application?.job?.[0]?.job_city && applicationDetails.application?.job?.[0]?.job_country 
+                           ? `${applicationDetails.application.job[0].job_city}, ${applicationDetails.application.job[0].job_country}`
+                           : 'Nicht angegeben'
+                         }
+                       </p>
+                     </div>
+                     <div>
+                       <Label className="text-sm font-medium text-muted-foreground">Arbeitszeit</Label>
+                       <p className="text-sm">
+                         {applicationDetails.application?.job?.[0]?.working_hours || 'Nicht angegeben'}
+                       </p>
+                     </div>
+                     <div>
+                       <Label className="text-sm font-medium text-muted-foreground">Remote-Arbeit</Label>
+                       <p className="text-sm">
+                         {applicationDetails.application?.job?.[0]?.remote_work || 'Nicht angegeben'}
+                       </p>
+                     </div>
+                     <div>
+                       <Label className="text-sm font-medium text-muted-foreground">Gehalt</Label>
+                       <p className="text-sm">
+                         {applicationDetails.application?.job?.[0]?.salary || 'Nicht angegeben'}
+                       </p>
+                     </div>
+                   </div>
+                 </div>
+                 
+                 {applicationDetails.application?.job?.[0]?.description?.description_original && (
+                   <div className="mt-6 pt-4 border-t">
+                     <Label className="text-sm font-medium text-muted-foreground">Job-Beschreibung</Label>
+                     <p className="text-sm mt-2 text-muted-foreground whitespace-pre-wrap">
+                       {applicationDetails.application.job[0].description.description_original}
+                     </p>
+                   </div>
+                 )}
+                 
+                 {applicationDetails.application?.job?.[0]?.apply_link && (
+                   <div className="mt-4 pt-4 border-t">
+                     <Button variant="outline" asChild>
+                       <a 
+                         href={applicationDetails.application.job[0].apply_link} 
+                         target="_blank" 
+                         rel="noopener noreferrer"
+                         className="flex items-center gap-2"
+                       >
+                         <Link className="h-4 w-4" />
+                         Zur Original-Stellenausschreibung
+                       </a>
+                     </Button>
+                   </div>
+                 )}
+               </CardContent>
+             </Card>
+           </div>
+         )}
+
+         {/* Documents Section */}
+         {!showForm && !isLoadingApplication && applicationDetails?.documents?.document_list && (
+           <div className="px-24 py-4">
+             <Card className="mb-4">
+               <CardHeader>
+                 <CardTitle className="flex items-center gap-2">
+                   <FileText className="h-5 w-5" />
+                   Generierte Dokumente
+                 </CardTitle>
+               </CardHeader>
+               <CardContent>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                   {applicationDetails.documents.document_list.map((document) => (
+                     <div key={document.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                       <div className="flex items-center gap-3 mb-3">
+                         <div className="p-2 bg-blue-100 rounded-lg">
+                           {document.type === 'resume' ? (
+                             <FileText className="h-5 w-5 text-blue-600" />
+                           ) : (
+                             <MessageSquare className="h-5 w-5 text-green-600" />
+                           )}
+                         </div>
+                         <div>
+                           <h4 className="font-medium text-sm">
+                             {document.type === 'resume' ? 'Lebenslauf' : 'Anschreiben'}
+                           </h4>
+                           <p className="text-xs text-muted-foreground">ID: {document.id}</p>
+                         </div>
+                       </div>
+                       <Button 
+                         variant="outline" 
+                         size="sm" 
+                         asChild
+                         className="w-full"
+                       >
+                         <a 
+                           href={document.link} 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           className="flex items-center gap-2"
+                         >
+                           <Link className="h-4 w-4" />
+                           Öffnen
+                         </a>
+                       </Button>
+                     </div>
+                   ))}
+                 </div>
+               </CardContent>
+             </Card>
+           </div>
+         )}
+
          {/* Chat Messages */}
          {!showForm && !isLoadingApplication && (
            <div className="flex-1 overflow-y-auto px-24 py-4 space-y-4">
-           {events.map((event) => (
-             <div key={event.id} className={`flex gap-3 p-4 rounded-lg border ${getEventStyle(event)}`}>
-               <div className="flex-shrink-0">
-                 {getEventIcon(event)}
-               </div>
-               <div className="flex-1 min-w-0">
-                 <div className="flex items-center gap-2 mb-1">
-                   <span className="text-sm font-medium text-gray-900">
-                     {event.type === 'message' ? 'Jobjäger Agent' : 'System'}
-                   </span>
-                   <span className="text-xs text-gray-500">
-                     {formatTime(event.timestamp)}
-                   </span>
-                   {event.status && (
+           {events.map((event) => {
+             const eventDesc = getEventDescription(event);
+             return (
+               <div key={event.id} className={`flex gap-3 p-4 rounded-lg border ${getEventStyle(event)}`}>
+                 <div className="flex-shrink-0">
+                   {getEventIcon(event)}
+                 </div>
+                 <div className="flex-1 min-w-0">
+                   <div className="flex items-center gap-2 mb-1">
+                     <span className="text-sm font-medium text-gray-900">
+                       {event.type === 'message' ? 'Jobjäger Agent' : 'System'}
+                     </span>
+                     <span className="text-xs text-gray-500">
+                       {formatTime(event.timestamp)}
+                     </span>
                      <Badge 
                        variant={event.status === 'success' ? 'default' : event.status === 'error' ? 'destructive' : 'secondary'}
                        className="text-xs"
                      >
-                       {event.status === 'success' ? 'Erfolgreich' : event.status === 'error' ? 'Fehler' : 'In Bearbeitung'}
+                       {eventDesc.status}
                      </Badge>
+                   </div>
+                   <p className="text-sm text-gray-700 font-medium mb-1">{eventDesc.action}</p>
+                   {event.type === 'message' && (
+                     <p className="text-sm text-gray-600">{event.content}</p>
                    )}
-                 </div>
-                 <p className="text-sm text-gray-700">{event.content}</p>
                  
                  {/* Job Metadata */}
                  {event.metadata && (
@@ -830,7 +1049,8 @@ export default function AgentChatPage() {
                  )}
                </div>
              </div>
-           ))}
+             );
+           })}
 
            {/* Loading Event */}
            {isLoading && loadingEvent && (
