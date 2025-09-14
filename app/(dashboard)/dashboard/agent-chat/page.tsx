@@ -23,7 +23,8 @@ import {
   Briefcase,
   MapPin as LocationIcon,
   Euro,
-  Loader2
+  Loader2,
+  Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +49,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { PDFViewer } from "@/components/ui/pdf-viewer";
 
 interface AgentEvent {
   id: string;
@@ -349,8 +351,8 @@ export default function AgentChatPage() {
         
         // Convert API events to AgentEvent format and add them
         if (data.application?.events && Array.isArray(data.application.events)) {
-          const convertedEvents: AgentEvent[] = data.application.events.map((event: any) => ({
-            id: event.event_id.toString(),
+          const convertedEvents: AgentEvent[] = data.application.events.map((event: any, index: number) => ({
+            id: `${event.event_id}_${index}`, // Use event_id + index to ensure uniqueness
             type: 'action' as const,
             timestamp: new Date(event.timestamp),
             content: `✅ ${event.event_type.replace(/_/g, ' ')} - ${event.event_status}`,
@@ -436,6 +438,26 @@ export default function AgentChatPage() {
       action: event.content,
       status: event.status === 'success' ? 'Erfolgreich' : event.status === 'error' ? 'Fehler' : 'In Bearbeitung'
     };
+  };
+
+  const getRelatedDocument = (event: AgentEvent) => {
+    if (!applicationDetails?.documents?.document_list) return null;
+    
+    // Extract event type from content if it's from API
+    const eventType = event.content.match(/✅ (.+) - (.+)/);
+    if (eventType) {
+      const [, action] = eventType;
+      const actionLower = action.toLowerCase();
+      
+      // Map event types to document types
+      if (actionLower.includes('resume') || actionLower.includes('lebenslauf')) {
+        return applicationDetails.documents.document_list.find(doc => doc.type === 'resume');
+      } else if (actionLower.includes('coverletter') || actionLower.includes('anschreiben')) {
+        return applicationDetails.documents.document_list.find(doc => doc.type === 'cover letter');
+      }
+    }
+    
+    return null;
   };
 
   const getEventStyle = (event: AgentEvent) => {
@@ -602,7 +624,7 @@ export default function AgentChatPage() {
             apiData.events.forEach((event: any, index: number) => {
               setTimeout(() => {
                 addEvent({
-                  id: event.event_id.toString(),
+                  id: `${event.event_id}_${index}`, // Use event_id + index to ensure uniqueness
                   type: 'action',
                   timestamp: new Date(event.timestamp),
                   content: `✅ ${event.event_type.replace(/_/g, ' ')} - ${event.event_status}`,
@@ -927,64 +949,13 @@ export default function AgentChatPage() {
            </div>
          )}
 
-         {/* Documents Section */}
-         {!showForm && !isLoadingApplication && applicationDetails?.documents?.document_list && (
-           <div className="px-24 py-4">
-             <Card className="mb-4">
-               <CardHeader>
-                 <CardTitle className="flex items-center gap-2">
-                   <FileText className="h-5 w-5" />
-                   Generierte Dokumente
-                 </CardTitle>
-               </CardHeader>
-               <CardContent>
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                   {applicationDetails.documents.document_list.map((document) => (
-                     <div key={document.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                       <div className="flex items-center gap-3 mb-3">
-                         <div className="p-2 bg-blue-100 rounded-lg">
-                           {document.type === 'resume' ? (
-                             <FileText className="h-5 w-5 text-blue-600" />
-                           ) : (
-                             <MessageSquare className="h-5 w-5 text-green-600" />
-                           )}
-                         </div>
-                         <div>
-                           <h4 className="font-medium text-sm">
-                             {document.type === 'resume' ? 'Lebenslauf' : 'Anschreiben'}
-                           </h4>
-                           <p className="text-xs text-muted-foreground">ID: {document.id}</p>
-                         </div>
-                       </div>
-                       <Button 
-                         variant="outline" 
-                         size="sm" 
-                         asChild
-                         className="w-full"
-                       >
-                         <a 
-                           href={document.link} 
-                           target="_blank" 
-                           rel="noopener noreferrer"
-                           className="flex items-center gap-2"
-                         >
-                           <Link className="h-4 w-4" />
-                           Öffnen
-                         </a>
-                       </Button>
-                     </div>
-                   ))}
-                 </div>
-               </CardContent>
-             </Card>
-           </div>
-         )}
 
          {/* Chat Messages */}
          {!showForm && !isLoadingApplication && (
            <div className="flex-1 overflow-y-auto px-24 py-4 space-y-4">
            {events.map((event) => {
              const eventDesc = getEventDescription(event);
+             const relatedDocument = getRelatedDocument(event);
              return (
                <div key={event.id} className={`flex gap-3 p-4 rounded-lg border ${getEventStyle(event)}`}>
                  <div className="flex-shrink-0">
@@ -1008,6 +979,60 @@ export default function AgentChatPage() {
                    <p className="text-sm text-gray-700 font-medium mb-1">{eventDesc.action}</p>
                    {event.type === 'message' && (
                      <p className="text-sm text-gray-600">{event.content}</p>
+                   )}
+                   
+                   {/* PDF Preview for related documents */}
+                   {relatedDocument && (
+                     <div className="mt-3 p-3 bg-white rounded-md border">
+                       <div className="flex items-center gap-2 mb-2">
+                         <FileText className="h-4 w-4 text-blue-600" />
+                         <span className="text-sm font-medium text-gray-900">
+                           {relatedDocument.type === 'resume' ? 'Lebenslauf' : 'Anschreiben'}
+                         </span>
+                         <Badge variant="outline" className="text-xs">
+                           Vorschau
+                         </Badge>
+                       </div>
+                       <div className="w-32 h-40 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
+                         <PDFViewer
+                           pdfUrl={relatedDocument.link}
+                           showToolbar={false}
+                           showNavigation={false}
+                           showBorder={false}
+                           fallbackMessage=""
+                           downloadMessage=""
+                           placeholderMessage=""
+                           className="w-full h-full -mt-6 -mb-6 pointer-events-none"
+                         />
+                       </div>
+                       <div className="mt-2 flex gap-2">
+                         <Button 
+                           variant="outline" 
+                           size="sm" 
+                           asChild
+                           className="text-xs"
+                         >
+                           <a 
+                             href={relatedDocument.link} 
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="flex items-center gap-1"
+                           >
+                             <Link className="h-3 w-3" />
+                             Öffnen
+                           </a>
+                         </Button>
+                         <Button 
+                           variant="ghost" 
+                           size="sm" 
+                           onClick={() => window.open(relatedDocument.link, '_blank')}
+                           className="text-xs"
+                         >
+                           <Download className="h-3 w-3 mr-1" />
+                           Download
+                         </Button>
+                       </div>
+                     </div>
                    )}
                  
                  {/* Job Metadata */}
