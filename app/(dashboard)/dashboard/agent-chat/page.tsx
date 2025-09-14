@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
   Play, 
@@ -294,7 +294,7 @@ const demoEvents: AgentEvent[] = [
   }
 ];
 
-export default function AgentChatPage() {
+function AgentChatContent() {
   const [events, setEvents] = useState<AgentEvent[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [remainingSteps, setRemainingSteps] = useState(3);
@@ -1227,5 +1227,20 @@ export default function AgentChatPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function AgentChatPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Lade Agent Chat...</p>
+        </div>
+      </div>
+    }>
+      <AgentChatContent />
+    </Suspense>
   );
 } 
