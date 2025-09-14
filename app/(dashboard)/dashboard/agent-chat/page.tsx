@@ -952,7 +952,7 @@ function AgentChatContent() {
 
          {/* Chat Messages */}
          {!showForm && !isLoadingApplication && (
-           <div className="flex-1 overflow-y-auto px-24 py-4 space-y-4">
+           <div className="flex-1 overflow-y-auto px-24 py-4 pb-32 space-y-4">
            {events.map((event) => {
              const eventDesc = getEventDescription(event);
              const relatedDocument = getRelatedDocument(event);
