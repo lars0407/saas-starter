@@ -24,7 +24,8 @@ import {
   MapPin as LocationIcon,
   Euro,
   Loader2,
-  Download
+  Download,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +36,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DocumentPreviewCard } from '@/components/job-search/document-preview-card';
+import { DocumentSkeleton } from '@/components/document-skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,6 +69,18 @@ interface AgentEvent {
     salary?: string;
     applicationId?: string;
   };
+}
+
+interface Document {
+  id: number;
+  created_at: number;
+  updated_at: number;
+  type: "resume" | "cover letter";
+  preview_link: string;
+  name: string;
+  storage_path: string;
+  variant: "human" | "ai";
+  url: string;
 }
 
 interface ApplicationDetails {
@@ -317,9 +333,68 @@ function AgentChatContent() {
     url: ''
   });
   const [autoMode, setAutoMode] = useState(true);
+  const [resumeModalOpen, setResumeModalOpen] = useState(false);
+  const [resumes, setResumes] = useState<Document[]>([]);
+  const [resumesLoading, setResumesLoading] = useState(false);
+  const [selectedResume, setSelectedResume] = useState<Document | null>(null);
 
   const searchParams = useSearchParams();
   const jobId = searchParams.get('id');
+
+  const fetchResumes = async (autoSelect = false) => {
+    setResumesLoading(true);
+    try {
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1];
+
+      const response = await fetch(
+        `https://api.jobjaeger.de/api:SiRHLF4Y/documents?offset=0&variant=human&type=resume`,
+        {
+          headers: {
+            ...(token && { "Authorization": `Bearer ${token}` })
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch resumes: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Resumes API response:", data);
+      
+      if (data && data.document) {
+        const resumes = data.document.items || [];
+        setResumes(resumes);
+        
+        // Auto-select the latest resume if requested and resumes exist
+        if (autoSelect && resumes.length > 0) {
+          // Sort by created_at descending to get the latest
+          const sortedResumes = resumes.sort((a, b) => b.created_at - a.created_at);
+          setSelectedResume(sortedResumes[0]);
+        }
+      } else {
+        setResumes([]);
+      }
+    } catch (error) {
+      console.error("Error fetching resumes:", error);
+      setResumes([]);
+    } finally {
+      setResumesLoading(false);
+    }
+  };
+
+  const handleOpenResumeModal = () => {
+    setResumeModalOpen(true);
+    fetchResumes();
+  };
+
+  const handleSelectResume = (resume: Document) => {
+    setSelectedResume(resume);
+    setResumeModalOpen(false);
+  };
 
   const loadApplicationDetails = async (applicationId: string) => {
     setIsLoadingApplication(true);
@@ -379,12 +454,30 @@ function AgentChatContent() {
     if (!jobId) {
       setShowForm(true);
       setIsRunning(false);
+      // Auto-fetch and select the latest resume when showing the form
+      fetchResumes(true);
     } else {
       // Load application details if ID is present
       loadApplicationDetails(jobId);
       setShowForm(false);
     }
   }, [jobId]);
+
+  // Listen for custom event from sidebar to open form
+  useEffect(() => {
+    const handleOpenForm = () => {
+      setShowForm(true);
+      setIsRunning(false);
+      // Auto-fetch and select the latest resume when opening form
+      fetchResumes(true);
+    };
+
+    window.addEventListener('openAgentForm', handleOpenForm);
+    
+    return () => {
+      window.removeEventListener('openAgentForm', handleOpenForm);
+    };
+  }, []);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('de-DE', { 
@@ -439,6 +532,25 @@ function AgentChatContent() {
     return {
       action: event.content,
       status: event.status === 'success' ? '✅ Fertig' : event.status === 'error' ? '❌ Fehler' : '⏳ Läuft...'
+    };
+  };
+
+  const getEventDescriptionFromType = (eventType: string, eventStatus: string) => {
+    const actionMap: { [key: string]: string } = {
+      'job_imported': '📥 Job erfolgreich importiert',
+      'resume_created': '📄 Lebenslauf erstellt',
+      'coverletter_created': '✍️ Anschreiben erstellt',
+      'application_submitted': '🎯 Bewerbung eingereicht',
+      'job_search': '🔍 Job-Suche durchgeführt',
+      'document_generation': '📝 Dokument generiert'
+    };
+    
+    const translatedAction = actionMap[eventType] || `✅ ${eventType.replace(/_/g, ' ')}`;
+    const status = eventStatus === 'done' ? '✅ Fertig' : '⏳ Läuft...';
+    
+    return {
+      action: translatedAction,
+      status: status
     };
   };
 
@@ -543,7 +655,22 @@ function AgentChatContent() {
   };
 
   const addEvent = (event: AgentEvent) => {
-    setEvents(prev => [...prev, event]);
+    console.log('Adding event to state:', event);
+    setEvents(prev => {
+      // If this is an agent message, ensure it's always at the end
+      if (event.type === 'message' && event.id.startsWith('agent_msg_')) {
+        // Remove any existing agent messages and add this one at the end
+        const otherEvents = prev.filter(e => !e.id.startsWith('agent_msg_'));
+        const newEvents = [...otherEvents, event];
+        console.log('Updated events array with agent message at end:', newEvents);
+        return newEvents;
+      } else {
+        // For regular events, just add them normally
+        const newEvents = [...prev, event];
+        console.log('Updated events array:', newEvents);
+        return newEvents;
+      }
+    });
   };
 
   const updateLastEvent = (updates: Partial<AgentEvent>) => {
@@ -570,6 +697,20 @@ function AgentChatContent() {
       setShowForm(false);
       setIsRunning(true);
 
+      // Remove existing application id from URL when starting a NEW application
+      try {
+        const currentUrl = new URL(window.location.href);
+        if (currentUrl.searchParams.has('id')) {
+          currentUrl.searchParams.delete('id');
+          window.history.replaceState({}, '', currentUrl.pathname + (currentUrl.search ? `?${currentUrl.searchParams.toString()}` : ''));
+        }
+      } catch (_) {
+        // ignore URL errors
+      }
+
+      // Clear previously loaded application details (if any)
+      setApplicationDetails(null);
+
       // Get auth token
       const getCookie = (name: string) => {
         const value = `; ${document.cookie}`;
@@ -586,22 +727,22 @@ function AgentChatContent() {
 
       // Try to call API (with fallback for development)
       let apiSuccess = false;
-      let apiData: any = null;
       try {
-        // Check if we have an ID parameter in the URL
+        // Read URL params AFTER potential cleanup above
         const urlParams = new URLSearchParams(window.location.search);
         const applicationId = urlParams.get('id');
         
         const requestBody: any = {
           job_title: jobDetails.title,
           job_description: jobDetails.description,
-          job_url: jobDetails.url
+          job_url: jobDetails.url,
+          document_id: selectedResume?.id || null,
+          mode: autoMode ? 'auto' : 'manual'
         };
         
-        // Only include application_agent_id if URL parameter exists
-        if (applicationId) {
-          requestBody.application_agent_id = parseInt(applicationId);
-        }
+        // Do NOT include application_agent_id when starting a new application.
+        // If in the future we support continuing an existing one, we can conditionally include it again.
+        // (Intentionally not adding application_agent_id even if applicationId exists.)
 
         const response = await fetch('https://api.jobjaeger.de/api:BP7K6-ZQ/v2/agent/application/generate', {
           method: 'POST',
@@ -613,27 +754,165 @@ function AgentChatContent() {
         });
 
         if (response.ok) {
-          apiData = await response.json();
-          console.log('API Response:', apiData);
           apiSuccess = true;
           
-          // Process the real API response
-          if (apiData.events && apiData.events.length > 0) {
-            // Clear existing events and add real ones from API
-            setEvents([]);
-            
-            // Add each event from the API response
-            apiData.events.forEach((event: any, index: number) => {
-              setTimeout(() => {
-                addEvent({
-                  id: `${event.event_id}_${index}`, // Use event_id + index to ensure uniqueness
-                  type: 'action',
-                  timestamp: new Date(event.timestamp),
-                  content: `✅ ${event.event_type.replace(/_/g, ' ')} - ${event.event_status}`,
-                  status: event.event_status === 'done' ? 'success' : 'pending'
-                });
-              }, index * 500); // Stagger events by 500ms each
-            });
+          // Handle streaming response
+          const reader = response.body?.getReader();
+          const decoder = new TextDecoder();
+          
+          if (reader) {
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                
+                if (done) break;
+                
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+                
+                for (const line of lines) {
+                  if (line.trim() === '') continue;
+                  
+                  try {
+                    // Handle different streaming formats
+                    let data;
+                    if (line.startsWith('data: ')) {
+                      // Server-Sent Events format
+                      data = JSON.parse(line.slice(6));
+                    } else {
+                      // Direct JSON format
+                      data = JSON.parse(line);
+                    }
+                    
+                    // Process streaming data
+                    console.log('Processing streaming data:', data);
+
+                    // Handle complete application object (first message)
+                    if (data && data.id && data.job && data.events && !data.type) {
+                      try {
+                        const jobTrackerFallback = {
+                          id: data.job_tracker_id || 0,
+                          created_at: data.created_at || Date.now(),
+                          user_id: data.user_id || 0,
+                          job_id: data.job_id || 0,
+                          status: data.status || 'created',
+                          joboffer_received: false,
+                          application_date: null,
+                          notes: '',
+                          interview_question: [] as any[],
+                        };
+                        
+                        // Update application details with latest data
+                        setApplicationDetails({
+                          application: data,
+                          documents: {
+                            document_list: [],
+                            job_tracker: jobTrackerFallback,
+                          },
+                        } as any);
+                        setShowForm(false);
+                        
+                        // Clear existing events and add all events from the initial application
+                        setEvents([]);
+                        data.events.forEach((event: any, index: number) => {
+                          const eventDesc = getEventDescriptionFromType(event.event_type, event.event_status);
+                          addEvent({
+                            id: `${event.event_id}_${index}`,
+                            type: 'action',
+                            timestamp: new Date(event.timestamp),
+                            content: eventDesc.action,
+                            status: event.event_status === 'done' ? 'success' : 'pending'
+                          });
+                        });
+                        
+                        // Add success message for the initial status (always last)
+                        addEvent({
+                          id: `agent_msg_${data.id}`,
+                          type: 'message',
+                          timestamp: new Date(),
+                          content: 'Bewerbung erfolgreich gestartet! Der Agent beginnt mit der automatischen Erstellung der Bewerbungsunterlagen'
+                        });
+                      } catch (e) {
+                        console.warn('Failed to process initial application:', e);
+                      }
+                    }
+                    // Handle event messages
+                    else if (data.type === 'event') {
+                      console.log('Adding event message:', data);
+                      const eventDesc = getEventDescriptionFromType(data.event_type, data.event_status);
+                      addEvent({
+                        id: `${data.event_id}_${Date.now()}_${Math.random()}`,
+                        type: 'action',
+                        timestamp: new Date(data.timestamp),
+                        content: eventDesc.action,
+                        status: data.event_status === 'done' ? 'success' : 'pending'
+                      });
+                    }
+                    // Handle status messages
+                    else if (data.type === 'status') {
+                      console.log('Updating status:', data.status);
+                      // Update the application status in the job information card
+                      setApplicationDetails(prev => {
+                        if (prev?.application) {
+                          return {
+                            ...prev,
+                            application: {
+                              ...prev.application,
+                              status: data.status
+                            }
+                          };
+                        }
+                        return prev;
+                      });
+                    }
+                    // Handle legacy single event format
+                    else if (data.event) {
+                      console.log('Adding single event:', data.event);
+                      const eventDesc = getEventDescriptionFromType(data.event.event_type, data.event.event_status);
+                      addEvent({
+                        id: `${data.event.event_id || Date.now()}_${Math.random()}`,
+                        type: 'action',
+                        timestamp: new Date(data.event.timestamp || Date.now()),
+                        content: eventDesc.action,
+                        status: data.event.event_status === 'done' ? 'success' : 'pending'
+                      });
+                    }
+                    // Handle legacy message format
+                    else if (data.message) {
+                      console.log('Adding message:', data.message);
+                      addEvent({
+                        id: `msg_${Date.now()}_${Math.random()}`,
+                        type: 'message',
+                        timestamp: new Date(),
+                        content: data.message
+                      });
+                    }
+                    // Handle legacy events array format
+                    else if (data.events && Array.isArray(data.events)) {
+                      console.log('Adding events array:', data.events);
+                      data.events.forEach((event: any, index: number) => {
+                        const eventDesc = getEventDescriptionFromType(event.event_type, event.event_status);
+                        addEvent({
+                          id: `${event.event_id}_${index}`,
+                          type: 'action',
+                          timestamp: new Date(event.timestamp),
+                          content: eventDesc.action,
+                          status: event.event_status === 'done' ? 'success' : 'pending'
+                        });
+                      });
+                    } else {
+                      console.log('Unknown data format:', data);
+                    }
+                  } catch (parseError) {
+                    console.warn('Failed to parse streaming data:', line, parseError);
+                  }
+                }
+              }
+            } catch (streamError) {
+              console.error('Streaming error:', streamError);
+            } finally {
+              reader.releaseLock();
+            }
           }
         } else {
           console.warn('API returned error, falling back to simulation');
@@ -644,17 +923,19 @@ function AgentChatContent() {
 
       // Stop loading and add success event
       stopLoadingEvent();
-      addEvent({
-        id: Date.now().toString(),
-        type: 'message',
-        timestamp: new Date(),
-        content: apiSuccess 
-          ? 'Bewerbung erfolgreich gestartet! Der Agent beginnt mit der automatischen Job-Suche...'
-          : 'Bewerbung gestartet (Demo-Modus)! Der Agent beginnt mit der automatischen Job-Suche...'
-      });
+      
+      // Only add the success message if API didn't provide real events (fallback mode)
+      if (!apiSuccess) {
+        addEvent({
+          id: Date.now().toString(),
+          type: 'message',
+          timestamp: new Date(),
+          content: 'Bewerbung gestartet (Demo-Modus)! Der Agent beginnt mit der automatischen Erstellung der Bewerbungsunterlagen'
+        });
+      }
 
       // Only add simulation events if API didn't provide real events
-      if (!apiSuccess || !apiData?.events || apiData.events.length === 0) {
+      if (!apiSuccess) {
         // Start the agent process
         startLoadingEvent('action', 'Jobs werden gesucht...');
         
@@ -829,7 +1110,60 @@ function AgentChatContent() {
                         } as React.CSSProperties}
                       />
                       <p className="text-sm text-muted-foreground">
-                        💡 Pro-Tipp: Füg die URL hinzu für extra Infos über die Stelle!
+                        🚀 Wir bewerben uns automatisch für dich! Die URL hilft uns dabei, die perfekte Bewerbung zu erstellen.
+                      </p>
+                    </div>
+
+                    {/* Resume Picker Section */}
+                    <div className="space-y-2">
+                      <Label>📄 Base-Lebenslauf wählen</Label>
+                      {selectedResume ? (
+                        <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                          <div className="w-16 h-20 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
+                            <PDFViewer
+                              pdfUrl={selectedResume.url}
+                              showToolbar={false}
+                              showNavigation={false}
+                              showBorder={false}
+                              fallbackMessage=""
+                              downloadMessage=""
+                              placeholderMessage=""
+                              className="w-full h-full -mt-6 -mb-6 pointer-events-none"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{selectedResume.name}</p>
+                            <p className="text-xs text-gray-500">ID: {selectedResume.id}</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedResume(null)}
+                            className="text-xs"
+                          >
+                            ✏️ Ändern
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          onClick={handleOpenResumeModal}
+                          className="w-full justify-start text-left h-auto p-4"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-16 h-20 bg-gray-100 border border-gray-200 rounded-md flex items-center justify-center">
+                              <FileText className="h-8 w-8 text-gray-400" />
+                            </div>
+                            <div className="flex-1 text-left">
+                              <p className="text-sm font-medium">Lebenslauf auswählen</p>
+                              <p className="text-xs text-muted-foreground">Wähle deinen Base-Lebenslauf für die KI-Generierung</p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-gray-400" />
+                          </div>
+                        </Button>
+                      )}
+                      <p className="text-sm text-muted-foreground">
+                        🤖 Wähle einen Lebenslauf als Grundlage für die automatische Anpassung
                       </p>
                     </div>
                   </TabsContent>
@@ -1239,6 +1573,62 @@ function AgentChatContent() {
              </div>
            </div>
          )}
+
+         {/* Resume Picker Modal */}
+         <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
+           <DialogContent className="max-w-7xl w-[98vw] max-h-[90vh]">
+             <DialogHeader className="mb-6">
+               <DialogTitle className="text-2xl font-bold text-center">
+                 Wähle deinen Base-Lebenslauf 🚀
+               </DialogTitle>
+               <p className="text-center text-muted-foreground mt-2">
+                 Pick dein bestehendes CV als Grundlage für die KI-Generierung
+               </p>
+             </DialogHeader>
+             
+             <div className="overflow-y-auto max-h-[60vh]">
+               {resumesLoading ? (
+                 <div className="flex gap-4 overflow-x-auto pb-4">
+                   {Array.from({ length: 6 }).map((_, index) => (
+                     <DocumentSkeleton key={index} className="min-w-[300px] flex-shrink-0" />
+                   ))}
+                 </div>
+               ) : resumes.length === 0 ? (
+                 <div className="text-center py-8">
+                   <div className="mx-auto h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                     <FileText className="h-12 w-12 text-gray-400" />
+                   </div>
+                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                     Noch kein Base-Lebenslauf vorhanden 😅
+                   </h3>
+                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                     Erstelle deinen ersten Lebenslauf, um mit der KI-Generierung zu starten
+                   </p>
+                   <Button 
+                     onClick={() => {
+                       setResumeModalOpen(false);
+                       window.location.href = '/dashboard/resume-generate';
+                     }}
+                     className="bg-[#0F973D] hover:bg-[#0D7A32] text-white"
+                   >
+                     <FileText className="mr-2 h-4 w-4" />
+                     Lebenslauf erstellen
+                   </Button>
+                 </div>
+               ) : (
+                 <div className="flex gap-4 overflow-x-auto pb-4">
+                   {resumes.map((resume) => (
+                     <div key={resume.id} onClick={() => handleSelectResume(resume)} className="flex-shrink-0">
+                       <DocumentPreviewCard
+                         document={resume}
+                       />
+                     </div>
+                   ))}
+                 </div>
+               )}
+             </div>
+           </DialogContent>
+         </Dialog>
 
       </div>
     </div>

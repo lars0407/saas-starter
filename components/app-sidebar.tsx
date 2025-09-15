@@ -172,7 +172,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   });
 
   const handleStartApplication = () => {
-    router.push('/dashboard/agent-chat');
+    // Check if we're already on the agent-chat page
+    if (window.location.pathname === '/dashboard/agent-chat') {
+      // Dispatch a custom event to open the form
+      window.dispatchEvent(new CustomEvent('openAgentForm'));
+    } else {
+      // Navigate to agent-chat page
+      router.push('/dashboard/agent-chat');
+    }
   };
 
   // Transform Xano user data to match NavUser component expectations
