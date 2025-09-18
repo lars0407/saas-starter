@@ -180,7 +180,7 @@ export default function JobjaegerAgentPage() {
   const router = useRouter();
 
   const handleStartApplication = () => {
-    router.push('/dashboard/agent-chat');
+    router.push('/dashboard/agent-chat?reset=true');
   };
 
   const loadApplications = async () => {

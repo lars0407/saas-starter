@@ -345,6 +345,7 @@ function AgentChatContent() {
 
   const searchParams = useSearchParams();
   const jobId = searchParams.get('id');
+  const resetForm = searchParams.get('reset');
 
   const fetchResumes = async (autoSelect = false) => {
     setResumesLoading(true);
@@ -473,6 +474,12 @@ function AgentChatContent() {
     const handleOpenForm = () => {
       setShowForm(true);
       setIsRunning(false);
+      // Reset form fields
+      setJobDetails({
+        title: '',
+        description: '',
+        url: ''
+      });
       // Auto-fetch and select the latest resume when opening form
       fetchResumes(true);
     };
@@ -497,6 +504,21 @@ function AgentChatContent() {
       }));
     }
   }, [loadingTasks]);
+
+  // Handle form reset when reset parameter is present
+  useEffect(() => {
+    if (resetForm === 'true') {
+      setJobDetails({
+        title: '',
+        description: '',
+        url: ''
+      });
+      setShowForm(true);
+      setIsRunning(false);
+      // Auto-fetch and select the latest resume when opening form
+      fetchResumes(true);
+    }
+  }, [resetForm]);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('de-DE', { 
