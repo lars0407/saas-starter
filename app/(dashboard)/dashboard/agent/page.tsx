@@ -297,7 +297,7 @@ export default function JobjaegerAgentPage() {
             <Play className="h-5 w-5 mr-2" />
             Bewerbung starten
           </Button>
-          <Button variant="link" className="p-0 h-auto text-[#0F973D]">
+          <Button variant="link" className="p-0 h-auto text-[#0F973D]" disabled>
             Tutorials anzeigen
           </Button>
         </div>
@@ -331,11 +331,13 @@ export default function JobjaegerAgentPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    Sie haben noch {applicationsRemaining} Job-Bewerbungen übrig.
+                  <span className="text-sm">
+                    <span className="text-muted-foreground">Während der Entwicklung haben Sie </span>
+                    <span className="font-bold bg-[#0F973D]/10 px-2 py-1 rounded-md text-[#0F973D]">unbegrenzte Job-Bewerbungen</span>
+                    <span className="text-muted-foreground">.</span>
                   </span>
                 </div>
-                <Button className="bg-[#0F973D] hover:bg-[#0F973D]/90">
+                <Button className="bg-[#0F973D] hover:bg-[#0F973D]/90" disabled>
                   Paket kaufen
                 </Button>
               </div>
@@ -347,7 +349,7 @@ export default function JobjaegerAgentPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <Button className="bg-[#0F973D] hover:bg-[#0F973D]/90">
+                  <Button className="bg-[#0F973D] hover:bg-[#0F973D]/90" disabled>
                     Alle bewerben
                   </Button>
                   <Button variant="outline">
@@ -385,44 +387,56 @@ export default function JobjaegerAgentPage() {
               <CardTitle>Passende Job-Möglichkeiten</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium">Position</th>
-                      <th className="text-left py-3 px-4 font-medium">Standort</th>
-                      <th className="text-left py-3 px-4 font-medium">Unternehmen</th>
-                      <th className="text-left py-3 px-4 font-medium">Passungsrate</th>
-                      <th className="text-left py-3 px-4 font-medium">Aktion</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mockJobs.map((job) => (
-                      <tr key={job.id} className="border-b hover:bg-gray-50">
-                        <td className="py-4 px-4">
-                          <div className="font-medium">{job.role}</div>
-                        </td>
-                        <td className="py-4 px-4 text-muted-foreground">
-                          {job.location}
-                        </td>
-                        <td className="py-4 px-4 text-muted-foreground">
-                          {job.company}
-                        </td>
-                        <td className="py-4 px-4">
-                          <Badge className={getMatchingRateColor(job.matchingRate)}>
-                            {job.matchingRate}
-                          </Badge>
-                        </td>
-                        <td className="py-4 px-4">
-                          <Button size="sm" className="bg-[#0F973D] hover:bg-[#0F973D]/90">
-                            <Zap className="h-4 w-4 mr-2" />
-                            Schnell bewerben
-                          </Button>
-                        </td>
+              <div className="text-center py-12">
+                <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Job-Empfehlungen kommen bald</h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  Wir arbeiten an der Integration intelligenter Job-Empfehlungen, die perfekt auf Ihr Profil abgestimmt sind. 
+                  Diese Funktion wird in Kürze verfügbar sein.
+                </p>
+              </div>
+              
+              {/* Hidden table structure for development - DO NOT DELETE */}
+              <div className="hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-medium">Position</th>
+                        <th className="text-left py-3 px-4 font-medium">Standort</th>
+                        <th className="text-left py-3 px-4 font-medium">Unternehmen</th>
+                        <th className="text-left py-3 px-4 font-medium">Passungsrate</th>
+                        <th className="text-left py-3 px-4 font-medium">Aktion</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {mockJobs.map((job) => (
+                        <tr key={job.id} className="border-b hover:bg-gray-50">
+                          <td className="py-4 px-4">
+                            <div className="font-medium">{job.role}</div>
+                          </td>
+                          <td className="py-4 px-4 text-muted-foreground">
+                            {job.location}
+                          </td>
+                          <td className="py-4 px-4 text-muted-foreground">
+                            {job.company}
+                          </td>
+                          <td className="py-4 px-4">
+                            <Badge className={getMatchingRateColor(job.matchingRate)}>
+                              {job.matchingRate}
+                            </Badge>
+                          </td>
+                          <td className="py-4 px-4">
+                            <Button size="sm" className="bg-[#0F973D] hover:bg-[#0F973D]/90">
+                              <Zap className="h-4 w-4 mr-2" />
+                              Schnell bewerben
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </CardContent>
           </Card>

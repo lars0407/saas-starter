@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
   Play, 
@@ -25,7 +25,9 @@ import {
   Euro,
   Loader2,
   Download,
-  ChevronRight
+  ChevronRight,
+  ExternalLink,
+  Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,57 +87,57 @@ interface Document {
 
 interface ApplicationDetails {
   application: {
+  id: number;
+  created_at: number;
+  job_id: number;
+  user_id: number;
+  updated_at: number | null;
+  status: string;
+  mode: string;
+  events: Array<{
+    event_id: number;
+    timestamp: number;
+    event_type: string;
+    event_status: string;
+  }>;
+  settings: any;
+  stop: boolean;
+  job_tracker_id: number;
+    document_id: number;
+  job: Array<{
     id: number;
     created_at: number;
-    job_id: number;
-    user_id: number;
-    updated_at: number | null;
-    status: string;
-    mode: string;
-    events: Array<{
-      event_id: number;
-      timestamp: number;
-      event_type: string;
-      event_status: string;
-    }>;
-    settings: any;
-    stop: boolean;
-    job_tracker_id: number;
-    document_id: number;
-    job: Array<{
-      id: number;
-      created_at: number;
       uuid: string | null;
       company_id: number;
-      title: string;
-      job_city: string;
-      job_state: string;
-      job_country: string;
-      job_employement_type: string;
-      salary: string;
-      seniority: string;
-      job_origin: string;
-      job_expiration: number | null;
-      job_identifier: number;
-      job_posted: number | null;
-      apply_link: string;
-      applicants_number: string;
-      working_hours: string;
-      remote_work: string;
-      source: string;
-      auto_apply: boolean;
-      recruitment_agency: boolean;
-      description: {
-        description_original: string;
-        description_responsibilities: string;
-        description_qualification: string;
-        description_benefits: string;
-      };
-      recruiter: {
-        recruiter_name: string;
-        recruiter_title: string;
-        recruiter_url: string;
-      };
+    title: string;
+    job_city: string;
+    job_state: string;
+    job_country: string;
+    job_employement_type: string;
+    salary: string;
+    seniority: string;
+    job_origin: string;
+    job_expiration: number | null;
+    job_identifier: number;
+    job_posted: number | null;
+    apply_link: string;
+    applicants_number: string;
+    working_hours: string;
+    remote_work: string;
+    source: string;
+    auto_apply: boolean;
+    recruitment_agency: boolean;
+    description: {
+      description_original: string;
+      description_responsibilities: string;
+      description_qualification: string;
+      description_benefits: string;
+    };
+    recruiter: {
+      recruiter_name: string;
+      recruiter_title: string;
+      recruiter_url: string;
+    };
       company: {
         id: number;
         created_at: number;
@@ -323,6 +325,9 @@ function AgentChatContent() {
     content: string;
     metadata?: any;
   } | null>(null);
+  // Loading checklist tasks for the blue agent card
+  const [loadingTasks, setLoadingTasks] = useState<Array<{ text: string; done: boolean }>>([]);
+  const loadingTimersRef = useRef<number[]>([]);
   const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(null);
   const [isLoadingApplication, setIsLoadingApplication] = useState(false);
   
@@ -479,6 +484,20 @@ function AgentChatContent() {
     };
   }, []);
 
+  // Update event statuses when loading tasks complete
+  useEffect(() => {
+    const hasPendingTasks = loadingTasks.some(task => !task.done);
+    if (!hasPendingTasks && loadingTasks.length > 0) {
+      // All loading tasks are done, update any pending events to success
+      setEvents(prev => prev.map(event => {
+        if (event.status === 'pending' && event.type === 'action') {
+          return { ...event, status: 'success' };
+        }
+        return event;
+      }));
+    }
+  }, [loadingTasks]);
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('de-DE', { 
       hour: '2-digit', 
@@ -557,18 +576,14 @@ function AgentChatContent() {
   const getRelatedDocument = (event: AgentEvent) => {
     if (!applicationDetails?.documents?.document_list) return null;
     
-    // Extract event type from content if it's from API
-    const eventType = event.content.match(/✅ (.+) - (.+)/);
-    if (eventType) {
-      const [, action] = eventType;
-      const actionLower = action.toLowerCase();
-      
-      // Map event types to document types
-      if (actionLower.includes('resume') || actionLower.includes('lebenslauf')) {
-        return applicationDetails.documents.document_list.find(doc => doc.type === 'resume');
-      } else if (actionLower.includes('coverletter') || actionLower.includes('anschreiben')) {
-        return applicationDetails.documents.document_list.find(doc => doc.type === 'cover letter');
-      }
+    // Check if this is a resume or cover letter event based on content
+    const content = event.content.toLowerCase();
+    
+    // Map event types to document types
+    if (content.includes('resume') || content.includes('lebenslauf')) {
+      return applicationDetails.documents.document_list.find(doc => doc.type === 'resume');
+    } else if (content.includes('coverletter') || content.includes('anschreiben')) {
+      return applicationDetails.documents.document_list.find(doc => doc.type === 'cover letter');
     }
     
     return null;
@@ -652,6 +667,14 @@ function AgentChatContent() {
   const stopLoadingEvent = () => {
     setIsLoading(false);
     setLoadingEvent(null);
+    // Clear any pending timers for loading tasks
+    if (loadingTimersRef.current.length) {
+      loadingTimersRef.current.forEach((t) => {
+        try { window.clearTimeout(t); } catch {}
+      });
+      loadingTimersRef.current = [];
+    }
+    setLoadingTasks([]);
   };
 
   const addEvent = (event: AgentEvent) => {
@@ -813,7 +836,7 @@ function AgentChatContent() {
                         setShowForm(false);
                         
                         // Clear existing events and add all events from the initial application
-                        setEvents([]);
+            setEvents([]);
                         data.events.forEach((event: any, index: number) => {
                           const eventDesc = getEventDescriptionFromType(event.event_type, event.event_status);
                           addEvent({
@@ -825,29 +848,51 @@ function AgentChatContent() {
                           });
                         });
                         
-                        // Add success message for the initial status (always last)
-                        addEvent({
-                          id: `agent_msg_${data.id}`,
-                          type: 'message',
-                          timestamp: new Date(),
-                          content: 'Bewerbung erfolgreich gestartet! Der Agent beginnt mit der automatischen Erstellung der Bewerbungsunterlagen'
-                        });
+                        // Do NOT add an agent message event here; the blue loading card handles this while running
                       } catch (e) {
                         console.warn('Failed to process initial application:', e);
                       }
                     }
-                    // Handle event messages
-                    else if (data.type === 'event') {
-                      console.log('Adding event message:', data);
-                      const eventDesc = getEventDescriptionFromType(data.event_type, data.event_status);
-                      addEvent({
-                        id: `${data.event_id}_${Date.now()}_${Math.random()}`,
-                        type: 'action',
-                        timestamp: new Date(data.timestamp),
-                        content: eventDesc.action,
-                        status: data.event_status === 'done' ? 'success' : 'pending'
-                      });
-                    }
+                     // Handle event messages
+                     else if (data.type === 'event') {
+                       console.log('Adding event message:', data);
+                       const eventDesc = getEventDescriptionFromType(data.event_type, data.event_status);
+                       
+                       // If this event is done, mark the corresponding loading task as done
+                       if (String(data.event_status).toLowerCase() === 'done') {
+                         setLoadingTasks((prev) => {
+                           const next = [...prev];
+                           // Find the task that matches this event type
+                           const taskIndex = next.findIndex(task => {
+                             const taskText = task.text.toLowerCase();
+                             const eventType = data.event_type.toLowerCase();
+                             
+                             // Map event types to task keywords
+                             if (eventType.includes('resume') && taskText.includes('lebenslauf')) return true;
+                             if (eventType.includes('coverletter') && taskText.includes('anschreiben')) return true;
+                             if (eventType.includes('application') && taskText.includes('bewerbung')) return true;
+                             
+                             return false;
+                           });
+                           
+                           if (taskIndex !== -1) {
+                             next[taskIndex] = { ...next[taskIndex], done: true };
+                           }
+                           return next;
+                         });
+                       }
+                       
+                       // Don't show as success if loading tasks are still active
+                       const hasPendingTasks = loadingTasks.some(task => !task.done);
+                       const isSuccess = data.event_status === 'done' && !hasPendingTasks;
+                       addEvent({
+                         id: `${data.event_id}_${Date.now()}_${Math.random()}`,
+                         type: 'action',
+                         timestamp: new Date(data.timestamp),
+                         content: eventDesc.action,
+                         status: isSuccess ? 'success' : 'pending'
+                       });
+                     }
                     // Handle status messages
                     else if (data.type === 'status') {
                       console.log('Updating status:', data.status);
@@ -863,6 +908,151 @@ function AgentChatContent() {
                           };
                         }
                         return prev;
+                      });
+
+                      // Do not stop the blue card on status anymore; wait for explicit finish message
+                    }
+                    // Handle result messages (documents, etc.)
+                    else if (data.type === 'result') {
+                      console.log('Processing result message:', data);
+                      if (data.data) {
+                        // Update application details with new documents (merge with existing)
+                        setApplicationDetails(prev => {
+                          if (prev) {
+                            const existingDocuments = prev.documents?.document_list || [];
+                            const newDocuments = data.data.document_list || [];
+                            
+                            // Merge documents, avoiding duplicates by ID
+                            const mergedDocuments = [...existingDocuments];
+                            newDocuments.forEach(newDoc => {
+                              const existingIndex = mergedDocuments.findIndex(existing => existing.id === newDoc.id);
+                              if (existingIndex >= 0) {
+                                // Update existing document
+                                mergedDocuments[existingIndex] = newDoc;
+                              } else {
+                                // Add new document
+                                mergedDocuments.push(newDoc);
+                              }
+                            });
+                            
+                            return {
+                              ...prev,
+                              documents: {
+                                document_list: mergedDocuments,
+                                job_tracker: data.data.job_tracker || prev.documents?.job_tracker
+                              }
+                            };
+                          }
+                          return prev;
+                        });
+                        
+                        // Show each remaining task as checked with 500ms delay
+                        setLoadingTasks(prev => {
+                          const uncheckedTasks = prev.filter(task => !task.done);
+                          if (uncheckedTasks.length > 0) {
+                            // Mark all remaining tasks as done one by one
+                            uncheckedTasks.forEach((_, index) => {
+                              setTimeout(() => {
+                                setLoadingTasks(current => 
+                                  current.map((task, taskIndex) => {
+                                    const isUnchecked = !task.done;
+                                    const isThisTask = current.findIndex(t => !t.done) === taskIndex;
+                                    return isUnchecked && isThisTask ? { ...task, done: true } : task;
+                                  })
+                                );
+                              }, index * 500);
+                            });
+                            
+                            // After all tasks are checked, finish loading state
+                            setTimeout(() => {
+                              setLoadingTasks([]);
+                              setEvents(prev => prev.map(event => {
+                                if (event.status === 'pending' && event.type === 'action') {
+                                  return { ...event, status: 'success' };
+                                }
+                                return event;
+                              }));
+                              stopLoadingEvent();
+                            }, uncheckedTasks.length * 500);
+                          } else {
+                            // No unchecked tasks, finish immediately
+                            setLoadingTasks([]);
+                            setEvents(prev => prev.map(event => {
+                              if (event.status === 'pending' && event.type === 'action') {
+                                return { ...event, status: 'success' };
+                              }
+                              return event;
+                            }));
+                            stopLoadingEvent();
+                          }
+                          return prev;
+                        });
+                      }
+                    }
+                    // Handle loading state for blue agent card checklist
+                    else if (data.type === 'loading_state') {
+                      console.log('Processing loading_state:', data);
+                      const minMs = Math.max(0, parseInt(String(data.time || '0'), 10) * 1000);
+                      const tasks: string[] = Array.isArray(data.task) ? data.task : [];
+                      // Initialize tasks: keep all unchecked initially
+                      const initial = tasks.map((t: string) => ({ text: t, done: false }));
+                      setLoadingTasks(initial);
+                      setIsLoading(true);
+                      setLoadingEvent({ type: 'message', content: 'Der Agent arbeitet an deinen Unterlagen…', metadata: {} });
+
+                      // Complete all but the last task randomly within min time
+                      if (initial.length > 1 && minMs > 0) {
+                        const countToAutoComplete = initial.length - 1;
+                        // Generate random times within [0, minMs - 1000]
+                        const times = Array.from({ length: countToAutoComplete }, () => Math.floor(Math.random() * Math.max(1, minMs - 1000)));
+                        times.sort((a, b) => a - b);
+                        times.forEach((delay, idx) => {
+                          const timer = window.setTimeout(() => {
+                            setLoadingTasks((prev) => {
+                              const next = [...prev];
+                              // Mark the next unchecked (but not the last) as done
+                              let marked = 0;
+                              for (let i = 0; i < next.length - 1; i++) {
+                                if (!next[i].done) {
+                                  next[i] = { ...next[i], done: true };
+                                  marked = 1;
+                                  break;
+                                }
+                              }
+                              return next;
+                            });
+                          }, Math.min(minMs - 500, delay + idx * 200));
+                          loadingTimersRef.current.push(timer);
+                        });
+                      }
+                    }
+                    // Handle explicit finish message
+                    else if (data.type === 'finish') {
+                      console.log('Finishing stream.');
+                      stopLoadingEvent();
+                      setIsRunning(false);
+                    }
+                    // Handle final application summary after finish
+                    else if (data.id && data.job && data.events && data.status) {
+                      console.log('Processing final application summary:', data);
+                      // Update application details with the complete final data
+                      setApplicationDetails({
+                        application: {
+                          id: data.id,
+                          created_at: data.created_at,
+                          job_id: data.job_id,
+                          user_id: data.user_id,
+                          updated_at: data.updated_at,
+                          status: data.status,
+                          mode: data.mode,
+                          events: data.events,
+                          settings: data.settings,
+                          stop: data.stop,
+                          job_tracker_id: data.job_tracker_id,
+                          document_id: data.document_id
+                        },
+                        job: data.job,
+                        documents: applicationDetails?.documents || { document_list: [], job_tracker: {} }
                       });
                     }
                     // Handle legacy single event format
@@ -894,11 +1084,11 @@ function AgentChatContent() {
                         const eventDesc = getEventDescriptionFromType(event.event_type, event.event_status);
                         addEvent({
                           id: `${event.event_id}_${index}`,
-                          type: 'action',
-                          timestamp: new Date(event.timestamp),
+                  type: 'action',
+                  timestamp: new Date(event.timestamp),
                           content: eventDesc.action,
-                          status: event.event_status === 'done' ? 'success' : 'pending'
-                        });
+                  status: event.event_status === 'done' ? 'success' : 'pending'
+                });
                       });
                     } else {
                       console.log('Unknown data format:', data);
@@ -926,12 +1116,12 @@ function AgentChatContent() {
       
       // Only add the success message if API didn't provide real events (fallback mode)
       if (!apiSuccess) {
-        addEvent({
-          id: Date.now().toString(),
-          type: 'message',
-          timestamp: new Date(),
+      addEvent({
+        id: Date.now().toString(),
+        type: 'message',
+        timestamp: new Date(),
           content: 'Bewerbung gestartet (Demo-Modus)! Der Agent beginnt mit der automatischen Erstellung der Bewerbungsunterlagen'
-        });
+      });
       }
 
       // Only add simulation events if API didn't provide real events
@@ -1306,18 +1496,18 @@ function AgentChatContent() {
              const eventDesc = getEventDescription(event);
              const relatedDocument = getRelatedDocument(event);
              return (
-               <div key={event.id} className={`flex gap-3 p-4 rounded-lg border ${getEventStyle(event)}`}>
-                 <div className="flex-shrink-0">
-                   {getEventIcon(event)}
-                 </div>
-                 <div className="flex-1 min-w-0">
-                   <div className="flex items-center gap-2 mb-1">
-                     <span className="text-sm font-medium text-gray-900">
-                       {event.type === 'message' ? 'Jobjäger Agent' : 'System'}
-                     </span>
-                     <span className="text-xs text-gray-500">
-                       {formatTime(event.timestamp)}
-                     </span>
+             <div key={event.id} className={`flex gap-3 p-4 rounded-lg border ${getEventStyle(event)}`}>
+               <div className="flex-shrink-0">
+                 {getEventIcon(event)}
+               </div>
+               <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-2 mb-1">
+                   <span className="text-sm font-medium text-gray-900">
+                     {event.type === 'message' ? 'Jobjäger Agent' : 'System'}
+                   </span>
+                   <span className="text-xs text-gray-500">
+                     {formatTime(event.timestamp)}
+                   </span>
                      <Badge 
                        variant={event.status === 'success' ? 'default' : event.status === 'error' ? 'destructive' : 'secondary'}
                        className="text-xs"
@@ -1341,7 +1531,7 @@ function AgentChatContent() {
                          <Badge variant="outline" className="text-xs">
                            Vorschau
                          </Badge>
-                       </div>
+                 </div>
                        <div className="w-32 h-40 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
                          <PDFViewer
                            pdfUrl={relatedDocument.link}
@@ -1450,12 +1640,30 @@ function AgentChatContent() {
                  </div>
                  <div className="flex items-center gap-2">
                    <p className="text-sm text-gray-700">{loadingEvent.content}</p>
+                   {!loadingTasks.length && (
                    <div className="flex space-x-1">
                      <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" />
                      <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
                      <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                    </div>
+                   )}
                  </div>
+
+                 {/* Loading task checklist */}
+                 {loadingTasks.length > 0 && (
+                   <div className="mt-3 space-y-2">
+                     {loadingTasks.map((t, idx) => (
+                       <div key={`lt_${idx}`} className="flex items-center gap-2 text-sm">
+                         {t.done ? (
+                           <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                         ) : (
+                           <Loader2 className="h-3.5 w-3.5 text-gray-400 animate-spin" />
+                         )}
+                         <span className={t.done ? 'text-gray-600 line-through' : 'text-gray-700'}>{t.text}</span>
+                       </div>
+                     ))}
+                   </div>
+                 )}
                  
                  {/* Loading Metadata */}
                  {loadingEvent.metadata && (
@@ -1488,6 +1696,106 @@ function AgentChatContent() {
                      </div>
                    </div>
                  )}
+               </div>
+             </div>
+           )}
+
+           {/* Application Summary Section - Disabled */}
+           {false && applicationDetails && !isRunning && applicationDetails.application.status && (
+             <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
+               <div className="flex items-center gap-3 mb-4">
+                 <CheckCircle className="h-6 w-6 text-green-600" />
+                 <h3 className="text-lg font-semibold text-gray-900">🎉 Bewerbung erfolgreich erstellt!</h3>
+               </div>
+               
+               {/* Job Summary */}
+               {applicationDetails.job && applicationDetails.job[0] && (
+                 <div className="mb-6 p-4 bg-white rounded-lg border">
+                   <h4 className="font-medium text-gray-900 mb-2">📋 Job-Details</h4>
+                   <div className="space-y-2">
+                     <div className="flex items-center gap-2">
+                       <Building2 className="h-4 w-4 text-gray-500" />
+                       <span className="text-sm text-gray-700">
+                         <strong>{applicationDetails.job[0].title}</strong>
+                         {applicationDetails.job[0].company_id && ` bei Unternehmen ID: ${applicationDetails.job[0].company_id}`}
+                       </span>
+                     </div>
+                     {applicationDetails.job[0].description?.description_original && (
+                       <div className="flex items-start gap-2">
+                         <FileText className="h-4 w-4 text-gray-500 mt-0.5" />
+                         <div className="text-sm text-gray-700">
+                           <p className="font-medium">Beschreibung:</p>
+                           <p className="mt-1">{applicationDetails.job[0].description.description_original}</p>
+                         </div>
+                       </div>
+                     )}
+                     {applicationDetails.job[0].apply_link && (
+                       <div className="flex items-center gap-2">
+                         <ExternalLink className="h-4 w-4 text-gray-500" />
+                         <a 
+                           href={applicationDetails.job[0].apply_link} 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           className="text-sm text-blue-600 hover:text-blue-800 underline"
+                         >
+                           Zur Stellenanzeige
+                         </a>
+                       </div>
+                     )}
+                   </div>
+                 </div>
+               )}
+
+               {/* Documents Summary */}
+               {applicationDetails.documents?.document_list && applicationDetails.documents.document_list.length > 0 && (
+                 <div className="mb-6">
+                   <h4 className="font-medium text-gray-900 mb-3">📄 Erstellte Dokumente</h4>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     {applicationDetails.documents.document_list.map((doc, index) => (
+                       <div key={doc.id || index} className="p-4 bg-white rounded-lg border">
+                         <DocumentPreviewCard 
+                           document={doc} 
+                           onDownload={() => {}} 
+                           showDownload={true}
+                         />
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               )}
+
+               {/* Action Buttons */}
+               <div className="flex flex-wrap gap-3">
+                 {applicationDetails.documents?.document_list && applicationDetails.documents.document_list.length > 0 && (
+                   <Button 
+                     onClick={() => {
+                       // Download all documents
+                       applicationDetails.documents.document_list.forEach((doc, index) => {
+                         setTimeout(() => {
+                           const link = document.createElement('a');
+                           link.href = doc.document_url || '';
+                           link.download = doc.document_name || `document_${index + 1}.pdf`;
+                           link.click();
+                         }, index * 500); // Stagger downloads
+                       });
+                     }}
+                     className="bg-green-600 hover:bg-green-700 text-white"
+                   >
+                     <Download className="h-4 w-4 mr-2" />
+                     Alle Dokumente herunterladen
+                   </Button>
+                 )}
+                 
+                 <Button 
+                   variant="outline" 
+                   onClick={() => {
+                     setShowForm(true);
+                     fetchResumes(true);
+                   }}
+                 >
+                   <Plus className="h-4 w-4 mr-2" />
+                   Neue Bewerbung starten
+                 </Button>
                </div>
              </div>
            )}
