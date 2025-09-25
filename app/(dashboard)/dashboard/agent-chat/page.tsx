@@ -1818,12 +1818,6 @@ function AgentChatContent() {
                            <span>{event.metadata.salary}</span>
                          </div>
                        )}
-                       {event.metadata.applicationId && (
-                         <div className="flex items-center gap-1">
-                           <User className="h-3 w-3 text-gray-500" />
-                           <span className="font-mono">{event.metadata.applicationId}</span>
-                         </div>
-                       )}
                      </div>
                    </div>
                  )}

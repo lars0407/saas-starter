@@ -14,7 +14,9 @@ import {
   Clock,
   AlertCircle,
   Zap,
-  Loader2
+  Loader2,
+  X,
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -86,6 +88,27 @@ interface Application {
     };
   }>;
 }
+
+// Function to translate event types to German
+const translateEventType = (eventType: string): string => {
+  const translations: { [key: string]: string } = {
+    'job_imported': 'Job importiert',
+    'autoapply_created': 'Auto-Bewerbung erstellt',
+    'Application successful': 'Bewerbung erfolgreich',
+    'Bewerbung erfolgreich': 'Bewerbung erfolgreich',
+    'job_created': 'Job erstellt',
+    'application_created': 'Bewerbung erstellt',
+    'document_generated': 'Dokument generiert',
+    'email_sent': 'E-Mail gesendet',
+    'status_updated': 'Status aktualisiert',
+    'cover_letter_created': 'Anschreiben erstellt',
+    'cover letter created': 'Anschreiben erstellt',
+    'resume_created': 'Lebenslauf erstellt',
+    'resume created': 'Lebenslauf erstellt'
+  };
+  
+  return translations[eventType] || eventType.replace(/_/g, ' ');
+};
 
 const mockJobs: Job[] = [
   {
@@ -312,7 +335,7 @@ export default function JobjaegerAgentPage() {
           </TabsTrigger>
           <TabsTrigger value="applications" className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4" />
-            Ihre Bewerbungen
+            Deine Bewerbungen
           </TabsTrigger>
           <TabsTrigger value="email" className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
@@ -403,7 +426,7 @@ export default function JobjaegerAgentPage() {
                     <thead>
                       <tr className="border-b">
                         <th className="text-left py-3 px-4 font-medium">Position</th>
-                        <th className="text-left py-3 px-4 font-medium">Standort</th>
+                        <th className="text-left py-3 px-4 font-medium">Bewerbung</th>
                         <th className="text-left py-3 px-4 font-medium">Unternehmen</th>
                         <th className="text-left py-3 px-4 font-medium">Passungsrate</th>
                         <th className="text-left py-3 px-4 font-medium">Aktion</th>
@@ -447,7 +470,7 @@ export default function JobjaegerAgentPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5" />
-                Ihre Bewerbungen
+                Deine Bewerbungen
                 {isLoadingApplications && <Loader2 className="h-4 w-4 animate-spin" />}
               </CardTitle>
             </CardHeader>
@@ -470,10 +493,9 @@ export default function JobjaegerAgentPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left py-3 px-4 font-medium">Position</th>
-                        <th className="text-left py-3 px-4 font-medium">Status</th>
+                        <th className="text-left py-3 px-4 font-medium w-1/3">Position</th>
                         <th className="text-left py-3 px-4 font-medium">Erstellt</th>
-                        <th className="text-left py-3 px-4 font-medium">Standort</th>
+                        <th className="text-left py-3 px-4 font-medium">Bewerbung</th>
                         <th className="text-left py-3 px-4 font-medium">Letzte Aktivität</th>
                         <th className="text-left py-3 px-4 font-medium">Aktionen</th>
                       </tr>
@@ -485,30 +507,22 @@ export default function JobjaegerAgentPage() {
                           className="border-b hover:bg-gray-50 cursor-pointer"
                           onClick={() => handleApplicationClick(application.id)}
                         >
-                          <td className="py-4 px-4">
+                          <td className="py-4 px-4 w-1/3">
                             <div className="font-medium">
                               {application.job[0]?.title || 'Unbekannte Position'}
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              ID: {application.id}
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <Badge 
-                              variant={application.status === 'created' ? 'default' : 'secondary'}
-                              className={application.status === 'created' ? 'bg-green-100 text-green-800' : ''}
-                            >
-                              {application.status}
-                            </Badge>
                           </td>
                           <td className="py-4 px-4 text-muted-foreground">
                             {new Date(application.created_at).toLocaleDateString('de-DE')}
                           </td>
-                          <td className="py-4 px-4 text-muted-foreground">
-                            {application.job[0]?.job_city && application.job[0]?.job_country 
-                              ? `${application.job[0].job_city}, ${application.job[0].job_country}`
-                              : 'Nicht angegeben'
-                            }
+                          <td className="py-4 px-4">
+                            <div className="flex items-center justify-center">
+                              {application.status === 'autoapply_created' || application.status === 'created' ? (
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                              ) : (
+                                <X className="h-5 w-5 text-red-600" />
+                              )}
+                            </div>
                           </td>
                           <td className="py-4 px-4">
                             {application.events && application.events.length > 0 ? (
@@ -519,7 +533,7 @@ export default function JobjaegerAgentPage() {
                                       event.event_status === 'done' ? 'bg-green-500' : 'bg-yellow-500'
                                     }`} />
                                     <span className="text-muted-foreground">
-                                      {event.event_type.replace(/_/g, ' ')}
+                                      {translateEventType(event.event_type)}
                                     </span>
                                   </div>
                                 ))}
@@ -538,7 +552,7 @@ export default function JobjaegerAgentPage() {
                                   handleApplicationClick(application.id);
                                 }}
                               >
-                                <Download className="h-4 w-4 mr-2" />
+                                <Eye className="h-4 w-4 mr-2" />
                                 Details
                               </Button>
                             </div>
