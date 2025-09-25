@@ -70,6 +70,11 @@ interface AgentEvent {
     location?: string;
     salary?: string;
     applicationId?: string;
+    isSuccessfulApplication?: boolean;
+    jobUrls?: string[];
+    additionalInfo?: string;
+    outputVideoUrl?: string;
+    workflowRuns?: number;
   };
 }
 
@@ -104,6 +109,7 @@ interface ApplicationDetails {
   stop: boolean;
   job_tracker_id: number;
     document_id: number;
+  auto_apply_id: number;
   job: Array<{
     id: number;
     created_at: number;
@@ -155,6 +161,14 @@ interface ApplicationDetails {
       };
     }>;
   };
+  auto_apply: {
+    created_at: number;
+    status: string;
+    output: string;
+    application_data: string;
+    output_video_url: string;
+    workflow_runs: number;
+  };
   documents: {
     document_list: Array<{
       id: number;
@@ -175,6 +189,50 @@ interface ApplicationDetails {
     };
   };
 }
+
+// Function to parse application_data JSON string and extract job URLs
+const parseApplicationData = (applicationData: string): { jobUrls: string[]; additionalInfo: string } => {
+  try {
+    // The application_data might be a JSON fragment, so we need to handle it carefully
+    let parsed;
+    
+    // First try to parse as complete JSON
+    try {
+      parsed = JSON.parse(applicationData);
+    } catch {
+      // If that fails, try to extract the data part from the fragment
+      // Look for the data object in the string
+      const dataMatch = applicationData.match(/"data":\s*{([^}]+(?:{[^}]*}[^}]*)*)}/);
+      if (dataMatch) {
+        const dataString = `{${dataMatch[0]}}`;
+        parsed = JSON.parse(dataString);
+      } else {
+        // Try to parse as a JSON fragment by wrapping it
+        parsed = JSON.parse(`{${applicationData}}`);
+      }
+    }
+    
+    if (parsed.data) {
+      return {
+        jobUrls: parsed.data.job_urls || [],
+        additionalInfo: parsed.data.additional_information || ''
+      };
+    }
+    return { jobUrls: [], additionalInfo: '' };
+  } catch (error) {
+    console.error('Error parsing application_data:', error);
+    return { jobUrls: [], additionalInfo: '' };
+  }
+};
+
+// Function to check if application was successful and has autoapply data
+const hasSuccessfulApplication = (applicationDetails: ApplicationDetails | null): boolean => {
+  if (!applicationDetails?.application?.events) return false;
+  
+  return applicationDetails.application.events.some(event => 
+    event.event_type === 'Application successful' && event.event_status === 'done'
+  );
+};
 
 const demoEvents: AgentEvent[] = [
   {
@@ -328,6 +386,7 @@ function AgentChatContent() {
   // Loading checklist tasks for the blue agent card
   const [loadingTasks, setLoadingTasks] = useState<Array<{ text: string; done: boolean }>>([]);
   const loadingTimersRef = useRef<number[]>([]);
+  const loadingPhaseIdRef = useRef<number>(0);
   const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(null);
   const [isLoadingApplication, setIsLoadingApplication] = useState(false);
   
@@ -430,17 +489,45 @@ function AgentChatContent() {
       if (response.ok) {
         const data = await response.json();
         console.log('Application details loaded:', data);
+        console.log('Auto apply data (root):', data.auto_apply);
+        console.log('Auto apply data (application):', data.application?.auto_apply);
+        console.log('Application events:', data.application?.events);
         setApplicationDetails(data);
         
         // Convert API events to AgentEvent format and add them
         if (data.application?.events && Array.isArray(data.application.events)) {
-          const convertedEvents: AgentEvent[] = data.application.events.map((event: any, index: number) => ({
-            id: `${event.event_id}_${index}`, // Use event_id + index to ensure uniqueness
-            type: 'action' as const,
-            timestamp: new Date(event.timestamp),
-            content: `✅ ${event.event_type.replace(/_/g, ' ')} - ${event.event_status}`,
-            status: event.event_status === 'done' ? 'success' : 'pending'
-          }));
+          const convertedEvents: AgentEvent[] = data.application.events.map((event: any, index: number) => {
+            const baseEvent = {
+              id: `${event.event_id}_${index}`, // Use event_id + index to ensure uniqueness
+              type: 'action' as const,
+              timestamp: new Date(event.timestamp),
+              content: `✅ ${event.event_type.replace(/_/g, ' ')} - ${event.event_status}`,
+              status: event.event_status === 'done' ? 'success' : 'pending'
+            };
+
+            // Add special metadata for "Application successful" events
+            const autoApplyData = data.auto_apply || data.application?.auto_apply;
+            if (event.event_type === 'Application successful' && event.event_status === 'done' && autoApplyData) {
+              console.log('Found Application successful event with auto_apply data:', autoApplyData);
+              const parsedData = parseApplicationData(autoApplyData.application_data);
+              console.log('Parsed application data:', parsedData);
+              const eventWithMetadata = {
+                ...baseEvent,
+                metadata: {
+                  ...baseEvent.metadata,
+                  isSuccessfulApplication: true,
+                  jobUrls: parsedData.jobUrls,
+                  additionalInfo: parsedData.additionalInfo,
+                  outputVideoUrl: autoApplyData.output_video_url,
+                  workflowRuns: autoApplyData.workflow_runs
+                }
+              };
+              console.log('Event with metadata:', eventWithMetadata);
+              return eventWithMetadata;
+            }
+
+            return baseEvent;
+          });
           setEvents(convertedEvents);
         }
       } else {
@@ -581,6 +668,8 @@ function AgentChatContent() {
       'job_imported': '📥 Job erfolgreich importiert',
       'resume_created': '📄 Lebenslauf erstellt',
       'coverletter_created': '✍️ Anschreiben erstellt',
+      'cover_letter_created': '✍️ Anschreiben erstellt',
+      'autoapply_created': '🤖 Auto-Bewerbung erstellt',
       'application_submitted': '🎯 Bewerbung eingereicht',
       'job_search': '🔍 Job-Suche durchgeführt',
       'document_generation': '📝 Dokument generiert'
@@ -589,8 +678,13 @@ function AgentChatContent() {
     const translatedAction = actionMap[eventType] || `✅ ${eventType.replace(/_/g, ' ')}`;
     const status = eventStatus === 'done' ? '✅ Fertig' : '⏳ Läuft...';
     
+    let actionText = translatedAction;
+    if (eventType === 'autoapply_created' && String(eventStatus).toLowerCase() === 'done') {
+      actionText = `${translatedAction} — Beschreibung: Du kannst das Fenster schließen. In der Regel dauert es ca. 10 Minuten, kann aber auch bis zu 24 Stunden dauern. Wir informieren dich, wenn die Bewerbung eingereicht ist.`;
+    }
+    
     return {
-      action: translatedAction,
+      action: actionText,
       status: status
     };
   };
@@ -880,29 +974,27 @@ function AgentChatContent() {
                        console.log('Adding event message:', data);
                        const eventDesc = getEventDescriptionFromType(data.event_type, data.event_status);
                        
-                       // If this event is done, mark the corresponding loading task as done
-                       if (String(data.event_status).toLowerCase() === 'done') {
-                         setLoadingTasks((prev) => {
-                           const next = [...prev];
-                           // Find the task that matches this event type
-                           const taskIndex = next.findIndex(task => {
-                             const taskText = task.text.toLowerCase();
-                             const eventType = data.event_type.toLowerCase();
-                             
-                             // Map event types to task keywords
-                             if (eventType.includes('resume') && taskText.includes('lebenslauf')) return true;
-                             if (eventType.includes('coverletter') && taskText.includes('anschreiben')) return true;
-                             if (eventType.includes('application') && taskText.includes('bewerbung')) return true;
-                             
-                             return false;
-                           });
-                           
-                           if (taskIndex !== -1) {
-                             next[taskIndex] = { ...next[taskIndex], done: true };
-                           }
-                           return next;
-                         });
-                       }
+                      // If this event is done, mark the corresponding loading task as done
+                      if (String(data.event_status).toLowerCase() === 'done') {
+                        setLoadingTasks((prev) => {
+                          const next = [...prev];
+                          // Normalize type for robust matching (cover_letter, cover-letter, cover letter → coverletter)
+                          const normalizedType = String(data.event_type || '')
+                            .toLowerCase()
+                            .replace(/[\s_-]+/g, '');
+                          const taskIndex = next.findIndex(task => {
+                            const taskText = task.text.toLowerCase();
+                            if (normalizedType.includes('resume') && taskText.includes('lebenslauf')) return true;
+                            if (normalizedType.includes('coverletter') && taskText.includes('anschreiben')) return true;
+                            if (normalizedType.includes('application') && taskText.includes('bewerbung')) return true;
+                            return false;
+                          });
+                          if (taskIndex !== -1) {
+                            next[taskIndex] = { ...next[taskIndex], done: true };
+                          }
+                          return next;
+                        });
+                      }
                        
                        // Don't show as success if loading tasks are still active
                        const hasPendingTasks = loadingTasks.some(task => !task.done);
@@ -914,6 +1006,8 @@ function AgentChatContent() {
                          content: eventDesc.action,
                          status: isSuccess ? 'success' : 'pending'
                        });
+
+                       // No extra message; description is embedded in the event text
                      }
                     // Handle status messages
                     else if (data.type === 'status') {
@@ -969,12 +1063,14 @@ function AgentChatContent() {
                         });
                         
                         // Show each remaining task as checked with 500ms delay
+                        const currentPhaseId = loadingPhaseIdRef.current;
                         setLoadingTasks(prev => {
                           const uncheckedTasks = prev.filter(task => !task.done);
                           if (uncheckedTasks.length > 0) {
                             // Mark all remaining tasks as done one by one
                             uncheckedTasks.forEach((_, index) => {
-                              setTimeout(() => {
+                              const t = window.setTimeout(() => {
+                                if (loadingPhaseIdRef.current !== currentPhaseId) return;
                                 setLoadingTasks(current => 
                                   current.map((task, taskIndex) => {
                                     const isUnchecked = !task.done;
@@ -983,10 +1079,12 @@ function AgentChatContent() {
                                   })
                                 );
                               }, index * 500);
+                              loadingTimersRef.current.push(t);
                             });
                             
                             // After all tasks are checked, finish loading state
-                            setTimeout(() => {
+                            const finalTimer = window.setTimeout(() => {
+                              if (loadingPhaseIdRef.current !== currentPhaseId) return;
                               setLoadingTasks([]);
                               setEvents(prev => prev.map(event => {
                                 if (event.status === 'pending' && event.type === 'action') {
@@ -996,6 +1094,7 @@ function AgentChatContent() {
                               }));
                               stopLoadingEvent();
                             }, uncheckedTasks.length * 500);
+                            loadingTimersRef.current.push(finalTimer);
                           } else {
                             // No unchecked tasks, finish immediately
                             setLoadingTasks([]);
@@ -1016,6 +1115,13 @@ function AgentChatContent() {
                       console.log('Processing loading_state:', data);
                       const minMs = Math.max(0, parseInt(String(data.time || '0'), 10) * 1000);
                       const tasks: string[] = Array.isArray(data.task) ? data.task : [];
+                      // Start a new phase and clear any previous timers
+                      loadingPhaseIdRef.current += 1;
+                      const currentPhaseId = loadingPhaseIdRef.current;
+                      if (loadingTimersRef.current.length) {
+                        loadingTimersRef.current.forEach((t) => { try { window.clearTimeout(t); } catch {} });
+                        loadingTimersRef.current = [];
+                      }
                       // Initialize tasks: keep all unchecked initially
                       const initial = tasks.map((t: string) => ({ text: t, done: false }));
                       setLoadingTasks(initial);
@@ -1030,6 +1136,7 @@ function AgentChatContent() {
                         times.sort((a, b) => a - b);
                         times.forEach((delay, idx) => {
                           const timer = window.setTimeout(() => {
+                            if (loadingPhaseIdRef.current !== currentPhaseId) return;
                             setLoadingTasks((prev) => {
                               const next = [...prev];
                               // Mark the next unchecked (but not the last) as done
@@ -1088,6 +1195,8 @@ function AgentChatContent() {
                         content: eventDesc.action,
                         status: data.event.event_status === 'done' ? 'success' : 'pending'
                       });
+
+                      // No extra message; description is embedded in the event text
                     }
                     // Handle legacy message format
                     else if (data.message) {
@@ -1111,6 +1220,8 @@ function AgentChatContent() {
                           content: eventDesc.action,
                   status: event.event_status === 'done' ? 'success' : 'pending'
                 });
+
+                        // No extra message; description is embedded in the event text
                       });
                     } else {
                       console.log('Unknown data format:', data);
@@ -1596,8 +1707,86 @@ function AgentChatContent() {
                      </div>
                    )}
                  
+                 {/* Application Success Information */}
+                 {(() => {
+                   console.log('Checking event metadata:', event.metadata);
+                   console.log('isSuccessfulApplication:', event.metadata?.isSuccessfulApplication);
+                   return event.metadata?.isSuccessfulApplication;
+                 })() && (
+                   <div className="mt-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                     <div className="flex items-center gap-2 mb-3">
+                       <CheckCircle className="h-5 w-5 text-green-600" />
+                       <h4 className="font-semibold text-green-800">🎉 Bewerbung erfolgreich eingereicht!</h4>
+                     </div>
+                     
+                     {/* Job URLs */}
+                     {event.metadata.jobUrls && event.metadata.jobUrls.length > 0 && (
+                       <div className="mb-3">
+                         <h5 className="text-sm font-medium text-green-700 mb-2">📋 Beworbene Stellen:</h5>
+                         <div className="space-y-2">
+                           {event.metadata.jobUrls.map((url: string, index: number) => (
+                             <div key={index} className="flex items-center gap-2">
+                               <ExternalLink className="h-4 w-4 text-green-600" />
+                               <a 
+                                 href={url} 
+                                 target="_blank" 
+                                 rel="noopener noreferrer"
+                                 className="text-sm text-green-700 hover:text-green-900 underline break-all"
+                               >
+                                 {url}
+                               </a>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     )}
+
+                     {/* Output Video */}
+                     {event.metadata.outputVideoUrl && (
+                       <div className="mb-3">
+                         <h5 className="text-sm font-medium text-green-700 mb-2">🎥 Bewerbungsvideo:</h5>
+                         <div className="flex items-center gap-2">
+                           <Button 
+                             variant="outline" 
+                             size="sm" 
+                             asChild
+                             className="border-green-300 text-green-700 hover:bg-green-100"
+                           >
+                             <a 
+                               href={event.metadata.outputVideoUrl} 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               className="flex items-center gap-1"
+                             >
+                               <ExternalLink className="h-3 w-3" />
+                               Video ansehen
+                             </a>
+                           </Button>
+                         </div>
+                       </div>
+                     )}
+
+                     {/* Additional Information */}
+                     {event.metadata.additionalInfo && (
+                       <div className="mb-3">
+                         <h5 className="text-sm font-medium text-green-700 mb-2">ℹ️ Zusätzliche Informationen:</h5>
+                         <p className="text-sm text-green-600 bg-white p-2 rounded border">
+                           {event.metadata.additionalInfo}
+                         </p>
+                       </div>
+                     )}
+
+                     {/* Workflow Runs */}
+                     {event.metadata.workflowRuns && (
+                       <div className="text-xs text-green-600">
+                         Workflow-Läufe: {event.metadata.workflowRuns}
+                       </div>
+                     )}
+                   </div>
+                 )}
+
                  {/* Job Metadata */}
-                 {event.metadata && (
+                 {event.metadata && !event.metadata.isSuccessfulApplication && (
                    <div className="mt-3 p-3 bg-white rounded-md border">
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                        {event.metadata.jobTitle && (
@@ -1825,7 +2014,7 @@ function AgentChatContent() {
          )}
 
         {/* Floating Control Menu */}
-        {!showForm && !isLoadingApplication && (
+        {false && !showForm && !isLoadingApplication && (
           <div className="fixed bottom-6 right-6 z-50">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -1868,7 +2057,7 @@ function AgentChatContent() {
         )}
 
          {/* Floating Status Container */}
-         {!showForm && !isLoadingApplication && (
+         {false && !showForm && !isLoadingApplication && (
            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
              <div className="flex items-center justify-between bg-white border border-gray-200 rounded-full shadow-lg overflow-hidden min-w-[400px]">
                {/* Status Indicator */}
