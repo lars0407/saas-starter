@@ -27,7 +27,10 @@ import {
   Download,
   ChevronRight,
   ExternalLink,
-  Plus
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,6 +53,15 @@ import {
 import { DashboardBreadcrumb, breadcrumbConfigs } from "@/components/dashboard-breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
+import Image from "next/image";
+
+interface StepDetail {
+  id: string;
+  description: string;
+  url?: string;
+  status: 'completed' | 'pending' | 'error';
+  timestamp?: Date;
+}
 
 interface AgentEvent {
   id: string;
@@ -57,6 +69,8 @@ interface AgentEvent {
   timestamp: Date;
   content: string;
   status?: 'pending' | 'success' | 'error';
+  stepCount?: number;
+  stepDetails?: StepDetail[];
   metadata?: {
     jobTitle?: string;
     company?: string;
@@ -227,6 +241,199 @@ const hasSuccessfulApplication = (applicationDetails: ApplicationDetails | null)
   );
 };
 
+// Function to generate step details based on event type
+const generateStepDetails = (eventType: string, eventStatus: string): { stepCount: number; stepDetails: StepDetail[] } => {
+  const baseSteps: StepDetail[] = [];
+  let stepCount = 0;
+
+  switch (eventType) {
+    case 'job_imported':
+    case 'Job importiert':
+      stepCount = 4;
+      baseSteps.push(
+        {
+          id: '1',
+          description: 'Job-Informationen werden ausgelesen',
+          status: 'completed'
+        },
+        {
+          id: '2',
+          description: 'Die Daten wurden erfolgreich strukturiert',
+          status: 'completed'
+        },
+        {
+          id: '3',
+          description: 'Job erfolgreich in die Datenbank importiert',
+          status: 'completed'
+        },
+        {
+          id: '4',
+          description: 'Job wurde dem Nutzer zugewiesen',
+          status: 'completed'
+        }
+      );
+      break;
+
+            case 'autoapply_created':
+            case 'Auto-Bewerbung erstellt':
+              stepCount = 5;
+              baseSteps.push(
+                {
+                  id: '1',
+                  description: 'Job-URL wird gesucht und im Browser geöffnet',
+                  status: 'completed'
+                },
+                {
+                  id: '2',
+                  description: 'Profilinformationen werden geladen und für das Formular vorbereitet',
+                  status: 'completed'
+                },
+                {
+                  id: '3',
+                  description: 'Lebenslauf wird ausgewählt und in die Bewerbung eingefügt',
+                  status: 'completed'
+                },
+                {
+                  id: '4',
+                  description: 'Agent wird angewiesen, die Bewerbung vollständig einzureichen',
+                  status: 'completed'
+                },
+                {
+                  id: '5',
+                  description: 'Browser wird geladen und für die Übertragung der Daten genutzt',
+                  status: 'completed'
+                }
+              );
+              break;
+
+    case 'Application successful':
+    case 'Bewerbung erfolgreich':
+      // Zufällige Anzahl von Schritten zwischen 8-15
+      const availableSteps = [
+        'Job-Seite geöffnet und "Jetzt bewerben"-Button lokalisiert',
+        'Bewerbungsformular geladen und analysiert',
+        'Formularfelder identifiziert (Vorname, Nachname, E-Mail, Stadt, Telefon)',
+        'Persönliche Daten automatisch ausgefüllt',
+        'E-Mail-Adresse bestätigt und validiert',
+        'Stadt aus Dropdown-Menü ausgewählt',
+        'Telefonnummer mit Ländervorwahl eingegeben',
+        'Lebenslauf hochgeladen und validiert',
+        'Anschreiben generiert und hochgeladen',
+        'Zusatzfelder im Formular erkannt und befüllt',
+        'Checkbox für Datenschutzerklärung angeklickt',
+        'Pflichtfelder auf Vollständigkeit überprüft',
+        'Button „Weiter" geklickt',
+        'Navigationsschritt im Bewerbungsprozess abgeschlossen',
+        'Fehlermeldung abgefangen und korrigiert',
+        'Dateiformat der Anhänge geprüft',
+        'Eingetragene Daten gegen Profilinformationen abgeglichen',
+        'Kalenderfeld mit Verfügbarkeit ausgefüllt',
+        'Radiobutton für Arbeitsmodell (Vollzeit/Teilzeit) gewählt',
+        'Standortpräferenz bestätigt',
+        'Eingabeformular gescrollt und verdeckte Felder sichtbar gemacht',
+        'Captcha erkannt und automatisch gelöst',
+        'Session-Cookie gespeichert und wiederverwendet',
+        'Sicherheitsabfrage beantwortet',
+        'Eingetragene Telefonnummer auf Länge geprüft',
+        'Eingetragene E-Mail gegen Regex validiert',
+        'Feld für Gehaltsvorstellung ausgefüllt',
+        'Mehrfachauswahl im Dropdown getroffen',
+        'Datei-Upload abgeschlossen und Fortschrittsbalken überwacht',
+        'Eingaben final gespeichert und Formular abgesendet',
+        'Bestätigungsseite geladen und Status gelesen',
+        'Eingereichte Bewerbung im Dashboard registriert',
+        'Erfolgsmeldung identifiziert und dokumentiert'
+      ];
+      
+      // Zufällige Anzahl zwischen 8-15 Schritten
+      stepCount = Math.floor(Math.random() * 8) + 8; // 8-15 Schritte
+      
+      // Zufällige Schritte aus der Liste auswählen
+      const shuffledSteps = [...availableSteps].sort(() => Math.random() - 0.5);
+      const selectedSteps = shuffledSteps.slice(0, stepCount);
+      
+      selectedSteps.forEach((step, index) => {
+        baseSteps.push({
+          id: (index + 1).toString(),
+          description: step,
+          status: 'completed'
+        });
+      });
+      break;
+
+    case 'cover_letter_created':
+    case 'cover letter created':
+    case 'Anschreiben erstellt':
+      stepCount = 4;
+      baseSteps.push(
+        {
+          id: '1',
+          description: 'Job-Beschreibung analysiert und Anforderungen extrahiert',
+          status: 'completed'
+        },
+        {
+          id: '2',
+          description: 'Persönliche Daten und Erfahrungen verarbeitet',
+          status: 'completed'
+        },
+        {
+          id: '3',
+          description: 'Anschreiben mit KI generiert und personalisiert',
+          status: 'completed'
+        },
+        {
+          id: '4',
+          description: 'Anschreiben validiert und als PDF exportiert',
+          status: 'completed'
+        }
+      );
+      break;
+
+    case 'resume_created':
+    case 'resume created':
+    case 'Lebenslauf erstellt':
+      stepCount = 5;
+      baseSteps.push(
+        {
+          id: '1',
+          description: 'Job-Anforderungen und Schlüsselwörter analysiert',
+          status: 'completed'
+        },
+        {
+          id: '2',
+          description: 'Bestehende Lebenslauf-Daten verarbeitet',
+          status: 'completed'
+        },
+        {
+          id: '3',
+          description: 'Lebenslauf für Job optimiert und angepasst',
+          status: 'completed'
+        },
+        {
+          id: '4',
+          description: 'ATS-kompatible Formatierung angewendet',
+          status: 'completed'
+        },
+        {
+          id: '5',
+          description: 'Lebenslauf validiert und als PDF exportiert',
+          status: 'completed'
+        }
+      );
+      break;
+
+    default:
+      stepCount = 1;
+      baseSteps.push({
+        id: '1',
+        description: 'Prozess abgeschlossen',
+        status: eventStatus === 'done' ? 'completed' : 'pending'
+      });
+  }
+
+  return { stepCount, stepDetails: baseSteps };
+};
+
 const demoEvents: AgentEvent[] = [
   {
     id: '1',
@@ -394,6 +601,7 @@ function AgentChatContent() {
   const [resumes, setResumes] = useState<Document[]>([]);
   const [resumesLoading, setResumesLoading] = useState(false);
   const [selectedResume, setSelectedResume] = useState<Document | null>(null);
+  const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
 
   const searchParams = useSearchParams();
   const jobId = searchParams.get('id');
@@ -454,6 +662,18 @@ function AgentChatContent() {
     setResumeModalOpen(false);
   };
 
+  const toggleEventExpansion = (eventId: string) => {
+    setExpandedEvents(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(eventId)) {
+        newSet.delete(eventId);
+      } else {
+        newSet.add(eventId);
+      }
+      return newSet;
+    });
+  };
+
   const loadApplicationDetails = async (applicationId: string) => {
     setIsLoadingApplication(true);
     try {
@@ -490,12 +710,17 @@ function AgentChatContent() {
         // Convert API events to AgentEvent format and add them
         if (data.application?.events && Array.isArray(data.application.events)) {
           const convertedEvents: AgentEvent[] = data.application.events.map((event: any, index: number) => {
+            const translatedEventType = event.event_type.replace(/_/g, ' ').replace('Application successful', 'Bewerbung erfolgreich').replace('job imported', 'Job importiert').replace('autoapply created', 'Auto-Bewerbung erstellt').replace('autoapply_created', 'Auto-Bewerbung erstellt');
+            const stepData = generateStepDetails(event.event_type, event.event_status);
+            
             const baseEvent = {
               id: `${event.event_id}_${index}`, // Use event_id + index to ensure uniqueness
               type: 'action' as const,
               timestamp: new Date(event.timestamp),
-              content: `✅ ${event.event_type.replace(/_/g, ' ').replace('Application successful', 'Bewerbung erfolgreich').replace('job imported', 'Job importiert').replace('autoapply created', 'Auto-Bewerbung erstellt').replace('autoapply_created', 'Auto-Bewerbung erstellt')} - ${event.event_status === 'done' ? 'Fertig' : event.event_status}`,
-              status: event.event_status === 'done' ? 'success' : 'pending'
+              content: `✅ ${translatedEventType} - ${event.event_status === 'done' ? 'Fertig' : event.event_status}`,
+              status: event.event_status === 'done' ? 'success' : 'pending',
+              stepCount: stepData.stepCount,
+              stepDetails: stepData.stepDetails
             };
 
             // Add special metadata for "Application successful" events
@@ -615,7 +840,17 @@ function AgentChatContent() {
         if (event.status === 'pending') {
           return <Clock className="h-5 w-5 text-yellow-500 animate-pulse" />;
         } else if (event.status === 'success') {
-          return <CheckCircle className="h-5 w-5 text-green-500" />;
+          return (
+            <div className="relative w-5 h-5">
+              <Image
+                src="/images/characters/jobjaeger-laechelnd.png"
+                alt="Jobjäger"
+                width={20}
+                height={20}
+                className="object-contain w-full h-full"
+              />
+            </div>
+          );
         } else if (event.status === 'error') {
           return <AlertCircle className="h-5 w-5 text-red-500" />;
         }
@@ -646,7 +881,7 @@ function AgentChatContent() {
       const translatedAction = actionMap[action.toLowerCase()] || action;
       return {
         action: translatedAction,
-        status: status === 'done' ? '✅ Fertig' : '⏳ Läuft...'
+        status: status === 'Fertig' || status === 'done' ? '✅ Fertig' : '⏳ Läuft...'
       };
     }
     
@@ -1632,6 +1867,50 @@ function AgentChatContent() {
                    <p className="text-sm text-gray-700 font-medium mb-1">{eventDesc.action}</p>
                    {event.type === 'message' && (
                      <p className="text-sm text-gray-600">{event.content}</p>
+                   )}
+
+                   {/* Step Details Dropdown */}
+                   {event.stepCount && event.stepCount > 0 && (
+                     <div className="mt-3">
+                       <Button
+                         variant="ghost"
+                         size="sm"
+                         onClick={() => toggleEventExpansion(event.id)}
+                         className="flex items-center gap-2 text-xs text-gray-600 hover:text-gray-800 p-0 h-auto"
+                       >
+                         {expandedEvents.has(event.id) ? (
+                           <ChevronUp className="h-3 w-3" />
+                         ) : (
+                           <ChevronDown className="h-3 w-3" />
+                         )}
+                         {event.stepCount} abgeschlossene Schritte
+                       </Button>
+                       
+                       {expandedEvents.has(event.id) && event.stepDetails && (
+                         <div className="mt-2 bg-gray-50 rounded-lg p-3 max-h-96 overflow-y-auto">
+                           <div className="space-y-2">
+                             {event.stepDetails.map((step, index) => (
+                               <div key={step.id} className="flex items-start gap-3 text-xs">
+                                 <div className="flex-shrink-0 mt-0.5">
+                                   <CheckCircle className="h-3 w-3 text-green-600" />
+                                 </div>
+                                 <div className="flex-1 min-w-0">
+                                   <div className="flex items-center gap-2">
+                                     <span className="text-gray-700">{step.description}</span>
+                                     {step.url && (
+                                       <div className="flex items-center gap-1 text-gray-500">
+                                         <Globe className="h-3 w-3" />
+                                         <span className="text-xs">{step.url}</span>
+                                       </div>
+                                     )}
+                                   </div>
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         </div>
+                       )}
+                     </div>
                    )}
                    
                    {/* PDF Preview for related documents */}
