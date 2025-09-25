@@ -230,7 +230,7 @@ const hasSuccessfulApplication = (applicationDetails: ApplicationDetails | null)
   if (!applicationDetails?.application?.events) return false;
   
   return applicationDetails.application.events.some(event => 
-    event.event_type === 'Application successful' && event.event_status === 'done'
+    (event.event_type === 'Application successful' || event.event_type === 'Bewerbung erfolgreich') && event.event_status === 'done'
   );
 };
 
@@ -501,13 +501,13 @@ function AgentChatContent() {
               id: `${event.event_id}_${index}`, // Use event_id + index to ensure uniqueness
               type: 'action' as const,
               timestamp: new Date(event.timestamp),
-              content: `✅ ${event.event_type.replace(/_/g, ' ')} - ${event.event_status}`,
+              content: `✅ ${event.event_type.replace(/_/g, ' ').replace('Application successful', 'Bewerbung erfolgreich').replace('job imported', 'Job importiert').replace('autoapply created', 'Auto-Bewerbung erstellt').replace('autoapply_created', 'Auto-Bewerbung erstellt')} - ${event.event_status === 'done' ? 'Fertig' : event.event_status}`,
               status: event.event_status === 'done' ? 'success' : 'pending'
             };
 
             // Add special metadata for "Application successful" events
             const autoApplyData = data.auto_apply || data.application?.auto_apply;
-            if (event.event_type === 'Application successful' && event.event_status === 'done' && autoApplyData) {
+            if ((event.event_type === 'Application successful' || event.event_type === 'Bewerbung erfolgreich') && event.event_status === 'done' && autoApplyData) {
               console.log('Found Application successful event with auto_apply data:', autoApplyData);
               const parsedData = parseApplicationData(autoApplyData.application_data);
               console.log('Parsed application data:', parsedData);
@@ -1636,7 +1636,7 @@ function AgentChatContent() {
                <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-2 mb-1">
                    <span className="text-sm font-medium text-gray-900">
-                     {event.type === 'message' ? 'Jobjäger Agent' : 'System'}
+                     {event.type === 'message' ? 'Jobjäger Agent' : 'Jobjäger'}
                    </span>
                    <span className="text-xs text-gray-500">
                      {formatTime(event.timestamp)}
@@ -1716,13 +1716,13 @@ function AgentChatContent() {
                    <div className="mt-3 p-4 bg-green-50 border border-green-200 rounded-lg">
                      <div className="flex items-center gap-2 mb-3">
                        <CheckCircle className="h-5 w-5 text-green-600" />
-                       <h4 className="font-semibold text-green-800">🎉 Bewerbung erfolgreich eingereicht!</h4>
+                       <h4 className="font-semibold text-black">🎉 Bewerbung erfolgreich eingereicht!</h4>
                      </div>
                      
                      {/* Job URLs */}
                      {event.metadata.jobUrls && event.metadata.jobUrls.length > 0 && (
                        <div className="mb-3">
-                         <h5 className="text-sm font-medium text-green-700 mb-2">📋 Beworbene Stellen:</h5>
+                         <h5 className="text-sm font-medium text-black mb-2">📋 Beworbene Stellen:</h5>
                          <div className="space-y-2">
                            {event.metadata.jobUrls.map((url: string, index: number) => (
                              <div key={index} className="flex items-center gap-2">
@@ -1731,7 +1731,7 @@ function AgentChatContent() {
                                  href={url} 
                                  target="_blank" 
                                  rel="noopener noreferrer"
-                                 className="text-sm text-green-700 hover:text-green-900 underline break-all"
+                                 className="text-sm text-black hover:text-gray-600 underline break-all"
                                >
                                  {url}
                                </a>
@@ -1744,7 +1744,7 @@ function AgentChatContent() {
                      {/* Output Video */}
                      {event.metadata.outputVideoUrl && (
                        <div className="mb-3">
-                         <h5 className="text-sm font-medium text-green-700 mb-2">🎥 Bewerbungsvideo:</h5>
+                         <h5 className="text-sm font-medium text-black mb-2">🎥 Agentvideo:</h5>
                          <div className="space-y-2">
                            <video 
                              controls 
@@ -1760,7 +1760,7 @@ function AgentChatContent() {
                                variant="outline" 
                                size="sm" 
                                asChild
-                               className="border-green-300 text-green-700 hover:bg-green-100"
+                               className="border-gray-300 text-black hover:bg-gray-100"
                              >
                                <a 
                                  href={event.metadata.outputVideoUrl} 
@@ -1780,19 +1780,13 @@ function AgentChatContent() {
                      {/* Additional Information */}
                      {event.metadata.additionalInfo && (
                        <div className="mb-3">
-                         <h5 className="text-sm font-medium text-green-700 mb-2">ℹ️ Zusätzliche Informationen:</h5>
-                         <p className="text-sm text-green-600 bg-white p-2 rounded border">
+                         <h5 className="text-sm font-medium text-black mb-2">ℹ️ Zusätzliche Informationen:</h5>
+                         <p className="text-sm text-black bg-white p-2 rounded border">
                            {event.metadata.additionalInfo}
                          </p>
                        </div>
                      )}
 
-                     {/* Workflow Runs */}
-                     {event.metadata.workflowRuns && (
-                       <div className="text-xs text-green-600">
-                         Workflow-Läufe: {event.metadata.workflowRuns}
-                       </div>
-                     )}
                    </div>
                  )}
 
@@ -1851,7 +1845,7 @@ function AgentChatContent() {
                <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-2 mb-1">
                    <span className="text-sm font-medium text-gray-900">
-                     {loadingEvent.type === 'message' ? 'Jobjäger Agent' : 'System'}
+                     {loadingEvent.type === 'message' ? 'Jobjäger Agent' : 'Jobjäger'}
                    </span>
                    <span className="text-xs text-gray-500">
                      {formatTime(new Date())}
