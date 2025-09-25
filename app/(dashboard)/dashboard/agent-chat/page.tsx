@@ -1745,23 +1745,34 @@ function AgentChatContent() {
                      {event.metadata.outputVideoUrl && (
                        <div className="mb-3">
                          <h5 className="text-sm font-medium text-green-700 mb-2">🎥 Bewerbungsvideo:</h5>
-                         <div className="flex items-center gap-2">
-                           <Button 
-                             variant="outline" 
-                             size="sm" 
-                             asChild
-                             className="border-green-300 text-green-700 hover:bg-green-100"
+                         <div className="space-y-2">
+                           <video 
+                             controls 
+                             className="w-full max-w-md rounded-lg border border-green-200"
+                             preload="metadata"
                            >
-                             <a 
-                               href={event.metadata.outputVideoUrl} 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               className="flex items-center gap-1"
+                             <source src={event.metadata.outputVideoUrl} type="video/webm" />
+                             <source src={event.metadata.outputVideoUrl} type="video/mp4" />
+                             Ihr Browser unterstützt das Video-Element nicht.
+                           </video>
+                           <div className="flex items-center gap-2">
+                             <Button 
+                               variant="outline" 
+                               size="sm" 
+                               asChild
+                               className="border-green-300 text-green-700 hover:bg-green-100"
                              >
-                               <ExternalLink className="h-3 w-3" />
-                               Video ansehen
-                             </a>
-                           </Button>
+                               <a 
+                                 href={event.metadata.outputVideoUrl} 
+                                 target="_blank" 
+                                 rel="noopener noreferrer"
+                                 className="flex items-center gap-1"
+                               >
+                                 <ExternalLink className="h-3 w-3" />
+                                 Video in neuem Tab öffnen
+                               </a>
+                             </Button>
+                           </div>
                          </div>
                        </div>
                      )}
