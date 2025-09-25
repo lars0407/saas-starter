@@ -26,6 +26,8 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
+import { DashboardBreadcrumb, breadcrumbConfigs } from "@/components/dashboard-breadcrumb";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 interface Job {
   id: string;
@@ -298,9 +300,23 @@ export default function JobjaegerAgentPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 flex flex-col h-screen">
       {/* Header */}
-      <div className="space-y-4">
+      <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <div className="flex items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator
+            orientation="vertical"
+            className="mr-2 data-[orientation=vertical]:h-4"
+          />
+          <DashboardBreadcrumb items={breadcrumbConfigs.agent} />
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 space-y-6 p-6">
+        {/* Page Header */}
+        <div className="space-y-4">
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold">Jobjäger Agent</h1>
           <Badge variant="secondary" className="bg-[#0F973D] text-white">
@@ -603,6 +619,7 @@ export default function JobjaegerAgentPage() {
       >
         <Play className="h-6 w-6" />
       </Button>
+      </div>
     </div>
   );
 } 
