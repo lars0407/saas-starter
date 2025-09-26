@@ -252,6 +252,17 @@ function AgentChatContent() {
       console.log('Status update:', data.status);
       // Status messages are handled internally, no UI event needed
     }
+    // Handle finish messages (agent is done)
+    else if (data.type === 'finish') {
+      console.log('Agent finished processing');
+      addEvent({
+        id: `finish_${Date.now()}_${Math.random()}`,
+        type: 'message' as const,
+        timestamp: new Date(),
+        content: '🎉 Agent hat die Bearbeitung abgeschlossen!',
+        metadata: {}
+      });
+    }
     // Handle result messages (like job data)
     else if (data.type === 'result') {
       console.log('Result data:', data.data);
