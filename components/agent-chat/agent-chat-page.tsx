@@ -271,7 +271,7 @@ function AgentChatContent() {
           return prev;
         });
 
-        // If this is job data from a job_imported event, update the most recent job_imported event with metadata
+        // Handle job data from job_imported event
         if (data.data.title || data.data.description?.description_original || data.data.job_origin) {
           console.log('Found job data, updating job_imported event with metadata:', {
             title: data.data.title,
@@ -307,8 +307,51 @@ function AgentChatContent() {
             }
             return updatedEvents;
           });
-        } else {
-          console.log('No job data found in result, skipping metadata update');
+        }
+        
+        // Handle document data from resume_created or coverletter_created events
+        else if (data.data.document_list && data.data.document_list.length > 0) {
+          console.log('Found document data, updating application details:', data.data);
+          
+          setApplicationDetails((prev: ApplicationDetails | null) => {
+            if (prev) {
+              return {
+                ...prev,
+                documents: {
+                  ...prev.documents,
+                  document_list: data.data.document_list,
+                  job_tracker: data.data.job_tracker || prev.documents.job_tracker
+                }
+              };
+            }
+            return prev;
+          });
+          
+          // Update the most recent resume_created or coverletter_created event with document metadata
+          setEvents(prevEvents => {
+            const updatedEvents = [...prevEvents];
+            // Find the most recent resume_created or coverletter_created event
+            for (let i = updatedEvents.length - 1; i >= 0; i--) {
+              const event = updatedEvents[i];
+              if ((event.content.includes('Lebenslauf erstellt') || event.content.includes('Anschreiben erstellt')) && event.type === 'action') {
+                console.log('Found document event to update:', event.id);
+                const document = data.data.document_list[0]; // Get the first document
+                updatedEvents[i] = {
+                  ...event,
+                  metadata: {
+                    ...event.metadata,
+                    documentId: document.id,
+                    documentType: document.type,
+                    documentLink: document.link,
+                    jobTrackerId: document.job_tracker_id
+                  }
+                };
+                console.log('Updated document event metadata:', updatedEvents[i].metadata);
+                break;
+              }
+            }
+            return updatedEvents;
+          });
         }
       }
     }

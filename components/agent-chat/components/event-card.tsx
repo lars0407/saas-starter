@@ -201,12 +201,15 @@ export function EventCard({
         )}
         
         {/* PDF Preview for related documents */}
-        {relatedDocument && (
+        {(relatedDocument || (event.metadata && event.metadata.documentLink)) && (
           <div className="mt-3 p-3 bg-white rounded-md border">
             <div className="flex items-center gap-2 mb-2">
               <FileText className="h-4 w-4 text-blue-600" />
               <span className="text-sm font-medium text-gray-900">
-                {relatedDocument.type === 'resume' ? 'Lebenslauf' : 'Anschreiben'}
+                {relatedDocument ? 
+                  (relatedDocument.type === 'resume' ? 'Lebenslauf' : 'Anschreiben') :
+                  (event.metadata?.documentType === 'resume' ? 'Lebenslauf' : 'Anschreiben')
+                }
               </span>
               <Badge variant="outline" className="text-xs">
                 Vorschau
@@ -214,7 +217,7 @@ export function EventCard({
             </div>
             <div className="w-32 h-40 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
               <PDFViewer
-                pdfUrl={relatedDocument.link}
+                pdfUrl={relatedDocument?.link || event.metadata?.documentLink || ''}
                 showToolbar={false}
                 showNavigation={false}
                 showBorder={false}
@@ -232,7 +235,7 @@ export function EventCard({
                 className="text-xs"
               >
                 <a 
-                  href={relatedDocument.link} 
+                  href={relatedDocument?.link || event.metadata?.documentLink || ''} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-1"
@@ -244,7 +247,7 @@ export function EventCard({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => window.open(relatedDocument.link, '_blank')}
+                onClick={() => window.open(relatedDocument?.link || event.metadata?.documentLink || '', '_blank')}
                 className="text-xs"
               >
                 <Download className="h-3 w-3 mr-1" />

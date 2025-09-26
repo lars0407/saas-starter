@@ -23,6 +23,10 @@ export interface AgentEvent {
     seniority?: string;
     jobDescription?: string;
     jobOrigin?: string;
+    documentId?: number;
+    documentType?: string;
+    documentLink?: string;
+    jobTrackerId?: number;
     applicationId?: string;
     isSuccessfulApplication?: boolean;
     jobUrls?: string[];
