@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useCallback } from 'react';
+import { useState, useEffect, Suspense, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -56,6 +56,10 @@ function AgentChatContent() {
     clearEvents,
     resetApplicationState,
   } = useAgentChat();
+
+  // Use ref to access current events in callbacks
+  const eventsRef = useRef(events);
+  eventsRef.current = events;
 
   const {
     resumeModalOpen,
@@ -229,6 +233,7 @@ function AgentChatContent() {
   // Streaming event processor for handling job import sequence
   const processStreamingEvent = useCallback((data: any) => {
     console.log('Processing streaming event:', data);
+    console.log('Current events count:', eventsRef.current.length);
     
     // Handle event messages (like job_imported)
     if (data.type === 'event') {
@@ -254,14 +259,33 @@ function AgentChatContent() {
     }
     // Handle finish messages (agent is done)
     else if (data.type === 'finish') {
-      console.log('Agent finished processing');
-      addEvent({
-        id: `finish_${Date.now()}_${Math.random()}`,
-        type: 'message' as const,
-        timestamp: new Date(),
-        content: '🎉 Agent hat die Bearbeitung abgeschlossen!',
-        metadata: {}
-      });
+      console.log('🎯 FINISH MESSAGE RECEIVED:', data);
+      console.log('Current events:', eventsRef.current.map(e => ({ id: e.id, content: e.content })));
+      
+      // Check if we already have a finish event to prevent duplicates
+      const hasFinishEvent = eventsRef.current.some(event => 
+        event.content.includes('🎉 Agent hat die Bearbeitung abgeschlossen!')
+      );
+      
+      console.log('Has finish event already?', hasFinishEvent);
+      
+      if (!hasFinishEvent) {
+        const finishEvent = {
+          id: `finish_${Date.now()}_${Math.random()}`,
+          type: 'message' as const,
+          timestamp: new Date(),
+          content: '🎉 Agent hat die Bearbeitung abgeschlossen!',
+          status: 'success' as const,
+          metadata: {}
+        };
+        
+        console.log('Creating finish event:', finishEvent);
+        addEvent(finishEvent);
+        setIsRunning(false); // Stop the loading state when finish event is created
+        console.log('✅ Finish event added to timeline');
+      } else {
+        console.log('⚠️ Finish event already exists, skipping duplicate');
+      }
     }
     // Handle result messages (like job data)
     else if (data.type === 'result') {

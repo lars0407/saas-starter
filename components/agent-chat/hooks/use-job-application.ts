@@ -138,6 +138,12 @@ export function useJobApplication() {
                       onStreamingEvent(data);
                     }
                   }
+                  else if (data.type === 'finish') {
+                    console.log('Processing finish message:', data);
+                    if (onStreamingEvent) {
+                      onStreamingEvent(data);
+                    }
+                  }
                 } catch (parseError) {
                   console.warn('Failed to parse streaming data:', line, parseError);
                 }

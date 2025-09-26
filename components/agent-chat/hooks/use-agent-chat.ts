@@ -27,7 +27,7 @@ export function useAgentChat() {
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const addEvent = useCallback((event: AgentEvent) => {
-    console.log('Adding event to state:', event);
+    console.log('🔵 addEvent called with:', event);
     setEvents(prev => {
       // If this is an agent message, ensure it's always at the end
       if (event.type === 'message' && event.id.startsWith('agent_msg_')) {
@@ -39,6 +39,13 @@ export function useAgentChat() {
       } else {
         // Check for duplicates based on event content and timestamp
         const isDuplicate = prev.some(existingEvent => {
+          // Special handling for finish events - prevent any duplicates
+          if (event.content.includes('🎉 Agent hat die Bearbeitung abgeschlossen!') && 
+              existingEvent.content.includes('🎉 Agent hat die Bearbeitung abgeschlossen!')) {
+            console.log('🚫 Duplicate finish event detected, skipping');
+            return true;
+          }
+          
           // Same content and timestamp
           const sameContent = existingEvent.content === event.content;
           const sameTimestamp = existingEvent.timestamp.getTime() === event.timestamp.getTime();
@@ -63,7 +70,7 @@ export function useAgentChat() {
         
         // For regular events, just add them normally
         const newEvents = [...prev, event];
-        console.log('Updated events array:', newEvents);
+        console.log('✅ Event added successfully. New events array:', newEvents.map(e => ({ id: e.id, content: e.content })));
         return newEvents;
       }
     });

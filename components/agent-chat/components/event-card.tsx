@@ -151,9 +151,10 @@ export function EventCard({
             {eventDesc.status}
           </Badge>
         </div>
-        <p className="text-sm text-gray-700 font-medium mb-1">{eventDesc.action}</p>
-        {event.type === 'message' && (
-          <p className="text-sm text-gray-600">{event.content}</p>
+        {event.type === 'message' ? (
+          <p className="text-sm text-gray-700 font-medium mb-1">{event.content}</p>
+        ) : (
+          <p className="text-sm text-gray-700 font-medium mb-1">{eventDesc.action}</p>
         )}
 
         {/* Step Details Dropdown */}
