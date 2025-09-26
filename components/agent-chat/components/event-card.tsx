@@ -349,12 +349,6 @@ export function EventCard({
               
               {/* Job Details Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                {event.metadata.company && (
-                  <div className="flex items-center gap-1">
-                    <Building2 className="h-3 w-3 text-gray-500" />
-                    <span>{event.metadata.company}</span>
-                  </div>
-                )}
                 {event.metadata.location && (
                   <div className="flex items-center gap-1">
                     <MapPin className="h-3 w-3 text-gray-500" />

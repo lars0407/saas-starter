@@ -294,7 +294,6 @@ function AgentChatContent() {
                     jobTitle: data.data.title || '',
                     jobDescription: data.data.description?.description_original || '',
                     jobOrigin: data.data.job_origin || '',
-                    company: data.data.company_id ? `Company ID: ${data.data.company_id}` : '',
                     location: data.data.job_city ? `${data.data.job_city}${data.data.job_state ? `, ${data.data.job_state}` : ''}${data.data.job_country ? `, ${data.data.job_country}` : ''}` : '',
                     salary: data.data.salary || '',
                     employmentType: data.data.job_employement_type || '',
