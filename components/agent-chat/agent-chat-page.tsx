@@ -97,7 +97,7 @@ function AgentChatContent() {
         }
       });
     }
-  }, [jobId, clearEvents]);
+  }, [jobId]);
 
   // Handle form reset when reset parameter is present
   useEffect(() => {
@@ -116,7 +116,7 @@ function AgentChatContent() {
         }
       });
     }
-  }, [resetForm, resetApplicationState]);
+  }, [resetForm]);
 
   // Listen for custom event from sidebar to open form
   useEffect(() => {
@@ -276,6 +276,7 @@ function AgentChatContent() {
           console.log('Found job data, updating job_imported event with metadata:', {
             title: data.data.title,
             description: data.data.description?.description_original,
+            descriptionLength: data.data.description?.description_original?.length || 0,
             job_origin: data.data.job_origin
           });
           
@@ -311,7 +312,7 @@ function AgentChatContent() {
         }
       }
     }
-  }, [addEvent, setApplicationDetails, setEvents, clearEvents]);
+  }, [addEvent, setApplicationDetails, setEvents]);
 
   const handleStartApplicationClick = async () => {
     try {

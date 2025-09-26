@@ -41,7 +41,10 @@ export function EventCard({
 }: EventCardProps) {
   // Debug logging
   if (event.metadata && !event.metadata.isSuccessfulApplication) {
-    console.log('Event metadata for job display:', event.metadata);
+    console.log('Event metadata for job display:', {
+      ...event.metadata,
+      jobDescriptionLength: event.metadata.jobDescription?.length || 0
+    });
   }
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('de-DE', { 
@@ -379,7 +382,7 @@ export function EventCard({
               {event.metadata.jobDescription && (
                 <div className="mt-2">
                   <div className="text-xs font-medium text-gray-700 mb-1">Job Description:</div>
-                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded border max-h-20 overflow-y-auto">
+                  <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded border max-h-60 overflow-y-auto whitespace-pre-wrap">
                     {event.metadata.jobDescription}
                   </div>
                 </div>
