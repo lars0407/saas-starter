@@ -139,24 +139,26 @@ export function EventCard({
   const relatedDocument = getRelatedDocument(event);
 
   return (
-    <div className={`flex gap-3 p-4 rounded-lg border ${getEventStyle(event)}`}>
+    <div className={`flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border ${getEventStyle(event)}`}>
       <div className="flex-shrink-0">
         {getEventIcon(event)}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
           <span className="text-sm font-medium text-gray-900">
             {event.type === 'message' ? 'Jobjaeger Agent' : 'Jobjaeger'}
           </span>
-          <span className="text-xs text-gray-500">
-            {formatTime(event.timestamp)}
-          </span>
-          <Badge 
-            variant={event.status === 'success' ? 'default' : event.status === 'error' ? 'destructive' : 'secondary'}
-            className="text-xs"
-          >
-            {eventDesc.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">
+              {formatTime(event.timestamp)}
+            </span>
+            <Badge 
+              variant={event.status === 'success' ? 'default' : event.status === 'error' ? 'destructive' : 'secondary'}
+              className="text-xs"
+            >
+              {eventDesc.status}
+            </Badge>
+          </div>
         </div>
         {event.type === 'message' ? (
           <p className="text-sm text-gray-700 font-medium mb-1">{event.content}</p>
@@ -210,20 +212,22 @@ export function EventCard({
         
         {/* PDF Preview for related documents */}
         {(relatedDocument || (event.metadata && event.metadata.documentLink)) && (
-          <div className="mt-3 p-3 bg-white rounded-md border">
-            <div className="flex items-center gap-2 mb-2">
-              <FileText className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-gray-900">
-                {relatedDocument ? 
-                  (relatedDocument.type === 'resume' ? 'Lebenslauf' : 'Anschreiben') :
-                  (event.metadata?.documentType === 'resume' ? 'Lebenslauf' : 'Anschreiben')
-                }
-              </span>
-              <Badge variant="outline" className="text-xs">
+          <div className="mt-3 p-2 sm:p-3 bg-white rounded-md border">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-gray-900">
+                  {relatedDocument ? 
+                    (relatedDocument.type === 'resume' ? 'Lebenslauf' : 'Anschreiben') :
+                    (event.metadata?.documentType === 'resume' ? 'Lebenslauf' : 'Anschreiben')
+                  }
+                </span>
+              </div>
+              <Badge variant="outline" className="text-xs w-fit">
                 Vorschau
               </Badge>
             </div>
-            <div className="w-32 h-40 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
+            <div className="w-24 h-32 sm:w-32 sm:h-40 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm mx-auto sm:mx-0">
               <PDFViewer
                 pdfUrl={relatedDocument?.link || event.metadata?.documentLink || ''}
                 showToolbar={false}
@@ -235,18 +239,18 @@ export function EventCard({
                 className="w-full h-full -mt-6 -mb-6 pointer-events-none"
               />
             </div>
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex flex-col sm:flex-row gap-2">
               <Button 
                 variant="outline" 
                 size="sm" 
                 asChild
-                className="text-xs"
+                className="text-xs flex-1 sm:flex-none"
               >
                 <a 
                   href={relatedDocument?.link || event.metadata?.documentLink || ''} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1"
+                  className="flex items-center justify-center gap-1"
                 >
                   <Link className="h-3 w-3" />
                   Öffnen
@@ -256,7 +260,7 @@ export function EventCard({
                 variant="ghost" 
                 size="sm" 
                 onClick={() => window.open(relatedDocument?.link || event.metadata?.documentLink || '', '_blank')}
-                className="text-xs"
+                className="text-xs flex-1 sm:flex-none"
               >
                 <Download className="h-3 w-3 mr-1" />
                 Download
@@ -267,10 +271,10 @@ export function EventCard({
       
         {/* Application Success Information */}
         {event.metadata?.isSuccessfulApplication && (
-          <div className="mt-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="mt-3 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center gap-2 mb-3">
               <CheckCircle className="h-5 w-5 text-green-600" />
-              <h4 className="font-semibold text-black">Bewerbung erfolgreich eingereicht!</h4>
+              <h4 className="font-semibold text-black text-sm sm:text-base">Bewerbung erfolgreich eingereicht!</h4>
             </div>
             
             {/* Job URLs */}
@@ -302,7 +306,7 @@ export function EventCard({
                 <div className="space-y-2">
                   <video 
                     controls 
-                    className="w-full max-w-md rounded-lg border border-green-200"
+                    className="w-full max-w-sm sm:max-w-md rounded-lg border border-green-200"
                     preload="metadata"
                   >
                     <source src={event.metadata.outputVideoUrl} type="video/webm" />
@@ -314,7 +318,7 @@ export function EventCard({
                       variant="outline" 
                       size="sm" 
                       asChild
-                      className="border-gray-300 text-black hover:bg-gray-100"
+                      className="border-gray-300 text-black hover:bg-gray-100 text-xs"
                     >
                       <a 
                         href={event.metadata.outputVideoUrl} 
@@ -323,7 +327,8 @@ export function EventCard({
                         className="flex items-center gap-1"
                       >
                         <ExternalLink className="h-3 w-3" />
-                        Video in neuem Tab öffnen
+                        <span className="hidden sm:inline">Video in neuem Tab öffnen</span>
+                        <span className="sm:hidden">Video öffnen</span>
                       </a>
                     </Button>
                   </div>
@@ -345,40 +350,40 @@ export function EventCard({
       
         {/* Job Metadata */}
         {event.metadata && !event.metadata.isSuccessfulApplication && (event.metadata.jobTitle || event.metadata.jobDescription || event.metadata.jobOrigin) && (
-          <div className="mt-3 p-3 bg-white rounded-md border">
+          <div className="mt-3 p-2 sm:p-3 bg-white rounded-md border">
             <div className="space-y-3">
               {/* Job Title */}
               {event.metadata.jobTitle && (
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-blue-500" />
-                  <span className="font-semibold text-sm text-gray-900">{event.metadata.jobTitle}</span>
+                  <span className="font-semibold text-sm text-gray-900 break-words">{event.metadata.jobTitle}</span>
                 </div>
               )}
               
               {/* Job Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 {event.metadata.location && (
                   <div className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-gray-500" />
-                    <span>{event.metadata.location}</span>
+                    <MapPin className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                    <span className="break-words">{event.metadata.location}</span>
                   </div>
                 )}
                 {event.metadata.salary && (
                   <div className="flex items-center gap-1">
-                    <DollarSign className="h-3 w-3 text-gray-500" />
-                    <span>{event.metadata.salary}</span>
+                    <DollarSign className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                    <span className="break-words">{event.metadata.salary}</span>
                   </div>
                 )}
                 {event.metadata.employmentType && (
                   <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3 text-gray-500" />
-                    <span>{event.metadata.employmentType}</span>
+                    <Clock className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                    <span className="break-words">{event.metadata.employmentType}</span>
                   </div>
                 )}
                 {event.metadata.seniority && (
                   <div className="flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3 text-gray-500" />
-                    <span>{event.metadata.seniority}</span>
+                    <TrendingUp className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                    <span className="break-words">{event.metadata.seniority}</span>
                   </div>
                 )}
               </div>

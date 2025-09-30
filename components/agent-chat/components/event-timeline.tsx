@@ -25,7 +25,7 @@ export function EventTimeline({
   onToggleEventExpansion,
 }: EventTimelineProps) {
   return (
-    <div className="flex-1 overflow-y-auto px-24 py-4 pb-32 space-y-4">
+    <div className="flex-1 overflow-y-auto px-4 sm:px-8 md:px-16 lg:px-24 py-4 pb-32 space-y-4">
       {events.map((event) => (
         <EventCard
           key={event.id}
