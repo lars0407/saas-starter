@@ -861,115 +861,186 @@ export default function JobjaegerAgentPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="applications" className="space-y-6">
+        <TabsContent value="applications" className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                Deine Bewerbungen
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden sm:inline">Deine Bewerbungen</span>
+                <span className="sm:hidden">Bewerbungen</span>
                 {isLoadingApplications && <Loader2 className="h-4 w-4 animate-spin" />}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               {isLoadingApplications ? (
                 <div className="text-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
                   <p className="text-muted-foreground">Bewerbungen werden geladen...</p>
                 </div>
               ) : !Array.isArray(applications) || applications.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Noch keine Bewerbungen</h3>
-                  <p className="text-muted-foreground">
+                <div className="text-center py-6 sm:py-8">
+                  <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-base sm:text-lg font-semibold mb-2">Noch keine Bewerbungen</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground px-4">
                     Ihre Job-Bewerbungen werden hier angezeigt, sobald Sie mit dem Bewerben beginnen.
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4 font-medium w-1/3">Position</th>
-                        <th className="text-left py-3 px-4 font-medium">Erstellt</th>
-                        <th className="text-left py-3 px-4 font-medium">Bewerbung</th>
-                        <th className="text-left py-3 px-4 font-medium">Letzte Aktivität</th>
-                        <th className="text-left py-3 px-4 font-medium">Aktionen</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {applications.map((application) => (
-                        <tr 
-                          key={application.id} 
-                          className="border-b hover:bg-gray-50 cursor-pointer"
-                          onClick={() => handleApplicationClick(application.id)}
-                        >
-                          <td className="py-4 px-4 w-1/3">
-                            <div className="font-medium">
-                              {application.job[0]?.title || 'Unbekannte Position'}
-                            </div>
-                          </td>
-                          <td className="py-4 px-4 text-muted-foreground">
-                            {new Date(application.created_at).toLocaleDateString('de-DE')}
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center justify-center">
-                              {application.status === 'autoapply_created' || application.status === 'created' ? (
-                                <CheckCircle className="h-5 w-5 text-green-600" />
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-4 font-medium w-1/3">Position</th>
+                          <th className="text-left py-3 px-4 font-medium">Erstellt</th>
+                          <th className="text-left py-3 px-4 font-medium">Bewerbung</th>
+                          <th className="text-left py-3 px-4 font-medium">Letzte Aktivität</th>
+                          <th className="text-left py-3 px-4 font-medium">Aktionen</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {applications.map((application) => (
+                          <tr 
+                            key={application.id} 
+                            className="border-b hover:bg-gray-50 cursor-pointer"
+                            onClick={() => handleApplicationClick(application.id)}
+                          >
+                            <td className="py-4 px-4 w-1/3">
+                              <div className="font-medium">
+                                {application.job[0]?.title || 'Unbekannte Position'}
+                              </div>
+                            </td>
+                            <td className="py-4 px-4 text-muted-foreground">
+                              {new Date(application.created_at).toLocaleDateString('de-DE')}
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex items-center justify-center">
+                                {application.status === 'autoapply_created' || application.status === 'created' ? (
+                                  <CheckCircle className="h-5 w-5 text-green-600" />
+                                ) : (
+                                  <X className="h-5 w-5 text-red-600" />
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-4 px-4">
+                              {application.events && application.events.length > 0 ? (
+                                <div className="space-y-1">
+                                  {application.events.slice(-1).map((event, index) => (
+                                    <div key={index} className="flex items-center gap-2 text-sm">
+                                      <div className={`w-2 h-2 rounded-full ${
+                                        event.event_status === 'done' ? 'bg-green-500' : 'bg-yellow-500'
+                                      }`} />
+                                      <span className="text-muted-foreground">
+                                        {translateEventType(event.event_type)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
                               ) : (
-                                <X className="h-5 w-5 text-red-600" />
+                                <span className="text-muted-foreground text-sm">Keine Aktivität</span>
+                              )}
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex items-center gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleApplicationClick(application.id);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Details
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="md:hidden space-y-3">
+                    {applications.map((application) => (
+                      <div 
+                        key={application.id} 
+                        className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleApplicationClick(application.id)}
+                      >
+                        <div className="flex flex-col gap-3">
+                          {/* Job Title */}
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-sm leading-tight">
+                                {application.job[0]?.title || 'Unbekannte Position'}
+                              </h3>
+                            </div>
+                            <div className="flex items-center gap-2 ml-2">
+                              {application.status === 'autoapply_created' || application.status === 'created' ? (
+                                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                              ) : (
+                                <X className="h-4 w-4 text-red-600 flex-shrink-0" />
                               )}
                             </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            {application.events && application.events.length > 0 ? (
-                              <div className="space-y-1">
-                                {application.events.slice(-1).map((event, index) => (
-                                  <div key={index} className="flex items-center gap-2 text-sm">
-                                    <div className={`w-2 h-2 rounded-full ${
-                                      event.event_status === 'done' ? 'bg-green-500' : 'bg-yellow-500'
-                                    }`} />
-                                    <span className="text-muted-foreground">
-                                      {translateEventType(event.event_type)}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">Keine Aktivität</span>
-                            )}
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-2">
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleApplicationClick(application.id);
-                                }}
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                Details
-                              </Button>
+                          </div>
+
+                          {/* Created Date */}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>Erstellt:</span>
+                            <span>{new Date(application.created_at).toLocaleDateString('de-DE')}</span>
+                          </div>
+
+                          {/* Last Activity */}
+                          {application.events && application.events.length > 0 ? (
+                            <div className="flex items-center gap-2 text-xs">
+                              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                application.events[application.events.length - 1].event_status === 'done' ? 'bg-green-500' : 'bg-yellow-500'
+                              }`} />
+                              <span className="text-muted-foreground">
+                                {translateEventType(application.events[application.events.length - 1].event_type)}
+                              </span>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          ) : (
+                            <div className="text-xs text-muted-foreground">
+                              Keine Aktivität
+                            </div>
+                          )}
+
+                          {/* Action Button */}
+                          <div className="pt-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="w-full"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleApplicationClick(application.id);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              Details anzeigen
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="email" className="space-y-6">
+        <TabsContent value="email" className="space-y-4 sm:space-y-6">
           <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-8">
-                <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Coming Soon</h3>
-                <p className="text-muted-foreground">
+            <CardContent className="p-4 sm:p-6">
+              <div className="text-center py-6 sm:py-8">
+                <Mail className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-semibold mb-2">Coming Soon</h3>
+                <p className="text-sm sm:text-base text-muted-foreground px-4">
                   Diese Funktion wird bald verfügbar sein.
                 </p>
               </div>
@@ -977,13 +1048,13 @@ export default function JobjaegerAgentPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="profile" className="space-y-6">
+        <TabsContent value="profile" className="space-y-4 sm:space-y-6">
           <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-8">
-                <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Coming Soon</h3>
-                <p className="text-muted-foreground">
+            <CardContent className="p-4 sm:p-6">
+              <div className="text-center py-6 sm:py-8">
+                <User className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-semibold mb-2">Coming Soon</h3>
+                <p className="text-sm sm:text-base text-muted-foreground px-4">
                   Diese Funktion wird bald verfügbar sein.
                 </p>
               </div>
@@ -995,9 +1066,9 @@ export default function JobjaegerAgentPage() {
       {/* Floating Help Button */}
       <Button
         size="lg"
-        className="fixed bottom-6 right-6 rounded-full w-14 h-14 bg-[#0F973D] hover:bg-[#0F973D]/90 shadow-lg"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 rounded-full w-12 h-12 sm:w-14 sm:h-14 bg-[#0F973D] hover:bg-[#0F973D]/90 shadow-lg"
       >
-        <Play className="h-6 w-6" />
+        <Play className="h-5 w-5 sm:h-6 sm:w-6" />
       </Button>
 
       {/* Resume Picker Modal */}
