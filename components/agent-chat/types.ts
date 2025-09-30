@@ -152,6 +152,7 @@ export interface JobDetails {
   title: string;
   description: string;
   url: string;
+  jobId?: number; // Optional job ID for recommendations
 }
 
 export interface LoadingEvent {

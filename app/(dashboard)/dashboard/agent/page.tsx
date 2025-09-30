@@ -29,6 +29,12 @@ import { useRouter } from 'next/navigation';
 import { DashboardBreadcrumb, breadcrumbConfigs } from "@/components/dashboard-breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import Link from 'next/link';
+import { ResumePickerModal } from '@/components/agent-chat/components/resume-picker-modal';
+import { useResumePicker } from '@/components/agent-chat/hooks/use-resume-picker';
+import type { Document as ResumeDocument } from '@/components/agent-chat/types';
+import type { JobDetails } from '@/components/agent-chat/types';
+import { useJobApplication } from '@/components/agent-chat/hooks/use-job-application';
+import { toast } from 'sonner';
 
 interface Job {
   id: string;
@@ -238,8 +244,65 @@ export default function JobjaegerAgentPage() {
   const [recPage, setRecPage] = useState(1);
   const [hasMoreRecs, setHasMoreRecs] = useState(false);
 
-  const handleStartApplication = () => {
+  // Resume picker state
+  const {
+    resumeModalOpen,
+    setResumeModalOpen,
+    resumes,
+    resumesLoading,
+    handleOpenResumeModal,
+    fetchResumes,
+  } = useResumePicker();
+  const [selectedResume, setSelectedResume] = useState<ResumeDocument | null>(null);
+  const { handleStartApplication } = useJobApplication();
+  const [applyingIds, setApplyingIds] = useState<Set<number>>(new Set());
+
+  const handleStartApplicationNavigation = () => {
     router.push('/dashboard/agent-chat?reset=true');
+  };
+
+  const startApplicationFromRecommendation = async (item: RecommendationItem) => {
+    const j = item.job && item.job[0] ? item.job[0] : undefined;
+    if (!j) return;
+    
+    if (!selectedResume) {
+      toast.error('Bitte wählen Sie zuerst einen Basis-Lebenslauf aus, bevor Sie sich bewerben.');
+      return;
+    }
+    
+    // Save job data and resume to localStorage
+    const jobData = {
+      title: j.title || 'Unbekannte Position',
+      description: (j as any)?.description?.description_original || '',
+      url: j.apply_link || '',
+      company: j.company?.employer_name || '',
+      location: [j.job_city, j.job_state, j.job_country].filter(Boolean).join(', '),
+      employmentType: j.job_employement_type || '',
+      seniority: j.seniority || '',
+      salary: j.salary || '',
+      source: 'recommendation',
+      recommendationId: item.id,
+      jobId: j.id, // Add the actual job ID from the recommendation
+      score: item.score,
+      matchReason: item.matchReason
+    };
+    
+    const resumeData = {
+      id: selectedResume.id,
+      title: selectedResume.title || selectedResume.name || 'Lebenslauf',
+      type: selectedResume.type || 'resume'
+    };
+    
+    localStorage.setItem('pendingJobApplication', JSON.stringify(jobData));
+    localStorage.setItem('selectedResume', JSON.stringify(resumeData));
+    
+    console.log('Saved job data to localStorage:', jobData);
+    console.log('Saved resume data to localStorage:', resumeData);
+    
+    toast.success('Job-Daten gespeichert. Öffne Agent-Chat...');
+    
+    // Navigate to agent-chat page
+    router.push('/dashboard/agent-chat?fromRecommendation=true');
   };
 
   const getCookie = (name: string) => {
@@ -515,7 +578,7 @@ export default function JobjaegerAgentPage() {
         </p>
         <div className="flex items-center gap-4">
           <Button 
-            onClick={handleStartApplication}
+            onClick={handleStartApplicationNavigation}
             className="bg-[#0F973D] hover:bg-[#0F973D]/90 text-white px-6 py-3 text-lg font-semibold"
           >
             <Play className="h-5 w-5 mr-2" />
@@ -578,6 +641,14 @@ export default function JobjaegerAgentPage() {
                       <RefreshCw className="h-4 w-4 mr-2" />
                       Aktualisieren
                     </Button>
+                    <Button variant="outline" onClick={handleOpenResumeModal}>
+                      Basis-Lebenslauf wählen
+                    </Button>
+                    {selectedResume && (
+                      <span className="text-sm text-muted-foreground hidden md:inline">
+                        Ausgewählt: {selectedResume.title || selectedResume.name || 'Lebenslauf'}
+                      </span>
+                    )}
                   </div>
                   <div />
                 </div>
@@ -665,13 +736,21 @@ export default function JobjaegerAgentPage() {
                               <div className="rounded-full border px-3 py-1 text-sm font-semibold bg-green-100 text-green-800">
                                 {scorePct}
                               </div>
-                              {j?.apply_link ? (
-                                <a href={j.apply_link} target="_blank" rel="noreferrer">
-                                  <Button size="sm" variant="outline">Bewerben</Button>
-                                </a>
-                              ) : (
-                                <Button size="sm" variant="outline" disabled>Bewerben</Button>
-                              )}
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                disabled={applyingIds.has(item.id)}
+                                onClick={() => startApplicationFromRecommendation(item)}
+                              >
+                                {applyingIds.has(item.id) ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Bewerben
+                                  </>
+                                ) : (
+                                  'Bewerben'
+                                )}
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -879,6 +958,18 @@ export default function JobjaegerAgentPage() {
       >
         <Play className="h-6 w-6" />
       </Button>
+
+      {/* Resume Picker Modal */}
+      <ResumePickerModal
+        isOpen={resumeModalOpen}
+        onClose={() => setResumeModalOpen(false)}
+        resumes={resumes}
+        resumesLoading={resumesLoading}
+        onSelectResume={(resume) => {
+          setSelectedResume(resume);
+          setResumeModalOpen(false);
+        }}
+      />
       </div>
     </div>
   );

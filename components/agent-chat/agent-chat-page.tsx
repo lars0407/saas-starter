@@ -79,6 +79,7 @@ function AgentChatContent() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get('id');
   const resetForm = searchParams.get('reset');
+  const fromRecommendation = searchParams.get('fromRecommendation');
 
   // Character count for description
   const characterCount = jobDetails.description.length;
@@ -121,6 +122,106 @@ function AgentChatContent() {
       });
     }
   }, [resetForm]);
+
+  // Handle recommendation data from localStorage
+  useEffect(() => {
+    if (fromRecommendation === 'true') {
+      console.log('Loading recommendation data from localStorage');
+      
+      try {
+        const pendingJobData = localStorage.getItem('pendingJobApplication');
+        const resumeData = localStorage.getItem('selectedResume');
+        
+        if (pendingJobData && resumeData) {
+          const jobData = JSON.parse(pendingJobData);
+          const resume = JSON.parse(resumeData);
+          
+          console.log('Loaded job data:', jobData);
+          console.log('Loaded resume data:', resume);
+          
+          // Set job details
+          const newJobDetails = {
+            title: jobData.title,
+            description: jobData.description,
+            url: jobData.url,
+            jobId: jobData.jobId // Include jobId for recommendations
+          };
+          setJobDetails(newJobDetails);
+          
+          // Set selected resume
+          setSelectedResume(resume);
+          
+          // Clear localStorage
+          localStorage.removeItem('pendingJobApplication');
+          localStorage.removeItem('selectedResume');
+          
+          // Auto-start the application with the data directly
+          setTimeout(async () => {
+            try {
+              console.log('Starting application with data:', newJobDetails, resume);
+              
+              // Clear previous events and reset state when starting a new application
+              console.log('Clearing events before starting application');
+              clearEvents();
+              setApplicationDetails(null);
+              
+              // Wait a bit for the state to clear before starting the application
+              await new Promise(resolve => setTimeout(resolve, 100));
+              
+              console.log('Starting loading event');
+              startLoadingEvent('message', 'Bewerbung wird gestartet...');
+              setShowForm(false);
+              setIsRunning(true);
+
+              await handleStartApplication(
+                newJobDetails,
+                resume,
+                autoMode,
+                (applicationId) => {
+                  console.log('Application started successfully:', applicationId);
+                  // Update URL with application ID
+                  const currentUrl = new URL(window.location.href);
+                  currentUrl.searchParams.set('id', applicationId);
+                  window.history.replaceState({}, '', currentUrl.toString());
+                },
+                (error) => {
+                  console.error('Error starting application:', error);
+                  addEvent({
+                    id: Date.now().toString(),
+                    type: 'error',
+                    timestamp: new Date(),
+                    content: `Fehler beim Starten der Bewerbung: ${error.message}`,
+                    metadata: {}
+                  });
+                  setIsRunning(false);
+                },
+                processStreamingEvent
+              );
+
+              stopLoadingEvent();
+            } catch (error) {
+              console.error('Error starting application:', error);
+              stopLoadingEvent();
+              addEvent({
+                id: Date.now().toString(),
+                type: 'error',
+                timestamp: new Date(),
+                content: `Fehler beim Starten der Bewerbung: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`,
+                metadata: {}
+              });
+              setIsRunning(false);
+            }
+          }, 500);
+        } else {
+          console.log('No recommendation data found in localStorage');
+          setShowForm(true);
+        }
+      } catch (error) {
+        console.error('Error loading recommendation data:', error);
+        setShowForm(true);
+      }
+    }
+  }, [fromRecommendation]);
 
   // Listen for custom event from sidebar to open form
   useEffect(() => {
@@ -232,25 +333,31 @@ function AgentChatContent() {
 
   // Streaming event processor for handling job import sequence
   const processStreamingEvent = useCallback((data: any) => {
-    console.log('Processing streaming event:', data);
-    console.log('Current events count:', eventsRef.current.length);
+    console.log('🟢 Processing streaming event:', data);
+    console.log('🟢 Current events count:', eventsRef.current.length);
+    console.log('🟢 Current events:', eventsRef.current.map(e => ({ id: e.id, content: e.content, type: e.type })));
     
     // Handle event messages (like job_imported)
     if (data.type === 'event') {
+      console.log('🟢 Processing event type:', data.event_type, 'status:', data.event_status);
       const eventDesc = getEventDescriptionFromType(data.event_type, data.event_status);
       const stepData = generateStepDetails(data.event_type, data.event_status);
       
       const isSuccess = data.event_status === 'done';
-      addEvent({
+      const newEvent = {
         id: `${data.event_id}_${Date.now()}_${Math.random()}`,
         type: 'action' as const,
         timestamp: new Date(data.timestamp),
         content: eventDesc.action,
-        status: isSuccess ? 'success' : 'pending',
+        status: (isSuccess ? 'success' : 'pending') as 'success' | 'pending',
         stepCount: stepData.stepCount,
         stepDetails: stepData.stepDetails,
         metadata: {}
-      });
+      };
+      
+      console.log('🟢 Adding event:', newEvent);
+      addEvent(newEvent);
+      console.log('🟢 Event added, new count should be:', eventsRef.current.length + 1);
     }
     // Handle status messages (like "job_imported" status)
     else if (data.type === 'status') {
@@ -369,7 +476,20 @@ function AgentChatContent() {
               const event = updatedEvents[i];
               if ((event.content.includes('Lebenslauf erstellt') || event.content.includes('Anschreiben erstellt')) && event.type === 'action') {
                 console.log('Found document event to update:', event.id);
-                const document = data.data.document_list[0]; // Get the first document
+                
+                // Find the correct document based on event content
+                let document;
+                if (event.content.includes('Lebenslauf erstellt')) {
+                  document = data.data.document_list.find((doc: any) => doc.type === 'resume');
+                } else if (event.content.includes('Anschreiben erstellt')) {
+                  document = data.data.document_list.find((doc: any) => doc.type === 'cover letter');
+                }
+                
+                // Fallback to first document if specific type not found
+                if (!document) {
+                  document = data.data.document_list[0];
+                }
+                
                 updatedEvents[i] = {
                   ...event,
                   metadata: {

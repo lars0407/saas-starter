@@ -95,6 +95,13 @@ export function EventCard({
   const getRelatedDocument = (event: AgentEvent) => {
     if (!applicationDetails?.documents?.document_list) return null;
     
+    // First try to match by event metadata (most accurate)
+    if (event.metadata?.documentId) {
+      const document = applicationDetails.documents.document_list.find(doc => doc.id === event.metadata?.documentId);
+      if (document) return document;
+    }
+    
+    // Fallback to content-based matching
     const content = event.content.toLowerCase();
     
     if (content.includes('resume') || content.includes('lebenslauf')) {

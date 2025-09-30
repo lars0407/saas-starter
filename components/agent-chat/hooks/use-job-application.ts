@@ -46,6 +46,15 @@ export function useJobApplication() {
         mode: autoMode ? 'auto' : 'manual'
       };
 
+      // Add job_id if it's from a recommendation (has jobId property)
+      if (jobDetails.jobId) {
+        requestBody.job_id = jobDetails.jobId;
+      }
+
+      // Don't add job_id for recommendations - only for existing job applications
+      console.log('Sending request body:', requestBody);
+
+      console.log('🚀 Making API request to start application');
       const response = await fetch('https://api.jobjaeger.de/api:BP7K6-ZQ/v2/agent/application/generate', {
         method: 'POST',
         headers: {
