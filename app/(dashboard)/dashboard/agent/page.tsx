@@ -289,7 +289,7 @@ export default function JobjaegerAgentPage() {
     
     const resumeData = {
       id: selectedResume.id,
-      title: selectedResume.title || selectedResume.name || 'Lebenslauf',
+      title: selectedResume.name || 'Lebenslauf',
       type: selectedResume.type || 'resume'
     };
     
@@ -389,11 +389,15 @@ export default function JobjaegerAgentPage() {
 
   // Load recommendations automatically when opening the page
   useEffect(() => {
-    if (activeTab === 'matched-jobs' && recommendations.length === 0 && !isLoadingRecommendations) {
+    if (activeTab === 'matched-jobs' && !hasAttemptedLoad) {
+      setHasAttemptedLoad(true);
       fetchRecommendations(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeTab]);
+
+  // Track if we've attempted to load recommendations at least once
+  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
 
   const loadApplications = async () => {
     setIsLoadingApplications(true);
@@ -562,62 +566,92 @@ export default function JobjaegerAgentPage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 space-y-6 p-6">
+      <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-6">
         {/* Page Header */}
         <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold">Jobjäger Agent</h1>
-          <Badge variant="secondary" className="bg-[#0F973D] text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold">Jobjäger Agent</h1>
+          <Badge variant="secondary" className="bg-[#0F973D] text-white w-fit">
             Beta
           </Badge>
         </div>
-        <p className="text-muted-foreground max-w-4xl">
+        <p className="text-muted-foreground max-w-4xl text-sm md:text-base">
           Der Jobjäger Agent ist Ihr 24/7 automatisierter Job-Assistent, der Jobs findet und sofort bewirbt, 
           sobald sie gepostet werden. Er passt Lebensläufe für jede Rolle an, umgeht ATS-Filter und stellt sicher, 
           dass Sie mit optimierten Bewerbungen, die mehr Interviews landen, an erster Stelle stehen.
         </p>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <Button 
             onClick={handleStartApplicationNavigation}
-            className="bg-[#0F973D] hover:bg-[#0F973D]/90 text-white px-6 py-3 text-lg font-semibold"
+            className="bg-[#0F973D] hover:bg-[#0F973D]/90 text-white px-6 py-3 text-lg font-semibold w-full sm:w-auto"
           >
             <Play className="h-5 w-5 mr-2" />
             Bewerbung starten
           </Button>
-          <Button variant="link" className="p-0 h-auto text-[#0F973D]" disabled>
+          <Button variant="link" className="p-0 h-auto text-[#0F973D] w-fit" disabled>
             Tutorials anzeigen
           </Button>
         </div>
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="matched-jobs" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Passende Jobs
-          </TabsTrigger>
-          <TabsTrigger value="applications" className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            Deine Bewerbungen
-          </TabsTrigger>
-          <TabsTrigger value="email" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 md:space-y-6">
+        <div className="grid w-full grid-cols-2 md:grid-cols-4 gap-2">
+          <button
+            onClick={() => handleTabChange('matched-jobs')}
+            className={`flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm px-3 py-2 rounded-md transition-colors ${
+              activeTab === 'matched-jobs' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            <FileText className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Passende Jobs</span>
+            <span className="sm:hidden">Jobs</span>
+          </button>
+          <button
+            onClick={() => handleTabChange('applications')}
+            className={`flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm px-3 py-2 rounded-md transition-colors ${
+              activeTab === 'applications' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            <CheckCircle className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Deine Bewerbungen</span>
+            <span className="sm:hidden">Bewerbungen</span>
+          </button>
+          <button
+            onClick={() => handleTabChange('email')}
+            className={`flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm px-3 py-2 rounded-md transition-colors ${
+              activeTab === 'email' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            <Mail className="h-3 w-3 md:h-4 md:w-4" />
             E-Mail
-          </TabsTrigger>
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => handleTabChange('profile')}
+            className={`flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm px-3 py-2 rounded-md transition-colors ${
+              activeTab === 'profile' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            <User className="h-3 w-3 md:h-4 md:w-4" />
             Profil
-          </TabsTrigger>
-        </TabsList>
+          </button>
+        </div>
 
-        <TabsContent value="matched-jobs" className="space-y-6">
+        <TabsContent value="matched-jobs" className="space-y-4 md:space-y-6">
           {/* Combined Application Status and Controls */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="space-y-4">
                 {/* Application Status Row */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <FileText className="h-5 w-5 text-muted-foreground" />
                     <span className="text-sm">
@@ -626,31 +660,30 @@ export default function JobjaegerAgentPage() {
                       <span className="text-muted-foreground">.</span>
                     </span>
                   </div>
-                  <Button className="bg-[#0F973D] hover:bg-[#0F973D]/90" disabled>
+                  <Button className="bg-[#0F973D] hover:bg-[#0F973D]/90 w-full sm:w-auto" disabled>
                     Paket kaufen
                   </Button>
                 </div>
                 
                 {/* Controls Row */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Button className="bg-[#0F973D] hover:bg-[#0F973D]/90" disabled>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                    <Button className="bg-[#0F973D] hover:bg-[#0F973D]/90 w-full sm:w-auto" disabled>
                       Alle bewerben
                     </Button>
-                    <Button variant="outline" onClick={() => fetchRecommendations(false)}>
+                    <Button variant="outline" onClick={() => fetchRecommendations(false)} className="w-full sm:w-auto">
                       <RefreshCw className="h-4 w-4 mr-2" />
                       Aktualisieren
                     </Button>
-                    <Button variant="outline" onClick={handleOpenResumeModal}>
+                    <Button variant="outline" onClick={handleOpenResumeModal} className="w-full sm:w-auto">
                       Basis-Lebenslauf wählen
                     </Button>
-                    {selectedResume && (
-                      <span className="text-sm text-muted-foreground hidden md:inline">
-                        Ausgewählt: {selectedResume.title || selectedResume.name || 'Lebenslauf'}
-                      </span>
-                    )}
                   </div>
-                  <div />
+                  {selectedResume && (
+                    <div className="text-sm text-muted-foreground text-center sm:text-left">
+                      Ausgewählt: {selectedResume.name || 'Lebenslauf'}
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -658,11 +691,11 @@ export default function JobjaegerAgentPage() {
 
           {/* Job List */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between gap-4">
-                <CardTitle>Passende Job-Möglichkeiten</CardTitle>
+            <CardHeader className="p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <CardTitle className="text-lg md:text-xl">Passende Job-Möglichkeiten</CardTitle>
                 <Select value={matchingRate} onValueChange={setMatchingRate}>
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-full sm:w-40">
                     <SelectValue placeholder="Passungsrate" />
                   </SelectTrigger>
                   <SelectContent>
@@ -674,20 +707,28 @@ export default function JobjaegerAgentPage() {
                 </Select>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6">
               {isLoadingRecommendations ? (
-                <div className="text-center py-8">
+                <div className="text-center py-6 md:py-8">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
                   <p className="text-muted-foreground">Empfehlungen werden geladen...</p>
                 </div>
               ) : recommendationsError ? (
-                <div className="text-center py-8">
+                <div className="text-center py-6 md:py-8">
                   <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">Fehler beim Laden</h3>
                   <p className="text-muted-foreground max-w-md mx-auto">{recommendationsError}</p>
                 </div>
+              ) : !hasAttemptedLoad ? (
+                <div className="text-center py-8 md:py-12">
+                  <Loader2 className="h-16 w-16 text-muted-foreground mx-auto mb-4 animate-spin" />
+                  <h3 className="text-xl font-semibold mb-2">Empfehlungen werden geladen...</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    Wir suchen die besten Job-Möglichkeiten für dich.
+                  </p>
+                </div>
               ) : !Array.isArray(recommendations) || recommendations.length === 0 ? (
-                <div className="text-center py-12">
+                <div className="text-center py-8 md:py-12">
                   <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-2">Keine Empfehlungen gefunden</h3>
                   <p className="text-muted-foreground max-w-md mx-auto">
@@ -701,20 +742,19 @@ export default function JobjaegerAgentPage() {
                 </div>
               ) : (
                 <>
-                  <div className="space-y-4">
+                  <div className="space-y-3 md:space-y-4">
                     {recommendations.map((item) => {
                       const j = item.job && item.job[0] ? item.job[0] : undefined;
                       const location = [j?.job_city, j?.job_state, j?.job_country].filter(Boolean).join(', ');
                       const scorePct = formatScorePercent(item.score);
                       return (
-                        <div key={item.id} className="border rounded-lg p-4 hover:bg-muted/30">
-                          <div className="flex items-start justify-between gap-4">
+                        <div key={item.id} className="border rounded-lg p-3 md:p-4 hover:bg-muted/30">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <div className="font-medium">{j?.company?.employer_name || '—'}</div>
-                                {/* Time is not available in payload; using created_at if present */}
+                                <div className="font-medium truncate">{j?.company?.employer_name || '—'}</div>
                               </div>
-                              <div className="mt-1 text-base font-semibold truncate">{j?.title || 'Unbekannte Position'}</div>
+                              <div className="mt-1 text-base font-semibold">{j?.title || 'Unbekannte Position'}</div>
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {location && (
                                   <span className="px-2 py-1 text-xs rounded-full bg-muted">{location}</span>
@@ -726,14 +766,14 @@ export default function JobjaegerAgentPage() {
                                   <span className="px-2 py-1 text-xs rounded-full bg-muted">{j.seniority}</span>
                                 )}
                               </div>
-                              {item.matchReason ? (
+                              {item.matchReason && (
                                 <div className="mt-3 text-sm text-muted-foreground">
                                   <span className="font-medium">Begründung:</span> {item.matchReason}
                                 </div>
-                              ) : null}
+                              )}
                             </div>
-                            <div className="flex items-center gap-3 shrink-0">
-                              <div className="rounded-full border px-3 py-1 text-sm font-semibold bg-green-100 text-green-800">
+                            <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 shrink-0 w-full sm:w-auto">
+                              <div className="rounded-full border px-3 py-1 text-sm font-semibold bg-green-100 text-green-800 shrink-0">
                                 {scorePct}
                               </div>
                               <Button 
@@ -741,6 +781,7 @@ export default function JobjaegerAgentPage() {
                                 variant="outline"
                                 disabled={applyingIds.has(item.id)}
                                 onClick={() => startApplicationFromRecommendation(item)}
+                                className="flex-1 sm:w-auto sm:flex-none"
                               >
                                 {applyingIds.has(item.id) ? (
                                   <>
@@ -759,7 +800,7 @@ export default function JobjaegerAgentPage() {
                   </div>
                   {hasMoreRecs && (
                     <div className="flex justify-center mt-4">
-                      <Button onClick={() => fetchRecommendations(true)} disabled={isLoadingMoreRecs} variant="outline">
+                      <Button onClick={() => fetchRecommendations(true)} disabled={isLoadingMoreRecs} variant="outline" className="w-full sm:w-auto">
                         {isLoadingMoreRecs ? (
                           <>
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
