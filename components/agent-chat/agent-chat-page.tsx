@@ -427,7 +427,7 @@ function AgentChatContent() {
             // Find the most recent job_imported event
             for (let i = updatedEvents.length - 1; i >= 0; i--) {
               const event = updatedEvents[i];
-              if (event.content.includes('Job erfolgreich importiert') && event.type === 'action') {
+              if ((event.content.includes('Job wurde geladen') || event.content.includes('job linked')) && event.type === 'action') {
                 console.log('Found job_imported event to update:', event.id);
                 updatedEvents[i] = {
                   ...event,

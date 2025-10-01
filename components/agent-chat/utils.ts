@@ -42,6 +42,7 @@ export const generateStepDetails = (eventType: string, eventStatus: string): { s
 
   switch (eventType) {
     case 'job_imported':
+    case 'job_linked':
     case 'Job importiert':
       stepCount = 4;
       baseSteps.push(
@@ -230,7 +231,8 @@ export const generateStepDetails = (eventType: string, eventStatus: string): { s
 
 export const getEventDescriptionFromType = (eventType: string, eventStatus: string) => {
   const actionMap: { [key: string]: string } = {
-    'job_imported': '📥 Job erfolgreich importiert',
+    'job_imported': '📥 Job wurde geladen',
+    'job_linked': '📥 Job wurde geladen',
     'resume_created': '📄 Lebenslauf erstellt',
     'coverletter_created': '✍️ Anschreiben erstellt',
     'cover_letter_created': '✍️ Anschreiben erstellt',
