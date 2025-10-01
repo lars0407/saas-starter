@@ -18,7 +18,10 @@ import {
   FileText,
   Settings,
   MessageSquare,
-  TrendingUp
+  TrendingUp,
+  Eye,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -227,44 +230,46 @@ export function EventCard({
                 Vorschau
               </Badge>
             </div>
-            <div className="w-24 h-32 sm:w-32 sm:h-40 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm mx-auto sm:mx-0">
-              <PDFViewer
-                pdfUrl={relatedDocument?.link || event.metadata?.documentLink || ''}
-                showToolbar={false}
-                showNavigation={false}
-                showBorder={false}
-                fallbackMessage=""
-                downloadMessage=""
-                placeholderMessage=""
-                className="w-full h-full -mt-6 -mb-6 pointer-events-none"
-              />
-            </div>
-            <div className="mt-2 flex flex-col sm:flex-row gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                asChild
-                className="text-xs flex-1 sm:flex-none"
-              >
-                <a 
-                  href={relatedDocument?.link || event.metadata?.documentLink || ''} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-1"
+            <div className="flex gap-3">
+              <div className="w-24 h-32 sm:w-32 sm:h-40 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm flex-shrink-0">
+                <PDFViewer
+                  pdfUrl={relatedDocument?.link || event.metadata?.documentLink || ''}
+                  showToolbar={false}
+                  showNavigation={false}
+                  showBorder={false}
+                  fallbackMessage=""
+                  downloadMessage=""
+                  placeholderMessage=""
+                  className="w-full h-full -mt-6 -mb-6 pointer-events-none"
+                />
+              </div>
+              <div className="flex flex-col gap-1 justify-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  asChild
+                  className="text-xs h-auto p-2 flex items-center gap-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50"
                 >
-                  <Link className="h-3 w-3" />
-                  Öffnen
-                </a>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => window.open(relatedDocument?.link || event.metadata?.documentLink || '', '_blank')}
-                className="text-xs flex-1 sm:flex-none"
-              >
-                <Download className="h-3 w-3 mr-1" />
-                Download
-              </Button>
+                  <a 
+                    href={relatedDocument?.link || event.metadata?.documentLink || ''} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span>Ansehen</span>
+                  </a>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => window.open(relatedDocument?.link || event.metadata?.documentLink || '', '_blank')}
+                  className="text-xs h-auto p-2 flex items-center gap-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download</span>
+                </Button>
+              </div>
             </div>
           </div>
         )}
