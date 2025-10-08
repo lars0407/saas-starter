@@ -950,37 +950,6 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
         </CardContent>
       </Card>
 
-      {/* Recruiter Information */}
-      {job.recruiter && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Recruiter Kontakt</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                <Users className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold">{job.recruiter.recruiter_name}</h3>
-                <p className="text-muted-foreground">{job.recruiter.recruiter_title}</p>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <a href={`mailto:${job.recruiter.recruiter_name.toLowerCase().replace(' ', '.')}@${job.company?.employer_name?.toLowerCase().replace(' ', '')}.com`}>
-                    <Mail className="h-4 w-4" />
-                  </a>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <a href={job.recruiter.recruiter_url} target="_blank" rel="noopener noreferrer">
-                    <Linkedin className="h-4 w-4" />
-                  </a>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Documents Modal */}
       <Dialog open={documentsModalOpen} onOpenChange={setDocumentsModalOpen}>
