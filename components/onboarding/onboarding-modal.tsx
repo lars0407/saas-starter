@@ -486,6 +486,10 @@ export function OnboardingModal({
 
   const handleContinue = async () => {
     if (currentStep === 1) {
+      // Validate that both firstName and lastName are filled
+      if (!firstName.trim() || !lastName.trim()) {
+        return // Don't proceed if either field is empty
+      }
       // Move to step 2 (resume upload)
       setCurrentStep(2)
       setCharacterIndex(1) // Change to different character expression
@@ -789,7 +793,12 @@ export function OnboardingModal({
             {!isLoading && currentStep !== 3 && currentStep !== 4 && currentStep !== 5 && currentStep !== 6 && currentStep !== 7 && currentStep !== 8 && currentStep !== 9 && (
               <Button
                 onClick={handleContinue}
-                className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
+                disabled={currentStep === 1 && (!firstName.trim() || !lastName.trim())}
+                className={`px-8 py-3 rounded-lg font-medium ${
+                  currentStep === 1 && (!firstName.trim() || !lastName.trim())
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-[#0F973D] hover:bg-[#0D7A32] text-white'
+                }`}
               >
                 {currentStep === 1 ? (firstName && lastName ? `weiter als ${firstName} ${lastName}` : "Weiter") : 
                  currentStep === 2 ? "Weiter" : "Onboarding abschließen"}
