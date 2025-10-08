@@ -12,6 +12,10 @@ export function JobTitleStep({ onComplete }: JobTitleStepProps) {
   const [jobTitle, setJobTitle] = useState<string>("")
 
   const handleContinue = () => {
+    // Validate that job title is not empty
+    if (!jobTitle.trim()) {
+      return // Don't proceed if job title is empty
+    }
     console.log('JobTitleStep: handleContinue called with:', jobTitle.trim())
     onComplete(jobTitle.trim())
   }
@@ -56,7 +60,12 @@ export function JobTitleStep({ onComplete }: JobTitleStepProps) {
       <div className="flex justify-center pt-4">
         <Button 
           onClick={handleContinue}
-          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
+          disabled={!jobTitle.trim()}
+          className={`px-8 py-3 rounded-lg font-medium ${
+            !jobTitle.trim()
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-[#0F973D] hover:bg-[#0D7A32] text-white'
+          }`}
         >
           Weiter
         </Button>
