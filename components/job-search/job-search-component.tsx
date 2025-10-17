@@ -30,6 +30,12 @@ interface JobSearchFilters {
   datePublished: string
 }
 
+interface JobSearchComponentProps {
+  title?: string
+  description?: string
+  hideSearch?: boolean
+}
+
 const initialFilters: JobSearchFilters = {
   keyword: "",
   location: "",
@@ -41,7 +47,7 @@ const initialFilters: JobSearchFilters = {
   datePublished: "",
 }
 
-export function JobSearchComponent() {
+export function JobSearchComponent({ title = "Jobsuche", description = "Finde deinen Traumjob mit unseren intelligenten Suchfunktionen", hideSearch = false }: JobSearchComponentProps) {
   const router = useRouter()
   const [filters, setFilters] = useState<JobSearchFilters>(initialFilters)
   const [jobs, setJobs] = useState<Job[]>([])
@@ -118,10 +124,12 @@ export function JobSearchComponent() {
 
   // Load job favourites and search profile on component mount
   useEffect(() => {
-    
     fetchJobFavourites()
-    loadSearchProfile()
-  }, [])
+    // Only load search profile for regular search mode
+    if (!hideSearch) {
+      loadSearchProfile()
+    }
+  }, [hideSearch])
 
   // Detect mobile screen size
   useEffect(() => {
@@ -139,9 +147,9 @@ export function JobSearchComponent() {
     return () => window.removeEventListener('resize', checkIsMobile)
   }, [])
 
-  // Load jobs with search profile data after profile is loaded
+  // Load jobs with search profile data after profile is loaded (only for regular search)
   useEffect(() => {
-    if (searchProfile.jobTitle || searchProfile.location || searchProfile.selectedLocation) {
+    if (!hideSearch && (searchProfile.jobTitle || searchProfile.location || searchProfile.selectedLocation)) {
       console.log('Search profile loaded, triggering job search with profile data:', searchProfile)
       // Update filters with search profile data
       const newFilters = {
@@ -153,12 +161,14 @@ export function JobSearchComponent() {
       // Trigger job search with profile data
       fetchJobsWithProfileData(newFilters)
     }
-  }, [searchProfile.jobTitle, searchProfile.location, searchProfile.selectedLocation, searchProfile.datePosted])
+  }, [hideSearch, searchProfile.jobTitle, searchProfile.location, searchProfile.selectedLocation, searchProfile.datePosted])
 
-  // Sync locationSearchTerm with searchProfile.location
+  // Sync locationSearchTerm with searchProfile.location (only for regular search)
   useEffect(() => {
-    setLocationSearchTerm(searchProfile.location)
-  }, [searchProfile.location])
+    if (!hideSearch) {
+      setLocationSearchTerm(searchProfile.location)
+    }
+  }, [hideSearch, searchProfile.location])
 
   // Fetch job favourites from API
   const fetchJobFavourites = async () => {
@@ -581,6 +591,127 @@ export function JobSearchComponent() {
     }
   }
 
+  // Fetch job recommendations from API
+  const fetchJobRecommendations = async (isLoadMore = false) => {
+    console.log('fetchJobRecommendations called with isLoadMore:', isLoadMore);
+    
+    if (isLoadMore) {
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+    }
+    setError(null)
+    
+    const currentOffset = isLoadMore ? (page - 1) * 25 : 0
+    
+    try {
+      // Get auth token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        setError('Authentication required')
+        return
+      }
+
+      const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v3/job/recommend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          offset: currentOffset
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log('Recommendation API response:', data)
+
+      // Transform recommendation data to match Job interface
+      const newJobs: Job[] = data.recommendation.items.map((item: any) => {
+        const job = item.job[0] // Get the first job from the array
+        
+        // Handle missing company data
+        const companyData = job.company || {}
+        
+        // Debug logging for description data
+        console.log('Job description data:', {
+          title: job.title,
+          responsibilities: job.description?.description_responsibilities,
+          qualifications: job.description?.description_qualification,
+          benefits: job.description?.description_benefits
+        })
+        
+        return {
+          id: job.id,
+          title: job.title,
+          company: {
+            employer_name: companyData.employer_name || '',
+            employer_logo: companyData.employer_logo || '',
+            employer_website: companyData.employer_website || '',
+            employer_company_type: companyData.employer_company_type || '',
+            employer_linkedin: companyData.employer_linkedin || '',
+            about: companyData.about || '',
+            short_description: companyData.short_description || '',
+            founded: companyData.founded || '',
+            company_size: companyData.company_size || ''
+          },
+          job_city: job.job_city || '',
+          job_state: job.job_state || '',
+          job_country: job.job_country || '',
+          job_employement_type: job.job_employement_type || '',
+          salary: job.salary === 'null' ? '' : (job.salary || ''),
+          seniority: job.seniority || '',
+          job_posted: job.job_posted || job.created_at || 0,
+          apply_link: job.apply_link || '',
+          applicants_number: job.applicants_number || '',
+          working_hours: job.working_hours || '',
+          remote_work: job.remote_work || '',
+          source: job.source || '',
+          description: job.description || {},
+          job_geopoint: job.job_geopoint || '',
+          recruiter: job.recruiter || {},
+          created_at: job.created_at || 0,
+          uuid: job.uuid || '',
+          company_id: job.company_id || 0,
+          job_origin: job.job_origin || '',
+          job_expiration: job.job_expiration || false,
+          job_identifier: job.job_identifier || '',
+          auto_apply: job.auto_apply || false,
+          recruitment_agency: job.recruitment_agency || false,
+          // Add recommendation-specific fields
+          recommendation_score: item.score,
+          recommendation_reason: item.matchReason
+        }
+      })
+
+      if (!isLoadMore) {
+        setJobs(newJobs)
+      } else {
+        setJobs(prev => [...prev, ...newJobs])
+      }
+      
+      setPage(prev => prev + 1)
+      setSelectedJobId(null)
+      setTotalJobs(data.recommendation.itemsTotal)
+      setHasMoreJobs(newJobs.length === 25 && data.recommendation.nextPage > 0)
+      
+    } catch (err: any) {
+      setError(err.message || "Fehler beim Laden der Jobempfehlungen")
+      console.error('Error fetching job recommendations:', err)
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
+    }
+  }
+
   // Fetch jobs from Xano API
   const fetchJobs = async (isLoadMore = false) => {
     console.log('fetchJobs called with isLoadMore:', isLoadMore);
@@ -714,8 +845,21 @@ export function JobSearchComponent() {
     }
   }
 
+  // Load jobs based on whether search is hidden or not
   useEffect(() => {
-    fetchJobs(false)
+    if (hideSearch) {
+      fetchJobRecommendations(false)
+    } else {
+      fetchJobs(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hideSearch]) // Trigger when hideSearch changes
+
+  // Load jobs when filters change (only for regular search)
+  useEffect(() => {
+    if (!hideSearch) {
+      fetchJobs(false)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.keyword, filters.remoteWork]) // Trigger on main search fields and remote work
 
@@ -746,7 +890,11 @@ export function JobSearchComponent() {
           if (entry.isIntersecting && !loadingMore && hasMoreJobs && !isNearBottom && jobs.length > 0) {
             console.log('Observer triggered - loading more jobs')
             setIsNearBottom(true)
-            fetchJobs(true)
+            if (hideSearch) {
+              fetchJobRecommendations(true)
+            } else {
+              fetchJobs(true)
+            }
           }
         })
       },
@@ -774,8 +922,8 @@ export function JobSearchComponent() {
   const handleFilterChange = (key: keyof JobSearchFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))
     
-    // Trigger search immediately for job type and remote work changes
-    if (key === 'jobType' || key === 'remoteWork') {
+    // Only trigger search for regular search mode, not for recommendations
+    if (!hideSearch && (key === 'jobType' || key === 'remoteWork')) {
       // Small delay to ensure state is updated
       setTimeout(() => {
         fetchJobs(false)
@@ -789,7 +937,11 @@ export function JobSearchComponent() {
   }
 
   const handleSearch = () => {
-    fetchJobs(false)
+    if (hideSearch) {
+      fetchJobRecommendations(false)
+    } else {
+      fetchJobs(false)
+    }
   }
 
   // Helper function to convert datePosted selection to numeric value (same as search profile page)
@@ -1376,15 +1528,16 @@ export function JobSearchComponent() {
     <div className="h-screen max-h-screen flex flex-col space-y-3 md:space-y-6 overflow-hidden min-h-0 pb-4 md:pb-0">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl md:text-3xl font-bold">Jobsuche</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">{title}</h1>
         <p className="text-sm md:text-base text-muted-foreground hidden sm:block">
-          Finde deinen Traumjob mit unseren intelligenten Suchfunktionen
+          {description}
         </p>
       </div>
 
       {/* Search Bar */}
-      <Card>
-        <CardContent className="p-4 md:p-6">
+      {!hideSearch && (
+        <Card>
+          <CardContent className="p-4 md:p-6">
           <div className="flex flex-col md:flex-row gap-3 md:gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -1973,6 +2126,7 @@ export function JobSearchComponent() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6 flex-1 min-h-0">
@@ -2024,7 +2178,7 @@ export function JobSearchComponent() {
               <CardContent className="p-8 text-center">
                 <h3 className="text-base font-semibold mb-2">Fehler beim Laden der Jobs</h3>
                 <p className="text-sm text-muted-foreground mb-4">{error}</p>
-                <Button onClick={() => fetchJobs(false)} variant="outline" size="sm">
+                <Button onClick={() => hideSearch ? fetchJobRecommendations(false) : fetchJobs(false)} variant="outline" size="sm">
                   Erneut versuchen
                 </Button>
               </CardContent>
@@ -2067,7 +2221,17 @@ export function JobSearchComponent() {
                           <h3 className="font-semibold text-base hover:text-[#0F973D] truncate">
                           {job.title}
                         </h3>
-                          <p className="text-sm text-muted-foreground truncate">{job.company?.employer_name}</p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {job.company?.employer_name || 'Unbekanntes Unternehmen'}
+                          </p>
+                          {/* Recommendation Score */}
+                          {hideSearch && job.recommendation_score && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                                {job.recommendation_score} Passung
+                              </Badge>
+                            </div>
+                          )}
                       </div>
                         <Button
                           variant="ghost"

@@ -54,6 +54,9 @@ export interface Job {
     recruiter_url: string;
   };
   company: Company;
+  // Recommendation-specific fields
+  recommendation_score?: string;
+  recommendation_reason?: string;
 }
 
 export interface InterviewQuestion {

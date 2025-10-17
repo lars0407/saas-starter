@@ -334,7 +334,7 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
   }
 
   const formatListItems = (htmlString: string, sectionName: string) => {
-    if (!htmlString || htmlString === 'null' || htmlString === 'undefined') {
+    if (!htmlString || htmlString === 'null' || htmlString === 'undefined' || htmlString === '' || htmlString === 'Nicht angegeben') {
       return (
         <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
           <AlertCircle className="h-4 w-4" />
@@ -688,7 +688,15 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
               </div>
               <div>
                 <h1 className="text-2xl font-bold mb-2">{job.title}</h1>
-                <p className="text-lg text-muted-foreground mb-2">{job.company?.employer_name}</p>
+                <p className="text-lg text-muted-foreground mb-2">{job.company?.employer_name || 'Unbekanntes Unternehmen'}</p>
+                {/* Recommendation Score */}
+                {job.recommendation_score && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      {job.recommendation_score} Passung
+                    </Badge>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4" />
                   {job.job_city}, {job.job_state}

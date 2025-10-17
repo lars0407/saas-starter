@@ -329,7 +329,7 @@ export function MobileJobDetailDrawer({
   }
 
   const formatListItems = (htmlString: string, sectionName: string) => {
-    if (!htmlString || htmlString === 'null' || htmlString === 'undefined') {
+    if (!htmlString || htmlString === 'null' || htmlString === 'undefined' || htmlString === '' || htmlString === 'Nicht angegeben') {
       return (
         <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
           <AlertCircle className="h-4 w-4" />
@@ -685,7 +685,7 @@ export function MobileJobDetailDrawer({
                   <Building2 className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">{job.company?.employer_name}</h3>
+                  <h3 className="font-semibold text-lg">{job.company?.employer_name || 'Unbekanntes Unternehmen'}</h3>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span>Gegründet: {job.company?.founded}</span>
                     <span>Mitarbeiter: {job.company?.company_size}</span>
