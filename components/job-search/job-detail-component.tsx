@@ -670,6 +670,14 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
       {/* Job Header */}
       <Card>
         <CardContent className="p-6">
+          {/* Recommendation Score - Above Header Container */}
+          {job.recommendation_score && (
+            <div className="flex items-center gap-2 mb-4">
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                {job.recommendation_score} Passung
+              </Badge>
+            </div>
+          )}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-start gap-4">
               <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
@@ -690,14 +698,6 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
               <div>
                 <h1 className="text-2xl font-bold mb-2">{job.title}</h1>
                 <p className="text-lg text-muted-foreground mb-2">{job.company?.employer_name || 'Unbekanntes Unternehmen'}</p>
-                {/* Recommendation Score */}
-                {job.recommendation_score && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      {job.recommendation_score} Passung
-                    </Badge>
-                  </div>
-                )}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4" />
                   {job.job_city}, {job.job_state}
