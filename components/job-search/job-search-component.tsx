@@ -2203,7 +2203,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                  )}
                  onClick={() => handleJobClick(job.id)}
                >
-                <CardContent className="p-3 md:p-4">
+                <CardContent className="px-3 py-0 md:px-4 md:py-0">
                   <div className="flex items-start gap-3">
                   {/* Company Logo */}
                      <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
