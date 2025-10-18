@@ -2224,14 +2224,6 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                           <p className="text-sm text-muted-foreground truncate">
                             {job.company?.employer_name || 'Unbekanntes Unternehmen'}
                           </p>
-                          {/* Recommendation Score */}
-                          {hideSearch && job.recommendation_score && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
-                                {job.recommendation_score} Passung
-                              </Badge>
-                            </div>
-                          )}
                       </div>
                         <Button
                           variant="ghost"
@@ -2292,9 +2284,17 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                          )}
                        </div>
 
-                                             {/* Posted Date */}
-                       <div className="text-xs text-muted-foreground">
-                         {formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet
+                                             {/* Posted Date and Recommendation Score */}
+                       <div className="flex items-center justify-between">
+                         <div className="text-xs text-muted-foreground">
+                           {formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet
+                         </div>
+                         {/* Recommendation Score */}
+                         {hideSearch && job.recommendation_score && (
+                           <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                             {job.recommendation_score} Passung
+                           </Badge>
+                         )}
                        </div>
                   </div>
                 </div>
