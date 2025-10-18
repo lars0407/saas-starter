@@ -65,6 +65,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [hasInitialized, setHasInitialized] = useState(false)
   
   // Search Profile State
   const [searchProfile, setSearchProfile] = useState({
@@ -149,19 +150,25 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
 
   // Load jobs with search profile data after profile is loaded (only for regular search)
   useEffect(() => {
-    if (!hideSearch && (searchProfile.jobTitle || searchProfile.location || searchProfile.selectedLocation)) {
-      console.log('Search profile loaded, triggering job search with profile data:', searchProfile)
-      // Update filters with search profile data
-      const newFilters = {
-        ...filters,
-        keyword: searchProfile.jobTitle || '',
-        datePublished: searchProfile.datePosted || '',
+    if (!hideSearch && !hasInitialized) {
+      // Mark search profile as loaded
+      setHasInitialized(true)
+      
+      if (searchProfile.jobTitle || searchProfile.location || searchProfile.selectedLocation) {
+        console.log('Search profile loaded, triggering job search with profile data:', searchProfile)
+        // Update filters with search profile data
+        const newFilters = {
+          ...filters,
+          keyword: searchProfile.jobTitle || '',
+          datePublished: searchProfile.datePosted || '',
+        }
+        setFilters(newFilters)
+        // Trigger job search with profile data
+        fetchJobsWithProfileData(newFilters)
       }
-      setFilters(newFilters)
-      // Trigger job search with profile data
-      fetchJobsWithProfileData(newFilters)
+      // If no search profile data, the initial load useEffect will handle it
     }
-  }, [hideSearch, searchProfile.jobTitle, searchProfile.location, searchProfile.selectedLocation, searchProfile.datePosted])
+  }, [hideSearch, hasInitialized, searchProfile.jobTitle, searchProfile.location, searchProfile.selectedLocation, searchProfile.datePosted])
 
   // Sync locationSearchTerm with searchProfile.location (only for regular search)
   useEffect(() => {
@@ -849,15 +856,16 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
   useEffect(() => {
     if (hideSearch) {
       fetchJobRecommendations(false)
-    } else {
+    } else if (hasInitialized) {
+      // Only load jobs after search profile is loaded to prevent multiple API calls
       fetchJobs(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hideSearch]) // Trigger when hideSearch changes
+  }, [hideSearch, hasInitialized]) // Trigger when hideSearch or hasInitialized changes
 
   // Load jobs when filters change (only for regular search)
   useEffect(() => {
-    if (!hideSearch) {
+    if (!hideSearch && hasInitialized) {
       fetchJobs(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2458,6 +2466,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                   job={selectedJob} 
                   isSaved={savedJobs.has(selectedJob.id)}
                   onToggleSaved={() => toggleSavedJob(selectedJob.id)}
+                  hideEmployeeCount={hideSearch}
                 />
               </div>
             ) : (
@@ -2482,6 +2491,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
         onOpenChange={setMobileDrawerOpen}
         isSaved={selectedJob ? savedJobs.has(selectedJob.id) : false}
         onToggleSaved={() => selectedJob && toggleSavedJob(selectedJob.id)}
+        hideEmployeeCount={hideSearch}
       />
     </div>
   )

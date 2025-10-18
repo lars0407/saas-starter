@@ -54,6 +54,7 @@ interface MobileJobDetailDrawerProps {
   onOpenChange: (open: boolean) => void
   isSaved?: boolean
   onToggleSaved?: () => void
+  hideEmployeeCount?: boolean
 }
 
 export function MobileJobDetailDrawer({ 
@@ -61,7 +62,8 @@ export function MobileJobDetailDrawer({
   isOpen, 
   onOpenChange, 
   isSaved = false, 
-  onToggleSaved 
+  onToggleSaved,
+  hideEmployeeCount = false
 }: MobileJobDetailDrawerProps) {
   const [showFullDescription, setShowFullDescription] = useState(false)
   const [documentsModalOpen, setDocumentsModalOpen] = useState(false)
@@ -576,7 +578,7 @@ export function MobileJobDetailDrawer({
                  job.remote_work}
               </Badge>
             )}
-            <Badge variant="outline">{job.company?.company_size} Mitarbeiter</Badge>
+            {!hideEmployeeCount && <Badge variant="outline">{job.company?.company_size} Mitarbeiter</Badge>}
             <Badge variant="outline">{formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet</Badge>
           </div>
         </SheetHeader>

@@ -52,9 +52,10 @@ interface JobDetailComponentProps {
   job?: Job
   isSaved?: boolean
   onToggleSaved?: () => void
+  hideEmployeeCount?: boolean
 }
 
-export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onToggleSaved }: JobDetailComponentProps) {
+export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onToggleSaved, hideEmployeeCount = false }: JobDetailComponentProps) {
   const [job, setJob] = useState<Job | null>(propJob || null)
   const [loading, setLoading] = useState(!propJob)
   const [applied, setApplied] = useState(false)
@@ -904,7 +905,7 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
               <h3 className="font-semibold text-lg">{job.company?.employer_name}</h3>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>Gegründet: {job.company?.founded}</span>
-                <span>Mitarbeiter: {job.company?.company_size}</span>
+                {!hideEmployeeCount && <span>Mitarbeiter: {job.company?.company_size}</span>}
               </div>
             </div>
           </div>
