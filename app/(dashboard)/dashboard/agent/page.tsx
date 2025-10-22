@@ -252,32 +252,57 @@ export default function JobjaegerAgentPage() {
     const j = item.job && item.job[0] ? item.job[0] : undefined;
     if (!j) return;
     
+    // Add to applying state to show loading
+    setApplyingIds(prev => new Set(prev).add(item.id));
     
-    // Save job data and resume to localStorage
-    const jobData = {
-      title: j.title || 'Unbekannte Position',
-      description: (j as any)?.description?.description_original || '',
-      url: j.apply_link || '',
-      company: j.company?.employer_name || '',
-      location: [j.job_city, j.job_state, j.job_country].filter(Boolean).join(', '),
-      employmentType: j.job_employement_type || '',
-      seniority: j.seniority || '',
-      salary: j.salary || '',
-      source: 'recommendation',
-      recommendationId: item.id,
-      jobId: j.id, // Add the actual job ID from the recommendation
-      score: item.score,
-      matchReason: item.matchReason
-    };
-    
-    localStorage.setItem('pendingJobApplication', JSON.stringify(jobData));
-    
-    console.log('Saved job data to localStorage:', jobData);
-    
-    toast.success('Job-Daten gespeichert. Öffne Agent-Chat...');
-    
-    // Navigate to agent-chat page
-    router.push('/dashboard/agent-chat?fromRecommendation=true');
+    try {
+      const authToken = getCookie('token');
+      if (!authToken) {
+        toast.error('Kein Authentifizierungstoken gefunden. Bitte melden Sie sich erneut an.');
+        return;
+      }
+
+      const response = await fetch('https://api.jobjaeger.de/api:BP7K6-ZQ/v2/agent/application/queue/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ 
+          job_id: j.id 
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Nicht autorisiert. Bitte melden Sie sich erneut an.');
+        } else if (response.status === 400) {
+          toast.error('Eingabefehler. Bitte überprüfen Sie die Job-Daten.');
+        } else {
+          toast.error('Fehler beim Erstellen der Bewerbung.');
+        }
+        return;
+      }
+
+      const applicationData = await response.json();
+      console.log('Application created:', applicationData);
+      
+      // Remove the job from recommendations list
+      setRecommendations(prev => prev.filter(rec => rec.id !== item.id));
+      
+      toast.success('Bewerbung erfolgreich erstellt!');
+      
+    } catch (error: any) {
+      console.error('Error creating application:', error);
+      toast.error('Fehler beim Erstellen der Bewerbung.');
+    } finally {
+      // Remove from applying state
+      setApplyingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(item.id);
+        return newSet;
+      });
+    }
   };
 
   const getCookie = (name: string) => {
