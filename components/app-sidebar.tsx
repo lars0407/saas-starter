@@ -16,6 +16,7 @@ import {
   User,
   Zap,
   Play,
+  Star,
 } from "lucide-react"
 import useSWR from 'swr'
 import { useState } from 'react'
@@ -82,6 +83,11 @@ const data = {
           title: "Jobjäger",
           url: "/dashboard/agent",
           icon: Zap,
+        },
+        {
+          title: "Jobempfehlungen",
+          url: "/dashboard/job-recommend",
+          icon: Star,
         },
         {
           title: "Jobsuche",
