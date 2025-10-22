@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, MapPin, Briefcase, Building2, Clock, DollarSign, Filter, Star, Bookmark, ExternalLink, Eye, X, Plus, HelpCircle, Target, Globe, Calendar, Settings, Save } from "lucide-react"
+import { Search, MapPin, Briefcase, Building2, Clock, DollarSign, Filter, Star, Bookmark, ExternalLink, Eye, X, Plus, HelpCircle, Target, Globe, Calendar, Settings, Save, Bot, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from 'sonner'
 
 interface JobSearchFilters {
   keyword: string
@@ -132,6 +133,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
   const [locationSuggestions, setLocationSuggestions] = useState<Array<{ fullAddress: string; coordinates: { lon: number; lat: number } }>>([])
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
   const [locationSearchTerm, setLocationSearchTerm] = useState('')
+  const [creatingApplications, setCreatingApplications] = useState<Set<number>>(new Set())
 
   // Load job favourites and search profile on component mount
   useEffect(() => {
@@ -1485,6 +1487,108 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
     }
   }
 
+  const getCookie = (name: string) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift();
+    return null;
+  };
+
+  const createApplication = async (jobId: number) => {
+    setCreatingApplications(prev => new Set(prev).add(jobId));
+    
+    try {
+      const authToken = getCookie('token');
+      if (!authToken) {
+        toast.error('Kein Authentifizierungstoken gefunden. Bitte melden Sie sich erneut an.');
+        return;
+      }
+
+      const response = await fetch('https://api.jobjaeger.de/api:BP7K6-ZQ/v2/agent/application/queue/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ 
+          job_id: jobId 
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Nicht autorisiert. Bitte melden Sie sich erneut an.');
+        } else if (response.status === 400) {
+          toast.error('Eingabefehler. Bitte überprüfen Sie die Job-Daten.');
+        } else {
+          toast.error('Fehler beim Erstellen der Bewerbung.');
+        }
+        return;
+      }
+
+      const applicationData = await response.json();
+      console.log('Application created:', applicationData);
+      
+      // Remove the job from the list
+      setJobs(prev => prev.filter(job => job.id !== jobId));
+      
+      // Find the next job to show in detail view
+      const currentJobIndex = jobs.findIndex(job => job.id === jobId);
+      const remainingJobs = jobs.filter(job => job.id !== jobId);
+      
+      if (remainingJobs.length > 0) {
+        // If there are remaining jobs, show the next one
+        const nextJobIndex = currentJobIndex < remainingJobs.length ? currentJobIndex : 0;
+        const nextJob = remainingJobs[nextJobIndex];
+        
+        if (nextJob) {
+          setSelectedJobId(nextJob.id);
+          setSelectedJob(nextJob);
+        }
+      } else {
+        // If no more jobs, clear the selection
+        setSelectedJobId(null);
+        setSelectedJob(null);
+      }
+      
+      toast.success('Bewerbung erfolgreich erstellt!');
+      
+    } catch (error: any) {
+      console.error('Error creating application:', error);
+      toast.error('Fehler beim Erstellen der Bewerbung.');
+    } finally {
+      setCreatingApplications(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(jobId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleApplicationCreated = (jobId: number) => {
+    // Remove the job from the list
+    setJobs(prev => prev.filter(job => job.id !== jobId));
+    
+    // Find the next job to show in detail view
+    const currentJobIndex = jobs.findIndex(job => job.id === jobId);
+    const remainingJobs = jobs.filter(job => job.id !== jobId);
+    
+    if (remainingJobs.length > 0) {
+      // If there are remaining jobs, show the next one
+      const nextJobIndex = currentJobIndex < remainingJobs.length ? currentJobIndex : 0;
+      const nextJob = remainingJobs[nextJobIndex];
+      
+      if (nextJob) {
+        setSelectedJobId(nextJob.id);
+        setSelectedJob(nextJob);
+      }
+    } else {
+      // If no more jobs, clear the selection
+      setSelectedJobId(null);
+      setSelectedJob(null);
+    }
+  };
+
   const handleJobClick = (jobId: number) => {
     setSelectedJobId(jobId)
     // Find the job object
@@ -2249,14 +2353,32 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation()
-                            toggleSavedJob(job.id)
+                            if (hideSearch) {
+                              // On job recommendations page, create application
+                              createApplication(job.id)
+                            } else {
+                              // On regular job search page, toggle saved job
+                              toggleSavedJob(job.id)
+                            }
                           }}
+                          disabled={hideSearch && creatingApplications.has(job.id)}
                           className={cn(
                             "h-6 w-6 p-0 flex-shrink-0",
-                            savedJobs.has(job.id) && "text-[#0F973D]"
+                            hideSearch 
+                              ? "text-[#0F973D] hover:text-[#0F973D]/80" 
+                              : savedJobs.has(job.id) && "text-[#0F973D]",
+                            hideSearch && creatingApplications.has(job.id) && "opacity-50"
                           )}
                         >
-                          <Bookmark className="h-3 w-3" />
+                          {hideSearch ? (
+                            creatingApplications.has(job.id) ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Bot className="h-3 w-3" />
+                            )
+                          ) : (
+                            <Bookmark className="h-3 w-3" />
+                          )}
                         </Button>
                     </div>
 
@@ -2480,6 +2602,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                   hideEmployeeCount={hideSearch}
                   hideCompanyInfo={hideCompanyInfo}
                   matchReason={selectedJob?.matchReason || matchReason}
+                  onApplicationCreated={handleApplicationCreated}
                 />
               </div>
             ) : (
@@ -2507,6 +2630,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
         hideEmployeeCount={hideSearch}
         hideCompanyInfo={hideCompanyInfo}
         matchReason={selectedJob?.matchReason || matchReason}
+        onApplicationCreated={handleApplicationCreated}
       />
     </div>
   )

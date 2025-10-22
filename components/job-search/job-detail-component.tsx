@@ -22,7 +22,9 @@ import {
   ChevronDown,
   ChevronUp,
   FileText,
-  X
+  X,
+  Loader2,
+  Bot
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,6 +36,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DocumentCard } from "@/components/document-card"
 import { DocumentPreviewCard } from "@/components/job-search/document-preview-card"
 import { DocumentSkeleton } from "@/components/document-skeleton"
+import { toast } from 'sonner'
 
 interface Document {
   id: number
@@ -55,9 +58,10 @@ interface JobDetailComponentProps {
   hideEmployeeCount?: boolean
   hideCompanyInfo?: boolean
   matchReason?: string
+  onApplicationCreated?: (jobId: number) => void
 }
 
-export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onToggleSaved, hideEmployeeCount = false, hideCompanyInfo = false, matchReason }: JobDetailComponentProps) {
+export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onToggleSaved, hideEmployeeCount = false, hideCompanyInfo = false, matchReason, onApplicationCreated }: JobDetailComponentProps) {
   const formatScore = (score: string | undefined) => {
     if (!score) return '';
     // If score already contains %, return as is
@@ -78,6 +82,7 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
   const [generatingDocuments, setGeneratingDocuments] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState("")
   const [jobTrackerCreated, setJobTrackerCreated] = useState(false)
+  const [isCreatingApplication, setIsCreatingApplication] = useState(false)
   const topRef = useRef<HTMLDivElement>(null)
 
 
@@ -524,11 +529,82 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
   }, [])
 
   const handleApply = () => {
-    // In a real app, you'd redirect to the application page
-    if (job?.apply_link) {
-      window.open(job.apply_link, '_blank')
+    // Debug: Log job data to see what's available
+    console.log('Job data for apply:', {
+      apply_link: job?.apply_link,
+      job_origin: job?.job_origin,
+      recruiter_url: job?.recruiter?.recruiter_url,
+      fullJob: job
+    });
+    
+    // Try multiple sources for the apply link
+    const applyUrl = job?.apply_link || job?.job_origin || job?.recruiter?.recruiter_url;
+    
+    if (applyUrl && applyUrl.trim() !== '' && applyUrl !== 'null') {
+      window.open(applyUrl, '_blank')
+    } else {
+      toast.error('Kein Bewerbungslink verfügbar für diesen Job.')
     }
   }
+
+  const getCookie = (name: string) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift();
+    return null;
+  };
+
+  const createApplication = async () => {
+    if (!job) return;
+    
+    setIsCreatingApplication(true);
+    
+    try {
+      const authToken = getCookie('token');
+      if (!authToken) {
+        toast.error('Kein Authentifizierungstoken gefunden. Bitte melden Sie sich erneut an.');
+        return;
+      }
+
+      const response = await fetch('https://api.jobjaeger.de/api:BP7K6-ZQ/v2/agent/application/queue/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ 
+          job_id: job.id 
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Nicht autorisiert. Bitte melden Sie sich erneut an.');
+        } else if (response.status === 400) {
+          toast.error('Eingabefehler. Bitte überprüfen Sie die Job-Daten.');
+        } else {
+          toast.error('Fehler beim Erstellen der Bewerbung.');
+        }
+        return;
+      }
+
+      const applicationData = await response.json();
+      console.log('Application created:', applicationData);
+      
+      toast.success('Bewerbung erfolgreich erstellt!');
+      
+      // Call the callback to handle job removal and next job selection
+      if (onApplicationCreated && job) {
+        onApplicationCreated(job.id);
+      }
+      
+    } catch (error: any) {
+      console.error('Error creating application:', error);
+      toast.error('Fehler beim Erstellen der Bewerbung.');
+    } finally {
+      setIsCreatingApplication(false);
+    }
+  };
 
   const handleOpenDocumentsModal = () => {
     setDocumentsModalOpen(true)
@@ -788,23 +864,22 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-                         <Button 
-               onClick={handleOpenDocumentsModal}
-               disabled={jobDocuments.length > 0}
-               className={cn(
-                 "flex-1",
-                 jobDocuments.length > 0 
-                   ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
-                   : "bg-[#0F973D] hover:bg-[#0F973D]/90"
-               )}
-             >
-               <FileText className="h-4 w-4 mr-2" />
-               {jobDocuments.length > 0 ? 
-                 (jobTrackerCreated ? "Job gespeichert & Bewerbung erstellt 🎉" : "Bewerbungsunterlagen bereits erstellt") 
-                 : "Bewerbungsunterlagen erstellen"}
-             </Button>
-            <Button variant="outline" onClick={handleAddToTracker}>
-              {isSaved ? "Aus Jobtracker entfernen" : "Zum Jobtracker hinzufügen"}
+            <Button 
+              onClick={createApplication}
+              disabled={isCreatingApplication}
+              className={cn(
+                "flex-1",
+                isCreatingApplication 
+                  ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
+                  : "bg-[#0F973D] hover:bg-[#0F973D]/90"
+              )}
+            >
+              {isCreatingApplication ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Bot className="h-4 w-4 mr-2" />
+              )}
+              {isCreatingApplication ? "Erstelle..." : "Auto Apply starten"}
             </Button>
           </div>
         </CardContent>
@@ -868,7 +943,7 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Passungsbegründung
+              Begründung
             </CardTitle>
           </CardHeader>
           <CardContent>

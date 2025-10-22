@@ -22,7 +22,9 @@ import {
   ChevronDown,
   ChevronUp,
   X,
-  FileText
+  FileText,
+  Bot,
+  Loader2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -30,6 +32,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Job } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { toast } from 'sonner'
 
 interface Document {
   id: number
@@ -57,6 +60,7 @@ interface MobileJobDetailDrawerProps {
   hideEmployeeCount?: boolean
   hideCompanyInfo?: boolean
   matchReason?: string
+  onApplicationCreated?: (jobId: number) => void
 }
 
 export function MobileJobDetailDrawer({ 
@@ -67,7 +71,8 @@ export function MobileJobDetailDrawer({
   onToggleSaved,
   hideEmployeeCount = false,
   hideCompanyInfo = false,
-  matchReason
+  matchReason,
+  onApplicationCreated
 }: MobileJobDetailDrawerProps) {
   const [showFullDescription, setShowFullDescription] = useState(false)
   const [documentsModalOpen, setDocumentsModalOpen] = useState(false)
@@ -78,6 +83,7 @@ export function MobileJobDetailDrawer({
   const [generatingDocuments, setGeneratingDocuments] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState("")
   const [jobTrackerCreated, setJobTrackerCreated] = useState(false)
+  const [isCreatingApplication, setIsCreatingApplication] = useState(false)
   const topRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -282,6 +288,68 @@ export function MobileJobDetailDrawer({
     setDocumentsModalOpen(true)
     fetchDocuments()
   }
+
+  const getCookie = (name: string) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift();
+    return null;
+  };
+
+  const createApplication = async () => {
+    if (!job) return;
+    
+    setIsCreatingApplication(true);
+    
+    try {
+      const authToken = getCookie('token');
+      if (!authToken) {
+        toast.error('Kein Authentifizierungstoken gefunden. Bitte melden Sie sich erneut an.');
+        return;
+      }
+
+      const response = await fetch('https://api.jobjaeger.de/api:BP7K6-ZQ/v2/agent/application/queue/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ 
+          job_id: job.id 
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Nicht autorisiert. Bitte melden Sie sich erneut an.');
+        } else if (response.status === 400) {
+          toast.error('Eingabefehler. Bitte überprüfen Sie die Job-Daten.');
+        } else {
+          toast.error('Fehler beim Erstellen der Bewerbung.');
+        }
+        return;
+      }
+
+      const applicationData = await response.json();
+      console.log('Application created:', applicationData);
+      
+      toast.success('Bewerbung erfolgreich erstellt!');
+      
+      // Call the callback to handle job removal and next job selection
+      if (onApplicationCreated && job) {
+        onApplicationCreated(job.id);
+      }
+      
+      // Close the mobile drawer
+      onOpenChange(false);
+      
+    } catch (error: any) {
+      console.error('Error creating application:', error);
+      toast.error('Fehler beim Erstellen der Bewerbung.');
+    } finally {
+      setIsCreatingApplication(false);
+    }
+  };
 
   const handleViewDocument = (id: number) => {
     const document = documents.find(doc => doc.id === id)
@@ -647,7 +715,7 @@ export function MobileJobDetailDrawer({
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  Passungsbegründung
+                  Begründung
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -777,19 +845,21 @@ export function MobileJobDetailDrawer({
         <div className="border-t bg-transparent">
           <div className="flex justify-center py-4">
             <Button 
-              onClick={handleOpenDocumentsModal}
-              disabled={jobDocuments.length > 0}
+              onClick={createApplication}
+              disabled={isCreatingApplication}
               className={cn(
                 "text-white font-semibold py-3 px-8",
-                jobDocuments.length > 0 
+                isCreatingApplication 
                   ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
                   : "bg-[#0F973D] hover:bg-[#0F973D]/90"
               )}
             >
-              <FileText className="h-4 w-4 mr-2" />
-              {jobDocuments.length > 0 ? 
-                (jobTrackerCreated ? "Job gespeichert & Bewerbung erstellt 🎉" : "Bewerbungsunterlagen bereits erstellt") 
-                : "Bewerbungsunterlagen erstellen"}
+              {isCreatingApplication ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Bot className="h-4 w-4 mr-2" />
+              )}
+              {isCreatingApplication ? "Erstelle..." : "Auto Apply starten"}
             </Button>
           </div>
         </div>
