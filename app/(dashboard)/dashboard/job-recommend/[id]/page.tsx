@@ -60,7 +60,10 @@ export default function JobRecommendDetailPage() {
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <JobDetailComponent jobId={jobId} />
+        <JobDetailComponent 
+          jobId={jobId} 
+          hideCompanyInfo={true} 
+        />
       </div>
     </>
   )

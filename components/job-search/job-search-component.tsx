@@ -34,6 +34,8 @@ interface JobSearchComponentProps {
   title?: string
   description?: string
   hideSearch?: boolean
+  hideCompanyInfo?: boolean
+  matchReason?: string
 }
 
 const initialFilters: JobSearchFilters = {
@@ -47,7 +49,15 @@ const initialFilters: JobSearchFilters = {
   datePublished: "",
 }
 
-export function JobSearchComponent({ title = "Jobsuche", description = "Finde deinen Traumjob mit unseren intelligenten Suchfunktionen", hideSearch = false }: JobSearchComponentProps) {
+export function JobSearchComponent({ title = "Jobsuche", description = "Finde deinen Traumjob mit unseren intelligenten Suchfunktionen", hideSearch = false, hideCompanyInfo = false, matchReason }: JobSearchComponentProps) {
+  const formatScore = (score: string | undefined) => {
+    if (!score) return '';
+    // If score already contains %, return as is
+    if (score.includes('%')) return score;
+    // If score is just a number, add %
+    return `${score}%`;
+  };
+
   const router = useRouter()
   const [filters, setFilters] = useState<JobSearchFilters>(initialFilters)
   const [jobs, setJobs] = useState<Job[]>([])
@@ -695,7 +705,8 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
           recruitment_agency: job.recruitment_agency || false,
           // Add recommendation-specific fields
           recommendation_score: item.score,
-          recommendation_reason: item.matchReason
+          recommendation_reason: item.matchReason,
+          matchReason: item.matchReason
         }
       })
 
@@ -2300,7 +2311,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                          {/* Recommendation Score */}
                          {hideSearch && job.recommendation_score && (
                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
-                             {job.recommendation_score} Passung
+                             {formatScore(job.recommendation_score)} Passung
                            </Badge>
                          )}
                        </div>
@@ -2467,6 +2478,8 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                   isSaved={savedJobs.has(selectedJob.id)}
                   onToggleSaved={() => toggleSavedJob(selectedJob.id)}
                   hideEmployeeCount={hideSearch}
+                  hideCompanyInfo={hideCompanyInfo}
+                  matchReason={selectedJob?.matchReason || matchReason}
                 />
               </div>
             ) : (
@@ -2492,6 +2505,8 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
         isSaved={selectedJob ? savedJobs.has(selectedJob.id) : false}
         onToggleSaved={() => selectedJob && toggleSavedJob(selectedJob.id)}
         hideEmployeeCount={hideSearch}
+        hideCompanyInfo={hideCompanyInfo}
+        matchReason={selectedJob?.matchReason || matchReason}
       />
     </div>
   )

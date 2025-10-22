@@ -675,9 +675,6 @@ export default function JobjaegerAgentPage() {
                       <RefreshCw className="h-4 w-4 mr-2" />
                       Aktualisieren
                     </Button>
-                    <Button variant="outline" onClick={handleOpenResumeModal} className="w-full sm:w-auto">
-                      Basis-Lebenslauf wählen
-                    </Button>
                   </div>
                   {selectedResume && (
                     <div className="text-sm text-muted-foreground text-center sm:text-left">
@@ -751,10 +748,7 @@ export default function JobjaegerAgentPage() {
                         <div key={item.id} className="border rounded-lg p-3 md:p-4 hover:bg-muted/30">
                           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <div className="font-medium truncate">{j?.company?.employer_name || '—'}</div>
-                              </div>
-                              <div className="mt-1 text-base font-semibold">{j?.title || 'Unbekannte Position'}</div>
+                              <div className="text-base font-semibold">{j?.title || 'Unbekannte Position'}</div>
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {location && (
                                   <span className="px-2 py-1 text-xs rounded-full bg-muted">{location}</span>

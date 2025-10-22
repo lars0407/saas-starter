@@ -98,6 +98,7 @@ function JobRecommendContent() {
           title="Jobempfehlungen"
           description="Entdecke personalisierte Jobempfehlungen basierend auf deinem Profil"
           hideSearch={true}
+          hideCompanyInfo={true}
         />
       </div>
       

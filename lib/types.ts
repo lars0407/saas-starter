@@ -41,6 +41,7 @@ export interface Job {
   source: string;
   auto_apply: boolean;
   recruitment_agency: boolean;
+  matchReason?: string;
   description: {
     description_original: string;
     description_responsibilities: string;

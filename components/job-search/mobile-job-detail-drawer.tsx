@@ -55,6 +55,8 @@ interface MobileJobDetailDrawerProps {
   isSaved?: boolean
   onToggleSaved?: () => void
   hideEmployeeCount?: boolean
+  hideCompanyInfo?: boolean
+  matchReason?: string
 }
 
 export function MobileJobDetailDrawer({ 
@@ -63,7 +65,9 @@ export function MobileJobDetailDrawer({
   onOpenChange, 
   isSaved = false, 
   onToggleSaved,
-  hideEmployeeCount = false
+  hideEmployeeCount = false,
+  hideCompanyInfo = false,
+  matchReason
 }: MobileJobDetailDrawerProps) {
   const [showFullDescription, setShowFullDescription] = useState(false)
   const [documentsModalOpen, setDocumentsModalOpen] = useState(false)
@@ -637,6 +641,25 @@ export function MobileJobDetailDrawer({
             </Card>
           )}
 
+          {/* Match Reason Section - Only for job recommendations */}
+          {(matchReason || job?.matchReason || (job && 'recommendation_reason' in job)) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Passungsbegründung
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-sm text-green-800 leading-relaxed">
+                    {matchReason || job?.matchReason || (job as any)?.recommendation_reason}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Job Details */}
           <Card>
             <CardHeader>
@@ -665,84 +688,86 @@ export function MobileJobDetailDrawer({
           </Card>
 
           {/* Company Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Über das Unternehmen</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-start gap-4 mb-4">
-                <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                  {job.company?.employer_logo ? (
-                    <img
-                      src={job.company.employer_logo}
-                      alt={`${job.company.employer_name} logo`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Hide the image and show the fallback icon on error
-                        e.currentTarget.style.display = 'none'
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden')
-                      }}
-                    />
-                  ) : null}
-                  <Building2 className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">{job.company?.employer_name || 'Unbekanntes Unternehmen'}</h3>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>Gegründet: {job.company?.founded}</span>
-                    <span>Mitarbeiter: {job.company?.company_size}</span>
+          {!hideCompanyInfo && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Über das Unternehmen</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                    {job.company?.employer_logo ? (
+                      <img
+                        src={job.company.employer_logo}
+                        alt={`${job.company.employer_name} logo`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Hide the image and show the fallback icon on error
+                          e.currentTarget.style.display = 'none'
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                        }}
+                      />
+                    ) : null}
+                    <Building2 className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">{job.company?.employer_name || 'Unbekanntes Unternehmen'}</h3>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span>Gegründet: {job.company?.founded}</span>
+                      <span>Mitarbeiter: {job.company?.company_size}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {job.company?.about && (
-                <div className="mb-4">
-                  <div className="text-muted-foreground">
-                    <p className={showFullDescription ? "" : "line-clamp-2"}>
-                      {job.company.about}
-                    </p>
+                
+                {job.company?.about && (
+                  <div className="mb-4">
+                    <div className="text-muted-foreground">
+                      <p className={showFullDescription ? "" : "line-clamp-2"}>
+                        {job.company.about}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFullDescription(!showFullDescription)}
+                      className="mt-2 p-0 h-auto text-[#0F973D] hover:text-[#0F973D]/80"
+                    >
+                      {showFullDescription ? (
+                        <>
+                          Weniger anzeigen
+                          <ChevronUp className="h-4 w-4 ml-1" />
+                        </>
+                      ) : (
+                        <>
+                          Mehr anzeigen
+                          <ChevronDown className="h-4 w-4 ml-1" />
+                        </>
+                      )}
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowFullDescription(!showFullDescription)}
-                    className="mt-2 p-0 h-auto text-[#0F973D] hover:text-[#0F973D]/80"
-                  >
-                    {showFullDescription ? (
-                      <>
-                        Weniger anzeigen
-                        <ChevronUp className="h-4 w-4 ml-1" />
-                      </>
-                    ) : (
-                      <>
-                        Mehr anzeigen
-                        <ChevronDown className="h-4 w-4 ml-1" />
-                      </>
-                    )}
-                  </Button>
+                )}
+                
+                <div className="flex flex-wrap gap-2">
+                  {job.company?.employer_website && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={job.company.employer_website} target="_blank" rel="noopener noreferrer">
+                        <Globe className="h-4 w-4 mr-2" />
+                        Website
+                      </a>
+                    </Button>
+                  )}
+                  {job.company?.employer_linkedin && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={job.company.employer_linkedin} target="_blank" rel="noopener noreferrer">
+                        <Linkedin className="h-4 w-4 mr-2" />
+                        LinkedIn
+                      </a>
+                    </Button>
+                  )}
                 </div>
-              )}
-              
-              <div className="flex flex-wrap gap-2">
-                {job.company?.employer_website && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={job.company.employer_website} target="_blank" rel="noopener noreferrer">
-                      <Globe className="h-4 w-4 mr-2" />
-                      Website
-                    </a>
-                  </Button>
-                )}
-                {job.company?.employer_linkedin && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={job.company.employer_linkedin} target="_blank" rel="noopener noreferrer">
-                      <Linkedin className="h-4 w-4 mr-2" />
-                      LinkedIn
-                    </a>
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
         </div>
 
