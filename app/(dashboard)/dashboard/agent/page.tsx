@@ -913,7 +913,12 @@ export default function JobjaegerAgentPage() {
                               </div>
                             </td>
                             <td className="py-4 px-4">
-                              {application.events && application.events.length > 0 ? (
+                              {application.status === 'application_queued' ? (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                                  <span className="text-muted-foreground">Bewerbung in Warteschlange</span>
+                                </div>
+                              ) : application.events && application.events.length > 0 ? (
                                 <div className="space-y-1">
                                   {application.events.slice(-1).map((event, index) => (
                                     <div key={index} className="flex items-center gap-2 text-sm">
@@ -983,7 +988,12 @@ export default function JobjaegerAgentPage() {
                           </div>
 
                           {/* Last Activity */}
-                          {application.events && application.events.length > 0 ? (
+                          {application.status === 'application_queued' ? (
+                            <div className="flex items-center gap-2 text-xs">
+                              <div className="w-2 h-2 rounded-full flex-shrink-0 bg-yellow-500" />
+                              <span className="text-muted-foreground">Bewerbung in Warteschlange</span>
+                            </div>
+                          ) : application.events && application.events.length > 0 ? (
                             <div className="flex items-center gap-2 text-xs">
                               <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                                 application.events[application.events.length - 1].event_status === 'done' ? 'bg-green-500' : 'bg-yellow-500'
