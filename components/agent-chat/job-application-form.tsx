@@ -255,12 +255,12 @@ export function JobApplicationForm({
             </Button>
             <Button
               onClick={onStartApplication}
-              disabled={!isFormValid}
-              className="bg-[#0F973D] hover:bg-[#0F973D]/90 w-full sm:w-auto"
+              disabled={true}
+              className="bg-gray-400 hover:bg-gray-400 cursor-not-allowed w-full sm:w-auto"
             >
               <Send className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">🚀 Bewerbung starten</span>
-              <span className="sm:hidden">🚀 Starten</span>
+              <span className="hidden sm:inline">⏳ Bald verfügbar</span>
+              <span className="sm:hidden">⏳ Bald verfügbar</span>
             </Button>
           </div>
         </CardContent>
