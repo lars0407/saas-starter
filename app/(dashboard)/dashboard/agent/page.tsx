@@ -16,7 +16,8 @@ import {
   Zap,
   Loader2,
   X,
-  Eye
+  Eye,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -711,17 +712,27 @@ export default function JobjaegerAgentPage() {
             <CardHeader className="px-4 pt-4 pb-0 md:px-6 md:pt-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <CardTitle className="text-lg md:text-xl">Passende Job-Möglichkeiten</CardTitle>
-                <Select value={matchingRate} onValueChange={setMatchingRate}>
-                  <SelectTrigger className="w-full sm:w-40">
-                    <SelectValue placeholder="Passungsrate" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Raten</SelectItem>
-                    <SelectItem value="high">Nur Hoch</SelectItem>
-                    <SelectItem value="medium">Nur Mittel</SelectItem>
-                    <SelectItem value="low">Nur Niedrig</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => router.push('/dashboard/job-recommend')}
+                    className="text-gray-600 border-gray-300 hover:bg-gray-100 hover:text-gray-700"
+                  >
+                    Detail Ansicht
+                  </Button>
+                  <Select value={matchingRate} onValueChange={setMatchingRate}>
+                    <SelectTrigger className="w-full sm:w-40">
+                      <SelectValue placeholder="Passungsrate" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Alle Raten</SelectItem>
+                      <SelectItem value="high">Nur Hoch</SelectItem>
+                      <SelectItem value="medium">Nur Mittel</SelectItem>
+                      <SelectItem value="low">Nur Niedrig</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="px-4 pb-4 pt-0 md:px-6 md:pb-6">
