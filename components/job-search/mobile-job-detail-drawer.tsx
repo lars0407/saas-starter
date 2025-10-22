@@ -61,6 +61,7 @@ interface MobileJobDetailDrawerProps {
   hideCompanyInfo?: boolean
   matchReason?: string
   onApplicationCreated?: (jobId: number) => void
+  isJobRecommendations?: boolean
 }
 
 export function MobileJobDetailDrawer({ 
@@ -72,7 +73,8 @@ export function MobileJobDetailDrawer({
   hideEmployeeCount = false,
   hideCompanyInfo = false,
   matchReason,
-  onApplicationCreated
+  onApplicationCreated,
+  isJobRecommendations = false
 }: MobileJobDetailDrawerProps) {
   const [showFullDescription, setShowFullDescription] = useState(false)
   const [documentsModalOpen, setDocumentsModalOpen] = useState(false)
@@ -845,21 +847,35 @@ export function MobileJobDetailDrawer({
         <div className="border-t bg-transparent">
           <div className="flex justify-center py-4">
             <Button 
-              onClick={createApplication}
-              disabled={isCreatingApplication}
+              onClick={isJobRecommendations ? createApplication : handleOpenDocumentsModal}
+              disabled={isJobRecommendations ? isCreatingApplication : jobDocuments.length > 0}
               className={cn(
                 "text-white font-semibold py-3 px-8",
-                isCreatingApplication 
-                  ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
-                  : "bg-[#0F973D] hover:bg-[#0F973D]/90"
+                isJobRecommendations 
+                  ? (isCreatingApplication 
+                      ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
+                      : "bg-[#0F973D] hover:bg-[#0F973D]/90")
+                  : (jobDocuments.length > 0 
+                      ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
+                      : "bg-[#0F973D] hover:bg-[#0F973D]/90")
               )}
             >
-              {isCreatingApplication ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              {isJobRecommendations ? (
+                isCreatingApplication ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Bot className="h-4 w-4 mr-2" />
+                )
               ) : (
-                <Bot className="h-4 w-4 mr-2" />
+                <FileText className="h-4 w-4 mr-2" />
               )}
-              {isCreatingApplication ? "Erstelle..." : "Auto Apply starten"}
+              {isJobRecommendations ? (
+                isCreatingApplication ? "Erstelle..." : "Auto Apply starten"
+              ) : (
+                jobDocuments.length > 0 ? 
+                  (jobTrackerCreated ? "Job gespeichert & Bewerbung erstellt 🎉" : "Bewerbungsunterlagen bereits erstellt") 
+                  : "Bewerbungsunterlagen erstellen"
+              )}
             </Button>
           </div>
         </div>

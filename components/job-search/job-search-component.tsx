@@ -2602,7 +2602,8 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                   hideEmployeeCount={hideSearch}
                   hideCompanyInfo={hideCompanyInfo}
                   matchReason={selectedJob?.matchReason || matchReason}
-                  onApplicationCreated={handleApplicationCreated}
+                  onApplicationCreated={hideSearch ? handleApplicationCreated : undefined}
+                  isJobRecommendations={hideSearch}
                 />
               </div>
             ) : (
@@ -2630,7 +2631,8 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
         hideEmployeeCount={hideSearch}
         hideCompanyInfo={hideCompanyInfo}
         matchReason={selectedJob?.matchReason || matchReason}
-        onApplicationCreated={handleApplicationCreated}
+        onApplicationCreated={hideSearch ? handleApplicationCreated : undefined}
+        isJobRecommendations={hideSearch}
       />
     </div>
   )
