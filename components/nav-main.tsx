@@ -19,73 +19,80 @@ import {
 } from "@/components/ui/sidebar"
 
 export function NavMain({
-  items,
+  sections,
 }: {
-  items: {
-    title: string
-    url: string
-    icon?: LucideIcon
-    isActive?: boolean
-    items?: {
+  sections: {
+    label: string
+    items: {
       title: string
       url: string
-      external?: boolean
+      icon?: LucideIcon
+      isActive?: boolean
+      items?: {
+        title: string
+        url: string
+        external?: boolean
+      }[]
     }[]
   }[]
 }) {
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
-      <SidebarMenu>
-        {items.map((item, index) => (
-          item.items && item.items.length > 0 ? (
-            // Render as collapsible dropdown if items exist
-            <Collapsible
-              key={`${item.title}-${index}`}
-              asChild
-              defaultOpen={item.isActive}
-              className="group/collapsible"
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={item.title}>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+    <>
+      {sections.map((section, sectionIndex) => (
+        <SidebarGroup key={`section-${sectionIndex}`}>
+          <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+          <SidebarMenu>
+            {section.items.map((item, index) => (
+              item.items && item.items.length > 0 ? (
+                // Render as collapsible dropdown if items exist
+                <Collapsible
+                  key={`${item.title}-${index}`}
+                  asChild
+                  defaultOpen={item.isActive}
+                  className="group/collapsible"
+                >
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton tooltip={item.title}>
+                        {item.icon && <item.icon />}
+                        <span>{item.title}</span>
+                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {item.items.map((subItem, subIndex) => (
+                          <SidebarMenuSubItem key={`${item.title}-${subItem.title}-${subIndex}`}>
+                            <SidebarMenuSubButton asChild>
+                              <a 
+                                href={subItem.url}
+                                target={subItem.external ? "_blank" : undefined}
+                                rel={subItem.external ? "noopener noreferrer" : undefined}
+                              >
+                                <span>{subItem.title}</span>
+                              </a>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              ) : (
+                // Render as simple link button if no items
+                <SidebarMenuItem key={`${item.title}-${index}`}>
+                  <SidebarMenuButton asChild tooltip={item.title}>
+                    <a href={item.url}>
+                      {item.icon && <item.icon />}
+                      <span>{item.title}</span>
+                    </a>
                   </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {item.items.map((subItem, subIndex) => (
-                      <SidebarMenuSubItem key={`${item.title}-${subItem.title}-${subIndex}`}>
-                        <SidebarMenuSubButton asChild>
-                          <a 
-                            href={subItem.url}
-                            target={subItem.external ? "_blank" : undefined}
-                            rel={subItem.external ? "noopener noreferrer" : undefined}
-                          >
-                            <span>{subItem.title}</span>
-                          </a>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-          ) : (
-            // Render as simple link button if no items
-            <SidebarMenuItem key={`${item.title}-${index}`}>
-              <SidebarMenuButton asChild tooltip={item.title}>
-                <a href={item.url}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )
-        ))}
-      </SidebarMenu>
-    </SidebarGroup>
+                </SidebarMenuItem>
+              )
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+      ))}
+    </>
   )
 }

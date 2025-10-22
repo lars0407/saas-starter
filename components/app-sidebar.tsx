@@ -78,7 +78,10 @@ const data = {
       plan: "Free",
     },
   ],
-  navMain: [
+  navSections: [
+    {
+      label: "Agent",
+      items: [
         {
           title: "Jobjäger",
           url: "/dashboard/agent",
@@ -89,82 +92,89 @@ const data = {
           url: "/dashboard/job-recommend",
           icon: Star,
         },
+      ],
+    },
+    {
+      label: "Plattform",
+      items: [
         {
           title: "Jobsuche",
           url: "/dashboard/job-search",
           icon: SquareTerminal,
           isActive: true,
         },
-    {
-      title: "Jobtracker",
-      url: "/dashboard",
-      icon: Kanban,
-    },
-    {
-      title: "Dokumente",
-      url: "/dashboard/documents",
-      icon: BookOpen,
-      items: [
         {
-          title: "Überblick",
+          title: "Jobtracker",
+          url: "/dashboard",
+          icon: Kanban,
+        },
+        {
+          title: "Dokumente",
           url: "/dashboard/documents",
+          icon: BookOpen,
+          items: [
+            {
+              title: "Überblick",
+              url: "/dashboard/documents",
+            },
+            {
+              title: "Anschreiben",
+              url: "/dashboard/documents/cover-letter",
+            },
+            {
+              title: "Lebenslauf",
+              url: "/dashboard/documents/resume",
+            },
+          ],
         },
         {
-          title: "Anschreiben",
-          url: "/dashboard/documents/cover-letter",
-        },
-        {
-          title: "Lebenslauf",
-          url: "/dashboard/documents/resume",
-        },
-      ],
-    },
-    {
-      title: "KI-Tools",
-      url: "/dashboard/coverletter-generate",
-      icon: Bot,
-      items: [
-        {
-          title: "Anschreiben Generator",
+          title: "KI-Tools",
           url: "/dashboard/coverletter-generate",
+          icon: Bot,
+          items: [
+            {
+              title: "Anschreiben Generator",
+              url: "/dashboard/coverletter-generate",
+            },
+            {
+              title: "Lebenslauf Generator",
+              url: "/dashboard/resume-generate",
+            },
+          ],
         },
         {
-          title: "Lebenslauf Generator",
-          url: "/dashboard/resume-generate",
+          title: "Recherche",
+          url: "#",
+          icon: Map,
+          items: [
+            {
+              title: "Gehalt",
+              url: "https://web.arbeitsagentur.de/entgeltatlas/",
+              external: true,
+            },
+          ],
         },
-      ],
-    },
-    {
-      title: "Recherche",
-      url: "#",
-      icon: Map,
-      items: [
         {
-          title: "Gehalt",
-          url: "https://web.arbeitsagentur.de/entgeltatlas/",
-          external: true,
-        },
-      ],
-    },
-    {
-      title: "Profil",
-      url: "/dashboard/profile",
-      icon: User,
-      items: [
-        {
-          title: "Überblick",
+          title: "Profil",
           url: "/dashboard/profile",
+          icon: User,
+          items: [
+            {
+              title: "Überblick",
+              url: "/dashboard/profile",
+            },
+            {
+              title: "Suchprofil",
+              url: "/dashboard/search-profile",
+            },
+          ],
         },
         {
-          title: "Suchprofil",
-          url: "/dashboard/search-profile",
+          title: "Settings",
+          url: "/dashboard/settings",
+          icon: Settings2,
         },
       ],
-    },
-    {
-      title: "Settings",
-      url: "/dashboard/settings",
-      icon: Settings2,
     },
   ],
 }
@@ -214,7 +224,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             Bewerbung starten
           </Button>
         </div>
-        <NavMain items={data.navMain} />
+        <NavMain sections={data.navSections} />
       </SidebarContent>
       
       <SidebarFooter>
