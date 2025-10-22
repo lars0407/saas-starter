@@ -60,6 +60,29 @@ interface Application {
   settings: any;
   stop: boolean;
   job_tracker_id: number;
+  document_id: number;
+  auto_apply_id: number;
+  auto_apply?: {
+    id: number;
+    created_at: number;
+    job_id: number;
+    user_id: number;
+    status: string;
+    output: string;
+    updated_at: number;
+    application_data: string;
+    task_id: string;
+    logs: any;
+    session_id: string;
+    session_status: string;
+    document_resume_id: number;
+    workflow_id: string;
+    output_video_url: string;
+    workflow_runs: number;
+    isSuccess: boolean;
+    steps: any;
+    session: any;
+  };
   job: Array<{
     id: number;
     created_at: number;
@@ -102,6 +125,8 @@ const translateEventType = (eventType: string): string => {
     'autoapply_created': 'Auto-Bewerbung erstellt',
     'Application successful': 'Bewerbung erfolgreich',
     'Bewerbung erfolgreich': 'Bewerbung erfolgreich',
+    'Application failed': 'Bewerbung gescheitert',
+    'job_linked': 'Job geladen',
     'job_created': 'Job erstellt',
     'application_created': 'Bewerbung erstellt',
     'document_generated': 'Dokument generiert',
@@ -852,7 +877,7 @@ export default function JobjaegerAgentPage() {
 
         <TabsContent value="applications" className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader className="p-4 sm:p-6">
+            <CardHeader className="px-4 pt-0 pb-0 sm:px-6">
               <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden sm:inline">Deine Bewerbungen</span>
@@ -860,7 +885,7 @@ export default function JobjaegerAgentPage() {
                 {isLoadingApplications && <Loader2 className="h-4 w-4 animate-spin" />}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6">
+            <CardContent className="px-4 pb-4 pt-0 sm:px-6 sm:pb-6">
               {isLoadingApplications ? (
                 <div className="text-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
@@ -905,7 +930,7 @@ export default function JobjaegerAgentPage() {
                             </td>
                             <td className="py-4 px-4">
                               <div className="flex items-center justify-center">
-                                {application.status === 'autoapply_created' || application.status === 'created' ? (
+                                {application.auto_apply?.isSuccess === true ? (
                                   <CheckCircle className="h-5 w-5 text-green-600" />
                                 ) : (
                                   <X className="h-5 w-5 text-red-600" />
@@ -973,7 +998,7 @@ export default function JobjaegerAgentPage() {
                               </h3>
                             </div>
                             <div className="flex items-center gap-2 ml-2">
-                              {application.status === 'autoapply_created' || application.status === 'created' ? (
+                              {application.auto_apply?.isSuccess === true ? (
                                 <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                               ) : (
                                 <X className="h-4 w-4 text-red-600 flex-shrink-0" />
