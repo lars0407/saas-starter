@@ -46,19 +46,24 @@ const fetcher = async (url: string) => {
   }
 };
 
-// Admin navigation items - will be updated with active state
-const getAdminNavItems = (pathname: string) => [
+// Admin navigation sections - will be updated with active state
+const getAdminNavSections = (pathname: string) => [
   {
-    title: "Dashboard",
-    url: "/internal/dashboard",
-    icon: Home,
-    isActive: pathname === "/internal/dashboard",
-  },
-  {
-    title: "User Management",
-    url: "/internal/users",
-    icon: Users,
-    isActive: pathname === "/internal/users",
+    label: "Admin",
+    items: [
+      {
+        title: "Dashboard",
+        url: "/internal/dashboard",
+        icon: Home,
+        isActive: pathname === "/internal/dashboard",
+      },
+      {
+        title: "User Management",
+        url: "/internal/users",
+        icon: Users,
+        isActive: pathname === "/internal/users",
+      },
+    ],
   },
 ];
 
@@ -96,7 +101,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={getAdminNavItems(pathname)} />
+        <NavMain sections={getAdminNavSections(pathname)} />
       </SidebarContent>
       
       <SidebarFooter>
