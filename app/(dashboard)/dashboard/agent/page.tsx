@@ -658,7 +658,7 @@ export default function JobjaegerAgentPage() {
 
           {/* Job List */}
           <Card>
-            <CardHeader className="p-4 md:p-6">
+            <CardHeader className="px-4 pt-4 pb-0 md:px-6 md:pt-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <CardTitle className="text-lg md:text-xl">Passende Job-Möglichkeiten</CardTitle>
                 <Select value={matchingRate} onValueChange={setMatchingRate}>
@@ -674,7 +674,7 @@ export default function JobjaegerAgentPage() {
                 </Select>
               </div>
             </CardHeader>
-            <CardContent className="p-4 md:p-6">
+            <CardContent className="px-4 pb-4 pt-0 md:px-6 md:pb-6">
               {isLoadingRecommendations ? (
                 <div className="text-center py-6 md:py-8">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
