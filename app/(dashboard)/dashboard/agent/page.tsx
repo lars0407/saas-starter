@@ -29,9 +29,6 @@ import { useRouter } from 'next/navigation';
 import { DashboardBreadcrumb, breadcrumbConfigs } from "@/components/dashboard-breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import Link from 'next/link';
-import { ResumePickerModal } from '@/components/agent-chat/components/resume-picker-modal';
-import { useResumePicker } from '@/components/agent-chat/hooks/use-resume-picker';
-import type { Document as ResumeDocument } from '@/components/agent-chat/types';
 import type { JobDetails } from '@/components/agent-chat/types';
 import { useJobApplication } from '@/components/agent-chat/hooks/use-job-application';
 import { toast } from 'sonner';
@@ -244,16 +241,6 @@ export default function JobjaegerAgentPage() {
   const [recPage, setRecPage] = useState(1);
   const [hasMoreRecs, setHasMoreRecs] = useState(false);
 
-  // Resume picker state
-  const {
-    resumeModalOpen,
-    setResumeModalOpen,
-    resumes,
-    resumesLoading,
-    handleOpenResumeModal,
-    fetchResumes,
-  } = useResumePicker();
-  const [selectedResume, setSelectedResume] = useState<ResumeDocument | null>(null);
   const { handleStartApplication } = useJobApplication();
   const [applyingIds, setApplyingIds] = useState<Set<number>>(new Set());
 
@@ -265,10 +252,6 @@ export default function JobjaegerAgentPage() {
     const j = item.job && item.job[0] ? item.job[0] : undefined;
     if (!j) return;
     
-    if (!selectedResume) {
-      toast.error('Bitte wählen Sie zuerst einen Basis-Lebenslauf aus, bevor Sie sich bewerben.');
-      return;
-    }
     
     // Save job data and resume to localStorage
     const jobData = {
@@ -287,17 +270,9 @@ export default function JobjaegerAgentPage() {
       matchReason: item.matchReason
     };
     
-    const resumeData = {
-      id: selectedResume.id,
-      title: selectedResume.name || 'Lebenslauf',
-      type: selectedResume.type || 'resume'
-    };
-    
     localStorage.setItem('pendingJobApplication', JSON.stringify(jobData));
-    localStorage.setItem('selectedResume', JSON.stringify(resumeData));
     
     console.log('Saved job data to localStorage:', jobData);
-    console.log('Saved resume data to localStorage:', resumeData);
     
     toast.success('Job-Daten gespeichert. Öffne Agent-Chat...');
     
@@ -676,11 +651,6 @@ export default function JobjaegerAgentPage() {
                       Aktualisieren
                     </Button>
                   </div>
-                  {selectedResume && (
-                    <div className="text-sm text-muted-foreground text-center sm:text-left">
-                      Ausgewählt: {selectedResume.name || 'Lebenslauf'}
-                    </div>
-                  )}
                 </div>
               </div>
             </CardContent>
@@ -1065,17 +1035,6 @@ export default function JobjaegerAgentPage() {
         <Play className="h-5 w-5 sm:h-6 sm:w-6" />
       </Button>
 
-      {/* Resume Picker Modal */}
-      <ResumePickerModal
-        isOpen={resumeModalOpen}
-        onClose={() => setResumeModalOpen(false)}
-        resumes={resumes}
-        resumesLoading={resumesLoading}
-        onSelectResume={(resume) => {
-          setSelectedResume(resume);
-          setResumeModalOpen(false);
-        }}
-      />
       </div>
     </div>
   );
