@@ -163,17 +163,11 @@ export default function AddressSearch({
   };
 
   const formatAddress = (address: Address) => {
+    // For JobJaeger API, we can use the display_name directly as it's already formatted
+    // or construct from available parts
     const parts = [];
     
-    if (address.address.street && address.address.house_number) {
-      parts.push(`${address.address.street} ${address.address.house_number}`);
-    } else if (address.address.street) {
-      parts.push(address.address.street);
-    }
-    
-    if (address.address.postcode && address.address.city) {
-      parts.push(`${address.address.postcode} ${address.address.city}`);
-    } else if (address.address.city) {
+    if (address.address.city) {
       parts.push(address.address.city);
     }
     
@@ -185,6 +179,7 @@ export default function AddressSearch({
       parts.push(address.address.country);
     }
     
+    // If we have parts, join them, otherwise use display_name
     return parts.length > 0 ? parts.join(', ') : address.display_name;
   };
 

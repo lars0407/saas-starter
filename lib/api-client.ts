@@ -383,11 +383,11 @@ export async function getPublishedDate(documentId: number) {
 }
 
 /**
- * Search addresses using OpenStreetMap Nominatim API
+ * Search addresses using JobJaeger API (same as job search)
  */
 export async function searchAddresses(query: string, limit: number = 5) {
   try {
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=${limit}&addressdetails=1&countrycodes=de`, {
+    const response = await fetch(`https://api.jobjaeger.de/api:O72K2wiB/geopoint/search?adresse=${encodeURIComponent(query)}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json'
@@ -399,22 +399,44 @@ export async function searchAddresses(query: string, limit: number = 5) {
     }
 
     const data = await response.json()
-    return data.map((item: any) => ({
-      id: item.place_id,
-      display_name: item.display_name,
-      lat: parseFloat(item.lat),
-      lon: parseFloat(item.lon),
-      type: item.type,
-      importance: item.importance,
-      address: {
-        city: item.address?.city || item.address?.town || item.address?.village,
-        state: item.address?.state,
-        country: item.address?.country,
-        postcode: item.address?.postcode,
-        street: item.address?.road,
-        house_number: item.address?.house_number
-      }
-    }))
+    
+    if (data.suggestions && Array.isArray(data.suggestions)) {
+      return data.suggestions.map((item: any) => {
+        // Extract coordinates and full address
+        const coordinates = item.geometry?.coordinates
+        const lon = coordinates?.[0]
+        const lat = coordinates?.[1]
+        
+        // Use full_address if available, otherwise construct from name and place_formatted
+        let fullAddress = 'Unbekannter Ort'
+        if (item.properties && item.properties.full_address) {
+          fullAddress = item.properties.full_address
+        } else if (item.properties && item.properties.name && item.properties.place_formatted) {
+          fullAddress = `${item.properties.name}, ${item.properties.place_formatted}`
+        } else if (item.properties && item.properties.name) {
+          fullAddress = item.properties.name
+        }
+        
+        return {
+          id: item.id || item.properties?.mapbox_id || Math.random(),
+          display_name: fullAddress,
+          lat: lat || 0,
+          lon: lon || 0,
+          type: item.properties?.feature_type || 'place',
+          importance: 0.5, // Default importance since JobJaeger API doesn't provide this
+          address: {
+            city: item.properties?.name,
+            state: item.properties?.context?.region?.name,
+            country: item.properties?.context?.country?.name,
+            postcode: '', // JobJaeger API doesn't provide postcode in this format
+            street: '', // JobJaeger API doesn't provide street in this format
+            house_number: '' // JobJaeger API doesn't provide house number in this format
+          }
+        }
+      }).slice(0, limit) // Limit results
+    }
+    
+    return []
   } catch (error) {
     console.error('Address search error:', error)
     throw new Error('Address search failed. Please try again.')
