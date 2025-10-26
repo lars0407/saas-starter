@@ -715,7 +715,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
           recommendation_reason: item.matchReason,
           matchReason: item.matchReason
         }
-      }).filter((job): job is Job => job !== null) // Filter out null values
+      }).filter((job: Job | null): job is Job => job !== null) // Filter out null values
 
       if (!isLoadMore) {
         setJobs(newJobs)
