@@ -83,9 +83,10 @@ const data = {
       label: "Agent",
       items: [
         {
-          title: "Jobjäger",
+          title: "Jobjäger (Bald verfügbar)",
           url: "/dashboard/agent",
           icon: Zap,
+          disabled: true,
         },
         {
           title: "Jobempfehlungen",

@@ -655,9 +655,14 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
 
       // Transform recommendation data to match Job interface
       const newJobs: Job[] = data.recommendation.items.map((item: any) => {
-        const job = item.job[0] // Get the first job from the array
+        const job = item.job?.[0] // Get the first job from the array, with safe access
         
-        // Handle missing company data
+        // Handle missing job or company data
+        if (!job) {
+          console.warn('Missing job data in recommendation item:', item)
+          return null
+        }
+        
         const companyData = job.company || {}
         
         // Debug logging for description data
@@ -710,7 +715,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
           recommendation_reason: item.matchReason,
           matchReason: item.matchReason
         }
-      })
+      }).filter((job): job is Job => job !== null) // Filter out null values
 
       if (!isLoadMore) {
         setJobs(newJobs)
@@ -2353,24 +2358,24 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation()
-                            if (hideSearch) {
-                              // On job recommendations page, create application
+                            if (hideSearch && job.auto_apply) {
+                              // On job recommendations page with auto_apply, create application
                               createApplication(job.id)
                             } else {
                               // On regular job search page, toggle saved job
                               toggleSavedJob(job.id)
                             }
                           }}
-                          disabled={hideSearch && creatingApplications.has(job.id)}
+                          disabled={hideSearch && job.auto_apply && creatingApplications.has(job.id)}
                           className={cn(
                             "h-6 w-6 p-0 flex-shrink-0",
-                            hideSearch 
+                            hideSearch && job.auto_apply 
                               ? "text-[#0F973D] hover:text-[#0F973D]/80" 
                               : savedJobs.has(job.id) && "text-[#0F973D]",
-                            hideSearch && creatingApplications.has(job.id) && "opacity-50"
+                            hideSearch && job.auto_apply && creatingApplications.has(job.id) && "opacity-50"
                           )}
                         >
-                          {hideSearch ? (
+                          {hideSearch && job.auto_apply ? (
                             creatingApplications.has(job.id) ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
                             ) : (

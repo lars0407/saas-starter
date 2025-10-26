@@ -28,6 +28,8 @@ export function NavMain({
       url: string
       icon?: LucideIcon
       isActive?: boolean
+      disabled?: boolean
+      className?: string
       items?: {
         title: string
         url: string
@@ -52,8 +54,11 @@ export function NavMain({
                   className="group/collapsible"
                 >
                   <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton tooltip={item.title}>
+                    <CollapsibleTrigger asChild disabled={item.disabled}>
+                      <SidebarMenuButton 
+                        tooltip={item.title}
+                        className={item.disabled ? "opacity-50 cursor-not-allowed" : ""}
+                      >
                         {item.icon && <item.icon />}
                         <span>{item.title}</span>
                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -81,11 +86,23 @@ export function NavMain({
               ) : (
                 // Render as simple link button if no items
                 <SidebarMenuItem key={`${item.title}-${index}`}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <a href={item.url}>
-                      {item.icon && <item.icon />}
-                      <span>{item.title}</span>
-                    </a>
+                  <SidebarMenuButton 
+                    asChild={!item.disabled}
+                    tooltip={item.title}
+                    className={item.disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : item.className || ""}
+                    disabled={item.disabled}
+                  >
+                    {item.disabled ? (
+                      <>
+                        {item.icon && <item.icon />}
+                        <span>{item.title}</span>
+                      </>
+                    ) : (
+                      <a href={item.url}>
+                        {item.icon && <item.icon />}
+                        <span>{item.title}</span>
+                      </a>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )
