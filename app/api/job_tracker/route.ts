@@ -40,9 +40,9 @@ export async function GET() {
           status: tracking.status,
           isActive: !job.job_expiration,
           createdAt: tracking.created_at,
-          updatedAt: tracking.application_date,
-          joboffer_received: tracking.joboffer_received,
-          notes: tracking.notes,
+          ...(tracking.application_date && { updatedAt: tracking.application_date }),
+          ...(tracking.joboffer_received !== undefined && { joboffer_received: tracking.joboffer_received }),
+          ...(tracking.notes && { notes: tracking.notes }),
         };
       })
       .filter((job): job is JobCardData => job !== null); // Filter out null values
