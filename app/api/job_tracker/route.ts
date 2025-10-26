@@ -14,21 +14,38 @@ export async function GET() {
     const data: JobTrackerResponse = response;
     
     // Transform the API data to match our UI expectations
-    const transformedJobs: JobCardData[] = data.job_trackings.map(tracking => {
-      const job = tracking.job[0]; // Get the first job from the array
-      return {
-        id: tracking.id.toString(),
-        title: job.title,
-        company: job.company.employer_name,
-        location: `${job.job_city}, ${job.job_country}`,
-        status: tracking.status,
-        isActive: !job.job_expiration,
-        createdAt: tracking.created_at,
-        updatedAt: tracking.application_date,
-        joboffer_received: tracking.joboffer_received,
-        notes: tracking.notes,
-      };
-    });
+    const transformedJobs: JobCardData[] = data.job_trackings
+      .map(tracking => {
+        // Check if job array exists and has at least one item
+        if (!tracking.job || !Array.isArray(tracking.job) || tracking.job.length === 0) {
+          console.warn('Job tracking missing job data:', tracking.id);
+          return null;
+        }
+        
+        const job = tracking.job[0];
+        
+        // Check if required job fields exist
+        if (!job.title || !job.company) {
+          console.warn('Job missing required fields:', tracking.id);
+          return null;
+        }
+        
+        return {
+          id: tracking.id.toString(),
+          title: job.title || 'Unknown Position',
+          company: job.company?.employer_name || 'Unknown Company',
+          location: job.job_city || job.job_country 
+            ? `${job.job_city || ''}, ${job.job_country || ''}`.trim()
+            : 'Unknown Location',
+          status: tracking.status,
+          isActive: !job.job_expiration,
+          createdAt: tracking.created_at,
+          updatedAt: tracking.application_date,
+          joboffer_received: tracking.joboffer_received,
+          notes: tracking.notes,
+        };
+      })
+      .filter((job): job is JobCardData => job !== null); // Filter out null values
     
     return Response.json(transformedJobs);
   } catch (error) {
