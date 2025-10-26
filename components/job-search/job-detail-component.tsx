@@ -128,11 +128,10 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
     fetchJob()
   }, [jobId, propJob])
 
-  const generateDocuments = async (documentId: number) => {
+  const generateDocuments = async () => {
     if (!job?.id) return
     
     setGeneratingDocuments(true)
-    setDocumentsModalOpen(false) // Close the modal
     
     // Start cycling through loading messages
     const loadingMessages = [
@@ -170,8 +169,7 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
             "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({
-            job_id: job.id,
-            document_id: documentId
+            job_id: job.id
           })
         }
       )
@@ -866,8 +864,8 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
             <Button 
-              onClick={isJobRecommendations && job?.auto_apply ? createApplication : handleOpenDocumentsModal}
-              disabled={isJobRecommendations && job?.auto_apply ? isCreatingApplication : jobDocuments.length > 0}
+              onClick={isJobRecommendations && job?.auto_apply ? createApplication : generateDocuments}
+              disabled={isJobRecommendations && job?.auto_apply ? isCreatingApplication : jobDocuments.length > 0 || generatingDocuments}
               className={cn(
                 "flex-1",
                 isJobRecommendations && job?.auto_apply 
@@ -885,6 +883,8 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
                 ) : (
                   <Bot className="h-4 w-4 mr-2" />
                 )
+              ) : generatingDocuments ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <FileText className="h-4 w-4 mr-2" />
               )}
@@ -893,7 +893,9 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
               ) : (
                 jobDocuments.length > 0 ? 
                   (jobTrackerCreated ? "Job gespeichert & Bewerbung erstellt 🎉" : "Bewerbungsunterlagen bereits erstellt") 
-                  : "Bewerbungsunterlagen erstellen"
+                  : generatingDocuments 
+                    ? "Erstelle..." 
+                    : "Bewerbungsunterlagen erstellen"
               )}
             </Button>
           </div>

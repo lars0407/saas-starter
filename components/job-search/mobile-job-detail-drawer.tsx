@@ -107,11 +107,10 @@ export function MobileJobDetailDrawer({
 
   if (!job) return null
 
-  const generateDocuments = async (documentId: number) => {
+  const generateDocuments = async () => {
     if (!job?.id) return
     
     setGeneratingDocuments(true)
-    setDocumentsModalOpen(false) // Close the modal
     
     // Start cycling through loading messages
     const loadingMessages = [
@@ -149,8 +148,7 @@ export function MobileJobDetailDrawer({
             "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({
-            job_id: job.id,
-            document_id: documentId
+            job_id: job.id
           })
         }
       )
@@ -847,8 +845,8 @@ export function MobileJobDetailDrawer({
         <div className="border-t bg-transparent">
           <div className="flex justify-center py-4">
             <Button 
-              onClick={isJobRecommendations && job.auto_apply ? createApplication : handleOpenDocumentsModal}
-              disabled={isJobRecommendations && job.auto_apply ? isCreatingApplication : jobDocuments.length > 0}
+              onClick={isJobRecommendations && job.auto_apply ? createApplication : generateDocuments}
+              disabled={isJobRecommendations && job.auto_apply ? isCreatingApplication : jobDocuments.length > 0 || generatingDocuments}
               className={cn(
                 "text-white font-semibold py-3 px-8",
                 isJobRecommendations && job.auto_apply 
@@ -866,6 +864,8 @@ export function MobileJobDetailDrawer({
                 ) : (
                   <Bot className="h-4 w-4 mr-2" />
                 )
+              ) : generatingDocuments ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <FileText className="h-4 w-4 mr-2" />
               )}
@@ -874,7 +874,9 @@ export function MobileJobDetailDrawer({
               ) : (
                 jobDocuments.length > 0 ? 
                   (jobTrackerCreated ? "Job gespeichert & Bewerbung erstellt 🎉" : "Bewerbungsunterlagen bereits erstellt") 
-                  : "Bewerbungsunterlagen erstellen"
+                  : generatingDocuments 
+                    ? "Erstelle..." 
+                    : "Bewerbungsunterlagen erstellen"
               )}
             </Button>
           </div>
