@@ -14,7 +14,7 @@ export async function GET() {
     const data: JobTrackerResponse = response;
     
     // Transform the API data to match our UI expectations
-    const transformedJobs: JobCardData[] = data.job_trackings
+    const transformedJobs = data.job_trackings
       .map(tracking => {
         // Check if job array exists and has at least one item
         if (!tracking.job || !Array.isArray(tracking.job) || tracking.job.length === 0) {
