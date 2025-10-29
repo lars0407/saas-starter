@@ -1,8 +1,8 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, MapPin, Briefcase, Building2, Clock, DollarSign, Filter, Star, Bookmark, ExternalLink, Eye, X, Plus, HelpCircle, Target, Globe, Calendar, Settings, Save, Bot, Loader2, RefreshCw } from "lucide-react"
+import { Search, MapPin, Briefcase, Building2, Clock, DollarSign, Filter, Star, Bookmark, ExternalLink, Eye, X, Plus, HelpCircle, Target, Globe, Calendar, Settings, Save, Bot, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -652,17 +652,6 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
 
       const data = await response.json()
       console.log('Recommendation API response:', data)
-
-      // Check if recommendation data exists and has items
-      if (!data.recommendation || !data.recommendation.items || data.recommendation.items.length === 0) {
-        console.log('No job recommendations found in API response')
-        if (!isLoadMore) {
-          setJobs([])
-          setTotalJobs(0)
-          setHasMoreJobs(false)
-        }
-        return
-      }
 
       // Transform recommendation data to match Job interface
       const newJobs: Job[] = data.recommendation.items.map((item: any) => {
@@ -1661,11 +1650,12 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
     })
   }
 
-  // Component return
+
+
   return (
     <div className="h-screen max-h-screen flex flex-col space-y-3 md:space-y-6 overflow-hidden min-h-0 pb-4 md:pb-0">
-        {/* Header */}
-        <div className="flex flex-col gap-2">
+      {/* Header */}
+      <div className="flex flex-col gap-2">
         <h1 className="text-2xl md:text-3xl font-bold">{title}</h1>
         <p className="text-sm md:text-base text-muted-foreground hidden sm:block">
           {description}
@@ -2267,57 +2257,9 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
       )}
 
       {/* Two Column Layout */}
-      {hideSearch && !loading && jobs.length === 0 && !error ? (
-        // Full-width empty state for job recommendations
-        <div className="flex-1 min-h-0 flex items-center justify-center">
-          <Card className="w-full max-w-4xl mx-auto">
-            <CardContent className="p-8 md:p-12 text-center">
-              <div className="flex justify-center mb-4">
-                <div className="rounded-full bg-[#0F973D]/10 p-4">
-                  <Target className="h-12 w-12 text-[#0F973D]" />
-                </div>
-              </div>
-              <h3 className="text-xl md:text-2xl font-semibold mb-2 text-gray-900">Noch keine Jobempfehlungen verfügbar</h3>
-              <p className="text-sm md:text-base text-gray-600 mb-1 max-w-md mx-auto">
-                Wir konnten aktuell keine passenden Jobs für dich finden. Das kann verschiedene Gründe haben:
-              </p>
-              <div className="text-sm md:text-base text-gray-500 mb-6 mt-4 space-y-2 max-w-md mx-auto text-left">
-                <div className="flex items-start gap-2">
-                  <span className="text-[#0F973D] mt-0.5">•</span>
-                  <span>Dein Suchprofil ist noch nicht vollständig ausgefüllt</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-[#0F973D] mt-0.5">•</span>
-                  <span>Deine Suchkriterien sind zu spezifisch oder eingeschränkt</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-[#0F973D] mt-0.5">•</span>
-                  <span>Wir haben aktuell keine passenden Stellen in der Datenbank</span>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                <Button 
-                  onClick={() => router.push('/dashboard/search-profile')} 
-                  className="bg-[#0F973D] hover:bg-[#0F973D]/90 text-white"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Suchprofil anpassen
-                </Button>
-                <Button 
-                  onClick={() => fetchJobRecommendations(false)} 
-                  variant="outline"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Erneut laden
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6 flex-1 min-h-0">
-          {/* Left Column - Job List - Full width on mobile */}
-          <div className="lg:col-span-1 flex flex-col space-y-2 md:space-y-4 min-h-0 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6 flex-1 min-h-0">
+        {/* Left Column - Job List - Full width on mobile */}
+        <div className="lg:col-span-1 flex flex-col space-y-2 md:space-y-4 min-h-0 overflow-hidden">
           {/* Mobile-only title */}
           <div className="lg:hidden mb-2 md:mb-4">
             <h2 className="text-xl font-semibold">Jobs</h2>
@@ -2509,62 +2451,14 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
           // Empty state
           <Card>
               <CardContent className="p-8 text-center">
-                {hideSearch ? (
-                  // Empty state for job recommendations
-                  <>
-                    <div className="flex justify-center mb-4">
-                      <div className="rounded-full bg-[#0F973D]/10 p-4">
-                        <Target className="h-12 w-12 text-[#0F973D]" />
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-900">Noch keine Jobempfehlungen verfügbar</h3>
-                    <p className="text-sm text-gray-600 mb-1 max-w-md mx-auto">
-                      Wir konnten aktuell keine passenden Jobs für dich finden. Das kann verschiedene Gründe haben:
-                    </p>
-                    <div className="text-sm text-gray-500 mb-6 mt-4 space-y-2 max-w-md mx-auto text-left">
-                      <div className="flex items-start gap-2">
-                        <span className="text-[#0F973D] mt-0.5">•</span>
-                        <span>Dein Suchprofil ist noch nicht vollständig ausgefüllt</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="text-[#0F973D] mt-0.5">•</span>
-                        <span>Deine Suchkriterien sind zu spezifisch oder eingeschränkt</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="text-[#0F973D] mt-0.5">•</span>
-                        <span>Wir haben aktuell keine passenden Stellen in der Datenbank</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                      <Button 
-                        onClick={() => router.push('/dashboard/search-profile')} 
-                        className="bg-[#0F973D] hover:bg-[#0F973D]/90 text-white"
-                      >
-                        <Settings className="h-4 w-4 mr-2" />
-                        Suchprofil anpassen
-                      </Button>
-                      <Button 
-                        onClick={() => fetchJobRecommendations(false)} 
-                        variant="outline"
-                      >
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Erneut laden
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  // Empty state for regular job search
-                  <>
-                    <Search className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                    <h3 className="text-base font-semibold mb-2">Keine Jobs gefunden</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Versuche deine Suchkriterien zu ändern oder erweitere deine Suche.
-                    </p>
-                    <Button onClick={clearFilters} variant="outline" size="sm">
-                      Filter zurücksetzen
-                    </Button>
-                  </>
-                )}
+                <Search className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+                <h3 className="text-base font-semibold mb-2">Keine Jobs gefunden</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                Versuche deine Suchkriterien zu ändern oder erweitere deine Suche.
+              </p>
+                <Button onClick={clearFilters} variant="outline" size="sm">
+                Filter zurücksetzen
+              </Button>
             </CardContent>
           </Card>
         ) : null}
@@ -2730,7 +2624,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
           )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Mobile Job Detail Drawer */}
       <MobileJobDetailDrawer
