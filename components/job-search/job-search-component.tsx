@@ -1652,6 +1652,8 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
 
 
 
+  const isEmpty = !loading && !error && jobs.length === 0;
+
   return (
     <div className="h-screen max-h-screen flex flex-col space-y-3 md:space-y-6 overflow-hidden min-h-0 pb-4 md:pb-0">
       {/* Header */}
@@ -2259,7 +2261,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6 flex-1 min-h-0">
         {/* Left Column - Job List - Full width on mobile */}
-        <div className="lg:col-span-1 flex flex-col space-y-2 md:space-y-4 min-h-0 overflow-hidden">
+        <div className={cn(isEmpty ? "lg:col-span-3" : "lg:col-span-1", "flex flex-col space-y-2 md:space-y-4 min-h-0 overflow-hidden")}>
           {/* Mobile-only title */}
           <div className="lg:hidden mb-2 md:mb-4">
             <h2 className="text-xl font-semibold">Jobs</h2>
@@ -2452,13 +2454,29 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
           <Card>
               <CardContent className="p-8 text-center">
                 <Search className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                <h3 className="text-base font-semibold mb-2">Keine Jobs gefunden</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                Versuche deine Suchkriterien zu ändern oder erweitere deine Suche.
-              </p>
-                <Button onClick={clearFilters} variant="outline" size="sm">
-                Filter zurücksetzen
-              </Button>
+                {hideSearch ? (
+                  <>
+                    <h3 className="text-base font-semibold mb-2">Keine passenden Empfehlungen</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Aktuell haben wir keine Treffer basierend auf deinem Profil. Passe dein Suchprofil an oder starte die manuelle Jobsuche.
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                      <Button onClick={() => router.push('/dashboard/search-profile')} className="bg-[#0F973D] hover:bg-[#0F973D]/90 text-white">
+                        Suchprofil anpassen
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-base font-semibold mb-2">Keine Jobs gefunden</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Versuche deine Suchkriterien zu ändern oder erweitere deine Suche.
+                    </p>
+                    <Button onClick={clearFilters} variant="outline" size="sm">
+                      Filter zurücksetzen
+                    </Button>
+                  </>
+                )}
             </CardContent>
           </Card>
         ) : null}
@@ -2481,7 +2499,8 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
           </div>
         </div>
 
-        {/* Right Column - Job Details - Hidden on mobile */}
+        {/* Right Column - Job Details - Hidden when empty */}
+        {!isEmpty && (
         <div className="hidden lg:flex lg:col-span-2 flex-col space-y-4 min-h-0">
           <h2 className="text-lg font-semibold">Job Details</h2>
           <div className="flex-1 overflow-y-auto">
@@ -2621,9 +2640,10 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                 </p>
               </CardContent>
             </Card>
-          )}
+            )}
           </div>
         </div>
+        )}
       </div>
 
       {/* Mobile Job Detail Drawer */}

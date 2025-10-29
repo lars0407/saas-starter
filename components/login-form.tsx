@@ -42,8 +42,8 @@ export function LoginForm({
       const { authToken } = response
       document.cookie = `token=${authToken}; path=/; max-age=86400; secure; samesite=strict`
       
-      // Always redirect to job search page
-      router.push("/dashboard/job-search")
+      // Redirect to job recommendations
+      router.push("/dashboard/job-recommend")
     } catch (err: any) {
       console.error('Login error:', err)
       setError(err.response?.data?.message || "Login fehlgeschlagen")
