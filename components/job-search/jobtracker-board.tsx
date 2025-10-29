@@ -391,7 +391,7 @@ export function JobtrackerBoard() {
                   ) : jobDetails && transformJobDetailsToJob(jobDetails) ? (
                     <div className="overflow-y-auto max-h-[calc(100vh-20rem)] -mx-6 px-6">
                       <JobDetailComponent 
-                        job={transformJobDetailsToJob(jobDetails)} 
+                        job={transformJobDetailsToJob(jobDetails) || undefined} 
                         hideCompanyInfo={false}
                         hideTopLogo={true}
                         hideDocumentsButton={true}
