@@ -48,7 +48,7 @@ function GoogleSuccessContent() {
         document.cookie = `token=${data.token}; path=/; secure; samesite=strict; max-age=${3600 * 24 * 30}`; // Set for 30 days
         
         // Redirect to dashboard
-        window.location.href = 'https://app.jobjaeger.de/dashboard/job-search'
+        window.location.href = 'https://app.jobjaeger.de/dashboard/job-recommend'
       } else {
         throw new Error('No token received from OAuth completion')
       }
@@ -97,7 +97,7 @@ function GoogleSuccessContent() {
     
     // Redirect to dashboard after a short delay
     setTimeout(() => {
-      router.push('/dashboard/job-search')
+      router.push('/dashboard/job-recommend')
     }, 2000)
   } else {
     // Default to loading state if no token and no error
@@ -110,7 +110,7 @@ function GoogleSuccessContent() {
   }
 
   const handleGoToDashboard = () => {
-    router.push('/dashboard/job-search')
+    router.push('/dashboard/job-recommend')
   }
 
   return (
