@@ -169,7 +169,13 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
         
         // Handle different possible data structures
         // The data might be directly in content, or nested in a data field
-        const data = content.data || content;
+        let data = content.data || content;
+        
+        // Check if content has a nested 'content' field (this is the HTML content)
+        let htmlContent = '';
+        if (content.content && typeof content.content === 'string') {
+          htmlContent = content.content;
+        }
         
                  // Transform API data to component format
          // The API data structure is nested with Sender, Receiver, Content, Context
@@ -181,14 +187,14 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
            strengths: data.Context?.Strengths || data.strengths || content.Context?.Strengths || content.strengths || '',
            motivation: data.Context?.Motivation || data.motivation || content.Context?.Motivation || content.motivation || '',
           
-                     // Sender fields (Basics)
-           senderName: data.Sender?.['First name'] || data.sender_name || content.sender_name || '',
-          senderPhone: data.Sender?.Telephone || data.sender_phone || content.Sender?.Telephone || content.sender_phone || '',
-          senderEmail: data.Sender?.Email || data.sender_email || content.Sender?.Email || content.sender_email || '',
-          senderStreet: data.Sender?.Adresse?.Street || data.sender_street || content.Sender?.Adresse?.Street || content.sender_street || '',
-          senderPostcode: data.Sender?.Adresse?.['Zip code'] || data.sender_postcode || content.Sender?.Adresse?.['Zip code'] || content.sender_postcode || '',
-          senderCity: data.Sender?.Adresse?.City || data.sender_city || content.Sender?.Adresse?.City || content.sender_city || '',
-          senderCountry: data.Sender?.Adresse?.Country || data.sender_country || content.Sender?.Adresse?.Country || content.sender_country || '',
+                     // Sender fields (Basics) - check both nested Sender object and direct fields on content
+           senderName: content.sender_name || data.Sender?.['First name'] || data.sender_name || '',
+          senderPhone: content.sender_telephone || data.Sender?.Telephone || data.sender_phone || content.Sender?.Telephone || '',
+          senderEmail: content.sender_email || data.Sender?.Email || data.sender_email || content.Sender?.Email || '',
+          senderStreet: content.sender_street || data.Sender?.Adresse?.Street || data.sender_street || content.Sender?.Adresse?.Street || '',
+          senderPostcode: content.sender_zip || data.Sender?.Adresse?.['Zip code'] || data.sender_postcode || content.Sender?.Adresse?.['Zip code'] || '',
+          senderCity: content.sender_city || data.Sender?.Adresse?.City || data.sender_city || content.Sender?.Adresse?.City || '',
+          senderCountry: content.sender_country || data.Sender?.Adresse?.Country || data.sender_country || content.Sender?.Adresse?.Country || '',
           
           // Additional sender fields
           senderFirstName: data.Sender?.['First name'] || data.sender_first_name || content.Sender?.['First name'] || content.sender_first_name || '',
@@ -208,8 +214,8 @@ export function CoverLetterGenerator({ documentId }: CoverLetterGeneratorProps) 
           receiverZip: data.Receiver?.Adresse?.['Zip code'] || data.receiver_adresse_zip || content.Receiver?.Adresse?.['Zip code'] || content.receiver_adresse_zip || '',
           receiverCountry: data.Receiver?.Adresse?.Country || data.receiver_adresse_country || content.Receiver?.Adresse?.Country || content.receiver_adresse_country || '',
           
-          // Content fields
-          customContent: data.Content?.Text || data.custom_content || content.Content?.Text || content.custom_content || '',
+          // Content fields - handle both nested and direct content structure
+          customContent: htmlContent || data.htmlContent || data.Content?.Text || data.custom_content || content.Content?.Text || content.custom_content || '',
           contentSubject: data.Content?.Subject || data.content_subject || content.Content?.Subject || content.content_subject || '',
           contentDate: data.Content?.Date || data.content_date || content.Content?.Date || content.content_date || '',
         };

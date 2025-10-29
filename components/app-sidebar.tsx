@@ -89,7 +89,7 @@ const data = {
           disabled: true,
         },
         {
-          title: "Jobempfehlungen",
+          title: "Jobs",
           url: "/dashboard/job-recommend",
           icon: Search,
         },
@@ -98,12 +98,6 @@ const data = {
     {
       label: "Plattform",
       items: [
-        {
-          title: "Jobsuche",
-          url: "/dashboard/job-search",
-          icon: SquareTerminal,
-          isActive: true,
-        },
         {
           title: "Jobtracker",
           url: "/dashboard",

@@ -22,18 +22,27 @@ export function Content({ data, onChange, isEditing }: ContentProps) {
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
+    console.log('Content component received data:', data);
     setFormData(data);
   }, [data]);
 
   // Update editor content when formData changes
   useEffect(() => {
+    console.log('formData.customContent changed:', formData.customContent);
     if (editorRef.current && formData.customContent) {
       const currentContent = editorRef.current.getContent();
+      console.log('Current editor content:', currentContent);
+      console.log('New content to set:', formData.customContent);
       // Only update if content is actually different to avoid cursor position issues
       if (currentContent !== formData.customContent) {
+        console.log('Updating editor content');
         editorRef.current.setContent(formData.customContent);
         updateWordCount(formData.customContent);
+      } else {
+        console.log('Content is the same, skipping update');
       }
+    } else {
+      console.log('Editor not ready or no customContent');
     }
   }, [formData.customContent]);
 

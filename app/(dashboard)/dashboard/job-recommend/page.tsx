@@ -87,7 +87,7 @@ function JobRecommendContent() {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>Jobempfehlungen</BreadcrumbPage>
+                <BreadcrumbPage>Jobs</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -95,7 +95,7 @@ function JobRecommendContent() {
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         <JobSearchComponent 
-          title="Jobempfehlungen"
+          title="Jobs"
           description="Entdecke personalisierte Jobempfehlungen basierend auf deinem Profil"
           hideSearch={true}
           hideCompanyInfo={true}

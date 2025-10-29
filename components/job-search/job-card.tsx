@@ -13,9 +13,10 @@ interface JobCardProps {
   job: JobCardData;
   className?: string;
   index?: number;
+  onDetailsClick?: (job: JobCardData) => void;
 }
 
-export function JobCard({ job, className, index = 0 }: JobCardProps) {
+export function JobCard({ job, className, index = 0, onDetailsClick }: JobCardProps) {
   const {
     attributes,
     listeners,
@@ -84,7 +85,15 @@ export function JobCard({ job, className, index = 0 }: JobCardProps) {
           </div>
           
           <div className="flex gap-2 pt-0.5">
-            <Button size="sm" variant="outline" className="flex-1 text-xs h-7 md:h-8">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="flex-1 text-xs h-7 md:h-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDetailsClick?.(job);
+              }}
+            >
               <Eye className="w-3 h-3 mr-1" />
               <span className="hidden sm:inline">Details</span>
               <span className="sm:hidden">Info</span>

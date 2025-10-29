@@ -49,7 +49,7 @@ export default function JobRecommendDetailPage() {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="/dashboard/job-recommend">Jobempfehlungen</BreadcrumbLink>
+                <BreadcrumbLink href="/dashboard/job-recommend">Jobs</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>

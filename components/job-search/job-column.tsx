@@ -13,9 +13,10 @@ interface JobColumnProps {
   jobs: JobCardData[];
   isLoading?: boolean;
   className?: string;
+  onDetailsClick?: (job: JobCardData) => void;
 }
 
-export function JobColumn({ column, jobs, isLoading = false, className }: JobColumnProps) {
+export function JobColumn({ column, jobs, isLoading = false, className, onDetailsClick }: JobColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
   });
@@ -59,7 +60,7 @@ export function JobColumn({ column, jobs, isLoading = false, className }: JobCol
             >
               <div className="space-y-2 md:space-y-3">
                 {jobs.map((job, index) => (
-                  <JobCard key={job.id} job={job} index={index} />
+                  <JobCard key={job.id} job={job} index={index} onDetailsClick={onDetailsClick} />
                 ))}
               </div>
             </SortableContext>

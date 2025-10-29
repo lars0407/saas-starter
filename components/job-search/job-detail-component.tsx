@@ -57,12 +57,15 @@ interface JobDetailComponentProps {
   onToggleSaved?: () => void
   hideEmployeeCount?: boolean
   hideCompanyInfo?: boolean
+  hideTopLogo?: boolean
+  hideDocumentsButton?: boolean
+  hideDocumentsSection?: boolean
   matchReason?: string
   onApplicationCreated?: (jobId: number) => void
   isJobRecommendations?: boolean
 }
 
-export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onToggleSaved, hideEmployeeCount = false, hideCompanyInfo = false, matchReason, onApplicationCreated, isJobRecommendations = false }: JobDetailComponentProps) {
+export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onToggleSaved, hideEmployeeCount = false, hideCompanyInfo = false, hideTopLogo = false, hideDocumentsButton = false, hideDocumentsSection = false, matchReason, onApplicationCreated, isJobRecommendations = false }: JobDetailComponentProps) {
   const formatScore = (score: string | undefined) => {
     if (!score) return '';
     // If score already contains %, return as is
@@ -765,21 +768,23 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
           )}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                {job.company?.employer_logo ? (
-                  <img
-                    src={job.company.employer_logo}
-                    alt={`${job.company.employer_name} logo`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      // Hide the image and show the fallback icon on error
-                      e.currentTarget.style.display = 'none'
-                      e.currentTarget.nextElementSibling?.classList.remove('hidden')
-                    }}
-                  />
-                ) : null}
-                <Building2 className="h-8 w-8 text-muted-foreground" />
-              </div>
+              {!hideTopLogo && (
+                <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                  {job.company?.employer_logo ? (
+                    <img
+                      src={job.company.employer_logo}
+                      alt={`${job.company.employer_name} logo`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Hide the image and show the fallback icon on error
+                        e.currentTarget.style.display = 'none'
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                      }}
+                    />
+                  ) : null}
+                  <Building2 className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
               <div>
                 <h1 className="text-2xl font-bold mb-2">{job.title}</h1>
                 <p className="text-lg text-muted-foreground mb-2">{job.company?.employer_name || 'Unbekanntes Unternehmen'}</p>
@@ -862,48 +867,50 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
 
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button 
-              onClick={isJobRecommendations && job?.auto_apply ? createApplication : generateDocuments}
-              disabled={isJobRecommendations && job?.auto_apply ? isCreatingApplication : jobDocuments.length > 0 || generatingDocuments}
-              className={cn(
-                "flex-1",
-                isJobRecommendations && job?.auto_apply 
-                  ? (isCreatingApplication 
-                      ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
-                      : "bg-[#0F973D] hover:bg-[#0F973D]/90")
-                  : (jobDocuments.length > 0 
-                      ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
-                      : "bg-[#0F973D] hover:bg-[#0F973D]/90")
-              )}
-            >
-              {isJobRecommendations && job?.auto_apply ? (
-                isCreatingApplication ? (
+          {!hideDocumentsButton && (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button 
+                onClick={isJobRecommendations && job?.auto_apply ? createApplication : generateDocuments}
+                disabled={isJobRecommendations && job?.auto_apply ? isCreatingApplication : jobDocuments.length > 0 || generatingDocuments}
+                className={cn(
+                  "flex-1",
+                  isJobRecommendations && job?.auto_apply 
+                    ? (isCreatingApplication 
+                        ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
+                        : "bg-[#0F973D] hover:bg-[#0F973D]/90")
+                    : (jobDocuments.length > 0 
+                        ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
+                        : "bg-[#0F973D] hover:bg-[#0F973D]/90")
+                )}
+              >
+                {isJobRecommendations && job?.auto_apply ? (
+                  isCreatingApplication ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Bot className="h-4 w-4 mr-2" />
+                  )
+                ) : generatingDocuments ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <Bot className="h-4 w-4 mr-2" />
-                )
-              ) : generatingDocuments ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <FileText className="h-4 w-4 mr-2" />
-              )}
-              {isJobRecommendations && job?.auto_apply ? (
-                isCreatingApplication ? "Erstelle..." : "Auto Apply starten"
-              ) : (
-                jobDocuments.length > 0 ? 
-                  (jobTrackerCreated ? "Job gespeichert & Bewerbung erstellt 🎉" : "Bewerbungsunterlagen bereits erstellt") 
-                  : generatingDocuments 
-                    ? "Erstelle..." 
-                    : "Bewerbungsunterlagen erstellen"
-              )}
-            </Button>
-          </div>
+                  <FileText className="h-4 w-4 mr-2" />
+                )}
+                {isJobRecommendations && job?.auto_apply ? (
+                  isCreatingApplication ? "Erstelle..." : "Auto Apply starten"
+                ) : (
+                  jobDocuments.length > 0 ? 
+                    (jobTrackerCreated ? "Job gespeichert & Bewerbung erstellt 🎉" : "Bewerbungsunterlagen bereits erstellt") 
+                    : generatingDocuments 
+                      ? "Erstelle..." 
+                      : "Bewerbungsunterlagen erstellen"
+                )}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Job Documents Section - Debug Mode */}
-      {(jobDocuments.length > 0 || generatingDocuments) && (
+      {!hideDocumentsSection && (jobDocuments.length > 0 || generatingDocuments) && (
         <Card>
           <CardHeader>
             <CardTitle>Dokumente</CardTitle>
