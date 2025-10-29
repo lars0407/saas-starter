@@ -93,16 +93,16 @@ const data = {
           url: "/dashboard/job-recommend",
           icon: Search,
         },
-      ],
-    },
-    {
-      label: "Plattform",
-      items: [
         {
           title: "Jobtracker",
           url: "/dashboard",
           icon: Kanban,
         },
+      ],
+    },
+    {
+      label: "Plattform",
+      items: [
         {
           title: "Dokumente",
           url: "/dashboard/documents",
