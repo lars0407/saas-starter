@@ -58,6 +58,7 @@ export interface Job {
   // Recommendation-specific fields
   recommendation_score?: string;
   recommendation_reason?: string;
+  job_match_created_at?: string | number;
 }
 
 export interface InterviewQuestion {

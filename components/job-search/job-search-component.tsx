@@ -59,6 +59,25 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
     return `${score}%`;
   };
 
+  const isJobMatchNew = (jobMatchCreatedAt: string | number | undefined | null): boolean => {
+    if (!jobMatchCreatedAt) return false;
+    
+    // Convert to timestamp if it's a string
+    const matchTime = typeof jobMatchCreatedAt === 'string' 
+      ? new Date(jobMatchCreatedAt).getTime()
+      : typeof jobMatchCreatedAt === 'number'
+      ? jobMatchCreatedAt
+      : 0;
+    
+    if (matchTime === 0) return false;
+    
+    // Check if created within last 24 hours
+    const now = Date.now();
+    const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
+    
+    return matchTime > twentyFourHoursAgo;
+  };
+
   const router = useRouter()
   const [filters, setFilters] = useState<JobSearchFilters>(initialFilters)
   const [jobs, setJobs] = useState<Job[]>([])
@@ -77,6 +96,8 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false)
+  const [sortOption, setSortOption] = useState<string>("alle")
+  const [isInitialMount, setIsInitialMount] = useState(true)
   
   // Search Profile State
   const [searchProfile, setSearchProfile] = useState({
@@ -635,6 +656,9 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
         return
       }
 
+      // Determine date_days based on sortOption: 1 for "heute", 7 for "alle" (default)
+      const dateDays = sortOption === "heute" ? 1 : 7
+
       const response = await fetch("https://api.jobjaeger.de/api:bxPM7PqZ/v3/job/recommend", {
         method: "POST",
         headers: {
@@ -642,7 +666,8 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          offset: currentOffset
+          offset: currentOffset,
+          date_days: dateDays
         })
       })
 
@@ -713,7 +738,8 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
           // Add recommendation-specific fields
           recommendation_score: item.score,
           recommendation_reason: item.matchReason,
-          matchReason: item.matchReason
+          matchReason: item.matchReason,
+          job_match_created_at: item.created_at || null
         }
       }).filter((job: Job | null): job is Job => job !== null) // Filter out null values
 
@@ -874,12 +900,24 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
   useEffect(() => {
     if (hideSearch) {
       fetchJobRecommendations(false)
+      setIsInitialMount(false)
     } else if (hasInitialized) {
       // Only load jobs after search profile is loaded to prevent multiple API calls
       fetchJobs(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hideSearch, hasInitialized]) // Trigger when hideSearch or hasInitialized changes
+
+  // Refetch jobs when sort option changes (only for job recommendations page)
+  useEffect(() => {
+    if (hideSearch && !isInitialMount) {
+      // Reset to first page and refetch when sort option changes
+      setPage(1)
+      setJobs([])
+      fetchJobRecommendations(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortOption]) // Trigger when sortOption changes
 
   // Load jobs when filters change (only for regular search)
   useEffect(() => {
@@ -2274,19 +2312,18 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
              <h2 className="text-lg font-semibold hidden lg:block">
                {loading ? "Lade Jobs..." : "Jobs gefunden"}
              </h2>
-            <Select>
-              <SelectTrigger className="w-28 md:w-32 focus:border-[#0F973D] focus:ring-[#0F973D]">
+            <Select value={sortOption} onValueChange={setSortOption}>
+              <SelectTrigger className="w-28 md:w-32 focus:border-gray-200 focus:ring-0 hover:border-gray-200">
                 <SelectValue placeholder="Sortieren" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="relevance">Relevanz</SelectItem>
-                <SelectItem value="date">Datum</SelectItem>
-                <SelectItem value="salary">Gehalt</SelectItem>
+                <SelectItem value="alle">Alle</SelectItem>
+                <SelectItem value="heute">Heute</SelectItem>
               </SelectContent>
             </Select>
       </div>
 
-                     <div className="flex-1 overflow-y-auto space-y-2 md:space-y-4 job-list-container scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 min-h-0 max-h-[calc(100vh-320px)] md:max-h-none">
+                     <div className="flex-1 overflow-y-auto space-y-2 md:space-y-4 job-list-container scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 min-h-0 max-h-[calc(100vh-320px)] md:max-h-none pr-2 md:pr-1">
         {loading ? (
           // Loading skeletons
           Array.from({ length: 3 }).map((_, index) => (
@@ -2320,7 +2357,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                  className={cn(
                    "hover:shadow-md transition-all cursor-pointer border-2",
                    selectedJobId === job.id 
-                     ? "border-[#0F973D] shadow-md" 
+                     ? "border-gray-200 shadow-md" 
                      : "border-gray-200 hover:border-gray-300"
                  )}
                  onClick={() => handleJobClick(job.id)}
@@ -2348,9 +2385,16 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
                     <div className="flex-1 space-y-1 md:space-y-2 min-w-0">
                     <div className="flex items-start justify-between">
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-base hover:text-[#0F973D] truncate">
-                          {job.title}
-                        </h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-base hover:text-[#0F973D] truncate">
+                              {job.title}
+                            </h3>
+                            {isJobMatchNew(job.job_match_created_at) && (
+                              <Badge variant="outline" className="text-xs px-1.5 py-0.5 border-[#0F973D] text-[#0F973D] bg-green-50/50 font-medium shrink-0">
+                                Neu
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground truncate">
                             {job.company?.employer_name || 'Unbekanntes Unternehmen'}
                           </p>
