@@ -569,94 +569,95 @@ export function MobileJobDetailDrawer({
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent 
         side="bottom" 
-        className="h-[90vh] max-h-[90vh] w-full rounded-t-xl border-t-4 border-t-[#0F973D]"
+        className="h-[90vh] max-h-[90vh] w-full rounded-t-xl border-t-4 border-t-[#0F973D] overflow-hidden"
       >
-        <SheetHeader className="space-y-4 pb-4 border-b">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-xl font-bold text-left">
-              Job Details
-            </SheetTitle>
-          </div>
-          
-          {/* Job Header */}
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-              {job.company?.employer_logo ? (
-                <img
-                  src={job.company.employer_logo}
-                  alt={`${job.company.employer_name} logo`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                    e.currentTarget.nextElementSibling?.classList.remove('hidden')
-                  }}
-                />
-              ) : null}
-              <Building2 className="h-8 w-8 text-muted-foreground" />
+        <div className="flex-1 overflow-y-auto" ref={topRef}>
+          <SheetHeader className="space-y-4 pb-4 border-b px-4">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-xl font-bold text-left">
+                Job Details
+              </SheetTitle>
             </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold mb-2">{job.title}</h1>
-              <p className="text-lg text-muted-foreground mb-2">{job.company?.employer_name}</p>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" />
-                {job.job_city}, {job.job_state}
+            
+            {/* Job Header */}
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                {job.company?.employer_logo ? (
+                  <img
+                    src={job.company.employer_logo}
+                    alt={`${job.company.employer_name} logo`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                    }}
+                  />
+                ) : null}
+                <Building2 className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold mb-2">{job.title}</h1>
+                <p className="text-lg text-muted-foreground mb-2">{job.company?.employer_name}</p>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  {job.job_city}, {job.job_state}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onToggleSaved}
+                  className={cn(isSaved && "text-[#0F973D]")}
+                >
+                  <Bookmark className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <Share2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onToggleSaved}
-                className={cn(isSaved && "text-[#0F973D]")}
-              >
-                <Bookmark className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Share2 className="h-4 w-4" />
-              </Button>
+
+            {/* Job Tags */}
+            <div className="flex flex-wrap gap-2">
+              {job.job_employement_type && job.job_employement_type !== 'null' && job.job_employement_type !== 'Not Applicable' && (
+                <Badge variant="outline">
+                  {translateEmploymentType(job.job_employement_type)}
+                </Badge>
+              )}
+              {job.salary && job.salary !== 'null' && job.salary !== 'Not Applicable' && (
+                <Badge variant="outline">{job.salary}</Badge>
+              )}
+              {job.seniority && job.seniority !== 'null' && job.seniority !== 'Not Applicable' && (
+                <Badge variant="outline">
+                  {job.seniority === 'Entry level' ? 'Berufseinstieg' :
+                   job.seniority === 'Junior' ? 'Berufseinstieg' :
+                   job.seniority === 'Internship' ? 'Praktikum' :
+                   job.seniority === 'Mid-Senior Level' ? 'Management' :
+                   job.seniority === 'Associate' ? 'Berufserfahren' :
+                   job.seniority === 'Director' ? 'Direktor' :
+                   job.seniority === 'Management' ? 'Management' :
+                   job.seniority}
+                </Badge>
+              )}
+              {job.working_hours && job.working_hours !== 'null' && job.working_hours !== 'Not Applicable' && (
+                <Badge variant="outline">{job.working_hours}</Badge>
+              )}
+              {job.remote_work && job.remote_work !== 'null' && job.remote_work !== 'Not Applicable' && (
+                <Badge variant="secondary">
+                  {job.remote_work === 'Remote' ? 'Vollständig Remote' :
+                   job.remote_work === 'Hybrid' ? 'Hybrid' :
+                   job.remote_work === 'On-site' ? 'Vor Ort' :
+                   job.remote_work}
+                </Badge>
+              )}
+              {!hideEmployeeCount && <Badge variant="outline">{job.company?.company_size} Mitarbeiter</Badge>}
+              <Badge variant="outline">{formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet</Badge>
             </div>
-          </div>
+          </SheetHeader>
 
-          {/* Job Tags */}
-          <div className="flex flex-wrap gap-2">
-            {job.job_employement_type && job.job_employement_type !== 'null' && job.job_employement_type !== 'Not Applicable' && (
-              <Badge variant="outline">
-                {translateEmploymentType(job.job_employement_type)}
-              </Badge>
-            )}
-            {job.salary && job.salary !== 'null' && job.salary !== 'Not Applicable' && (
-              <Badge variant="outline">{job.salary}</Badge>
-            )}
-            {job.seniority && job.seniority !== 'null' && job.seniority !== 'Not Applicable' && (
-              <Badge variant="outline">
-                {job.seniority === 'Entry level' ? 'Berufseinstieg' :
-                 job.seniority === 'Junior' ? 'Berufseinstieg' :
-                 job.seniority === 'Internship' ? 'Praktikum' :
-                 job.seniority === 'Mid-Senior Level' ? 'Management' :
-                 job.seniority === 'Associate' ? 'Berufserfahren' :
-                 job.seniority === 'Director' ? 'Direktor' :
-                 job.seniority === 'Management' ? 'Management' :
-                 job.seniority}
-              </Badge>
-            )}
-            {job.working_hours && job.working_hours !== 'null' && job.working_hours !== 'Not Applicable' && (
-              <Badge variant="outline">{job.working_hours}</Badge>
-            )}
-            {job.remote_work && job.remote_work !== 'null' && job.remote_work !== 'Not Applicable' && (
-              <Badge variant="secondary">
-                {job.remote_work === 'Remote' ? 'Vollständig Remote' :
-                 job.remote_work === 'Hybrid' ? 'Hybrid' :
-                 job.remote_work === 'On-site' ? 'Vor Ort' :
-                 job.remote_work}
-              </Badge>
-            )}
-            {!hideEmployeeCount && <Badge variant="outline">{job.company?.company_size} Mitarbeiter</Badge>}
-            <Badge variant="outline">{formatDate(job.job_posted || job.created_at || job.posted_date || job.date || '')} gepostet</Badge>
-          </div>
-        </SheetHeader>
-
-        {/* Job Content */}
-        <div className="flex-1 overflow-y-auto space-y-6 pt-4" ref={topRef}>
+          {/* Job Content */}
+          <div className="space-y-6 pt-4 px-4">
           {/* Job Documents Section - Debug Mode */}
           {(jobDocuments.length > 0 || generatingDocuments) && (
             <Card>
@@ -839,8 +840,7 @@ export function MobileJobDetailDrawer({
 
         </div>
 
-
-
+        </div>
         {/* Apply Button - Fixed at bottom */}
         <div className="border-t bg-transparent">
           <div className="flex justify-center py-4">
