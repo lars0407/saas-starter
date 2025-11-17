@@ -53,7 +53,7 @@ export default function SignUpPage() {
             <CardHeader className="text-center">
               <CardTitle className="text-xl">Konto erstellen</CardTitle>
               <CardDescription>
-                Melde dich mit deinem Apple- oder Google-Konto an
+                Melde dich mit deiner E-Mail oder deinem Google-Konto an
               </CardDescription>
             </CardHeader>
             <CardContent>
