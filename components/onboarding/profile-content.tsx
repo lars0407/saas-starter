@@ -237,13 +237,13 @@ export function ProfileContent({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 [&_[data-slot=card]]:md:border [&_[data-slot=card]]:border-0 [&_.border.rounded-lg]:md:border [&_.border.rounded-lg]:border-0">
       <div className="text-center mb-6">
-        <h3 className="text-xl font-semibold text-gray-900">
-          Profil erstellen
-        </h3>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          Profil vervollständigen
+        </h2>
         <p className="text-gray-600">
-          Fülle deine persönlichen Informationen aus, um dein Profil zu erstellen.
+          Ergänze deine Informationen, damit wir dir die besten Jobangebote zeigen können.
         </p>
       </div>
 
@@ -251,7 +251,7 @@ export function ProfileContent({
       <div className="space-y-8 pb-6">
         {/* Personal Information Section */}
         <div className="space-y-4">
-          <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+          <div className="flex items-center gap-3 pb-2 md:border-b border-gray-200">
             <div className="p-2 bg-blue-100 rounded-lg">
               <User className="h-5 w-5 text-blue-600" />
             </div>
@@ -266,7 +266,7 @@ export function ProfileContent({
 
         {/* Education Section */}
         <div className="space-y-4">
-          <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+          <div className="flex items-center gap-3 pb-2 md:border-b border-gray-200">
             <div className="p-2 bg-green-100 rounded-lg">
               <GraduationCap className="h-5 w-5 text-green-600" />
             </div>
@@ -281,7 +281,7 @@ export function ProfileContent({
 
         {/* Experience Section */}
         <div className="space-y-4">
-          <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+          <div className="flex items-center gap-3 pb-2 md:border-b border-gray-200">
             <div className="p-2 bg-purple-100 rounded-lg">
               <Briefcase className="h-5 w-5 text-purple-600" />
             </div>
@@ -296,7 +296,7 @@ export function ProfileContent({
 
         {/* Skills Section */}
         <div className="space-y-4">
-          <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+          <div className="flex items-center gap-3 pb-2 md:border-b border-gray-200">
             <div className="p-2 bg-orange-100 rounded-lg">
               <Zap className="h-5 w-5 text-orange-600" />
             </div>
@@ -311,7 +311,7 @@ export function ProfileContent({
       </div>
 
       {/* Buttons now part of the scrollable content */}
-      <div className="flex justify-between pt-4 border-t mt-6">
+      <div className="flex justify-between pt-4 md:border-t border-gray-100 mt-6">
         <div className="flex gap-2">
           {onBack && (
             <Button variant="outline" onClick={onBack} className="text-gray-600 hover:text-gray-800">

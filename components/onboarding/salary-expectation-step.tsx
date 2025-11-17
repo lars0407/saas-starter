@@ -7,9 +7,10 @@ import { Euro, TrendingUp } from "lucide-react"
 
 interface SalaryExpectationStepProps {
   onComplete: (salary: string) => void
+  isLoading?: boolean
 }
 
-export function SalaryExpectationStep({ onComplete }: SalaryExpectationStepProps) {
+export function SalaryExpectationStep({ onComplete, isLoading = false }: SalaryExpectationStepProps) {
   const [salaryType, setSalaryType] = useState<string>("")
   const [salaryAmount, setSalaryAmount] = useState<string>("")
 
@@ -22,16 +23,11 @@ export function SalaryExpectationStep({ onComplete }: SalaryExpectationStepProps
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <div className="flex justify-center mb-4">
-          <div className="p-3 bg-green-100 rounded-lg">
-            <Euro className="h-8 w-8 text-green-600" />
-          </div>
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Was ist dein Gehaltswunsch? 💰
-        </h3>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          Was ist dein Gehaltswunsch?
+        </h2>
         <p className="text-gray-600">
-          Sei ehrlich - das hilft uns dabei, dir Jobs zu zeigen, die zu deinen Erwartungen passen!
+          Gib uns deine Gehaltsvorstellung an, damit wir dir passende Jobs zeigen können.
         </p>
       </div>
 
@@ -98,9 +94,10 @@ export function SalaryExpectationStep({ onComplete }: SalaryExpectationStepProps
       <div className="flex justify-center pt-4">
         <Button 
           onClick={handleContinue}
-          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
+          disabled={isLoading}
+          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Weiter
+          {isLoading ? "Wird gespeichert..." : "Weiter"}
         </Button>
       </div>
     </div>

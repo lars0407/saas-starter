@@ -128,6 +128,13 @@
     border-color: #0F973D !important;
     box-shadow: 0 0 0 3px rgba(15, 151, 61, 0.5) !important;
   }
+  
+  /* Onboarding Form Input Border Fix */
+  .onboarding-form-inputs input[data-slot="input"] {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 
   /* Profile Page Input Focus Styles */
   .profile-settings input:focus-visible,

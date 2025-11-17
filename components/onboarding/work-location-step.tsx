@@ -11,23 +11,19 @@ export function WorkLocationStep({ onComplete }: WorkLocationStepProps) {
   const [selectedLocation, setSelectedLocation] = useState<string>("")
 
   const handleContinue = () => {
+    if (!selectedLocation) return // Don't proceed if nothing selected
     console.log('WorkLocationStep: handleContinue called with:', selectedLocation)
-    onComplete(selectedLocation || 'flexible') // Default to flexible if nothing selected
+    onComplete(selectedLocation)
   }
 
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <div className="flex justify-center mb-4">
-          <div className="p-3 bg-purple-100 rounded-lg">
-            <MapPin className="h-8 w-8 text-purple-600" />
-          </div>
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Wo willst du arbeiten? 🏢
-        </h3>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          Wo möchtest du arbeiten?
+        </h2>
         <p className="text-gray-600">
-          Wähle deine bevorzugte Arbeitsumgebung - das ist wichtig für deine Work-Life-Balance!
+          Wähle deine bevorzugte Arbeitsumgebung aus.
         </p>
       </div>
 
@@ -39,16 +35,16 @@ export function WorkLocationStep({ onComplete }: WorkLocationStepProps) {
           }`}
           onClick={() => setSelectedLocation('remote')}
         >
-          <CardContent className="p-3">
-            <div className="flex items-start space-x-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Home className="h-6 w-6 text-green-600" />
+          <CardContent className="p-2.5">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Home className="h-5 w-5 text-green-600" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900 mb-2">
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm">
                   🏠 Remote / Home Office
                 </h4>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-xs">
                   Ich will von überall arbeiten können! Flexibilität ist mir wichtig.
                 </p>
               </div>
@@ -63,16 +59,16 @@ export function WorkLocationStep({ onComplete }: WorkLocationStepProps) {
           }`}
           onClick={() => setSelectedLocation('in-person')}
         >
-          <CardContent className="p-3">
-            <div className="flex items-start space-x-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <MapPin className="h-6 w-6 text-blue-600" />
+          <CardContent className="p-2.5">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <MapPin className="h-5 w-5 text-blue-600" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900 mb-2">
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm">
                   🏢 Vor Ort im Büro
                 </h4>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-xs">
                   Ich mag das Team-Feeling und die direkte Zusammenarbeit!
                 </p>
               </div>
@@ -87,16 +83,16 @@ export function WorkLocationStep({ onComplete }: WorkLocationStepProps) {
           }`}
           onClick={() => setSelectedLocation('hybrid')}
         >
-          <CardContent className="p-3">
-            <div className="flex items-start space-x-4">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Monitor className="h-6 w-6 text-purple-600" />
+          <CardContent className="p-2.5">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Monitor className="h-5 w-5 text-purple-600" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900 mb-2">
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm">
                   🔄 Hybrid (Mix aus beidem)
                 </h4>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-xs">
                   Das Beste aus beiden Welten - manchmal Büro, manchmal Home Office!
                 </p>
               </div>
@@ -111,16 +107,16 @@ export function WorkLocationStep({ onComplete }: WorkLocationStepProps) {
           }`}
           onClick={() => setSelectedLocation('flexible')}
         >
-          <CardContent className="p-3">
-            <div className="flex items-start space-x-4">
-              <div className="p-3 bg-gray-100 rounded-lg">
-                <MapPin className="h-6 w-6 text-gray-600" />
+          <CardContent className="p-2.5">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <MapPin className="h-5 w-5 text-gray-600" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900 mb-2">
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm">
                   🤷‍♂️ Ist mir egal
                 </h4>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-xs">
                   Hauptsache der Job passt - der Rest ist mir nicht so wichtig!
                 </p>
               </div>
@@ -132,7 +128,12 @@ export function WorkLocationStep({ onComplete }: WorkLocationStepProps) {
       <div className="flex justify-center pt-4">
         <Button 
           onClick={handleContinue}
-          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
+          disabled={!selectedLocation}
+          className={`px-8 py-3 rounded-lg font-medium ${
+            !selectedLocation
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-[#0F973D] hover:bg-[#0D7A32] text-white'
+          }`}
         >
           Weiter
         </Button>

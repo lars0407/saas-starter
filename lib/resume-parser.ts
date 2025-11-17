@@ -61,6 +61,7 @@ export interface ResumeParserResponse {
 
 export class ResumeParserService {
   private static readonly API_URL = 'https://api.jobjaeger.de/api:O72K2wiB/v2/resume/parser';
+  private static readonly LINKEDIN_API_URL = 'https://api.jobjaeger.de/api:O72K2wiB/v1/linkedin/parser';
 
   /**
    * Parse a resume file using the JobJaeger API
@@ -121,6 +122,87 @@ export class ResumeParserService {
         throw error;
       }
       throw new Error('Failed to parse resume');
+    }
+  }
+
+  /**
+   * Parse a LinkedIn profile using the JobJaeger API
+   * @param linkedinUrl - The LinkedIn profile URL
+   * @param authToken - Authentication token from cookies
+   * @returns Parsed profile data
+   */
+  static async parseLinkedInProfile(linkedinUrl: string, authToken: string): Promise<ResumeParserResponse> {
+    if (!authToken) {
+      throw new Error('Authentication token is required');
+    }
+
+    if (!linkedinUrl) {
+      throw new Error('LinkedIn URL is required');
+    }
+
+    // Validate LinkedIn URL format
+    const linkedinUrlPattern = /^https?:\/\/(www\.)?(linkedin\.com\/in\/|linkedin\.com\/pub\/)[\w-]+\/?/i;
+    if (!linkedinUrlPattern.test(linkedinUrl)) {
+      throw new Error('Ungültige LinkedIn-URL. Bitte verwende eine URL im Format: https://linkedin.com/in/...');
+    }
+
+    try {
+      const response = await fetch(this.LINKEDIN_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          linkedin_url: linkedinUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        let errorMessage = `API request failed: ${response.status} ${response.statusText}`;
+        
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // If we can't parse the error response, use the status text
+        }
+
+        // Provide user-friendly error messages
+        if (response.status === 401) {
+          errorMessage = 'Sitzung abgelaufen. Bitte melde dich erneut an.';
+        } else if (response.status === 403) {
+          errorMessage = 'Zugriff verweigert. Bitte überprüfe deine Berechtigungen.';
+        } else if (response.status === 404) {
+          errorMessage = 'LinkedIn-Profil nicht gefunden. Bitte überprüfe die URL.';
+        } else if (response.status === 500) {
+          errorMessage = 'Server-Fehler. Bitte versuche es später erneut.';
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      
+      // LinkedIn API returns data in a nested structure: message.response.result.output
+      // We need to transform it to match the expected ResumeParserResponse format
+      if (result.message?.response?.result?.output) {
+        return {
+          message: result.message.response.result.output
+        } as ResumeParserResponse;
+      }
+      
+      // If structure is already correct (for CV parser compatibility), return as is
+      return result as ResumeParserResponse;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Fehler beim Importieren des LinkedIn-Profils');
     }
   }
 

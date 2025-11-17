@@ -1,42 +1,15 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { SpeechBubble } from "./speech-bubble"
-import { CharacterImage } from "./character-image"
 import { StepContent } from "./step-content"
-import { JobTitleStep } from "./job-title-step"
-import { WorkLocationStep } from "./work-location-step"
-import { JobTypeStep } from "./job-type-step"
-import { SalaryExpectationStep } from "./salary-expectation-step"
 import { toast } from "sonner"
+import { Progress } from "@/components/ui/progress"
+import { ChevronLeft } from "lucide-react"
 
-
-interface OnboardingModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onComplete: (firstName: string, lastName: string, resumeData?: any) => void
-  speechText?: string
-  characterSrc?: string
-  characterAlt?: string
-}
-
-export function OnboardingModal({
-  isOpen,
-  onClose,
-  onComplete,
-  speechText = "Nice, dass du da bist! Lass uns gleich starten – wie heißt du?",
-  characterSrc = "/images/characters/Job-Jäger Expressions.png", // Jobjäger character
-  characterAlt = "Friendly character",
-}: OnboardingModalProps) {
+export function OnboardingPage() {
+  const router = useRouter()
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [currentStep, setCurrentStep] = useState(1)
@@ -178,8 +151,8 @@ export function OnboardingModal({
   }
 
   // Function to parse salary expectation
-  const parseSalaryExpectation = (salaryString: string): { type: string, amount_eur: number } => {
-    if (!salaryString || salaryString === 'flexible: negotiable') {
+  const parseSalaryExpectation = (salaryString: string | undefined): { type: string, amount_eur: number } => {
+    if (!salaryString || salaryString === 'flexible: negotiable' || salaryString === '') {
       return { type: "Monthly salary (gross)", amount_eur: 3500 }
     }
     
@@ -200,7 +173,11 @@ export function OnboardingModal({
   }
 
   // API function to save onboarding data
-  const saveOnboardingToAPI = async () => {
+  const saveOnboardingToAPI = async (locationData?: {
+    location?: string;
+    selectedAddress?: any;
+    selectedLocation?: { lat: number; lon: number } | null;
+  }) => {
     try {
       // Get the search data from localStorage
       const searchData = localStorage.getItem('onboarding_search')
@@ -215,6 +192,11 @@ export function OnboardingModal({
       if (!token) {
         throw new Error('No authentication token found. Please log in again.')
       }
+      
+      // Use provided location data or fall back to state
+      const finalLocation = locationData?.location || jobLocation || ''
+      const finalSelectedAddress = locationData?.selectedAddress || jobSelectedAddress
+      const finalSelectedLocation = locationData?.selectedLocation || jobSelectedLocation
       
       // Transform profile data to the required JSON format
       const transformedProfileData = transformProfileDataToJSONFormat(profileData)
@@ -252,39 +234,41 @@ export function OnboardingModal({
           },
           salary_expectation: salaryData,
           date_published: Date.now(),
-          parameter: {
-            place: jobLocation || '',
-            distance: 25000 // 25km in meters
-          },
-          adresse: jobLocation || '',
-          location: {
-            adresse: jobLocation || '',
-            location: jobSelectedLocation ? {
-              key: "data.location",
-              geo_radius: {
-                center: {
-                  lon: jobSelectedLocation.lon,
-                  lat: jobSelectedLocation.lat
-                },
-                radius: 25000 // 25km in meters
-              }
-            } : {}
-          },
           profile_id: 0
         },
         linkedin_url: profileData?.basics?.linkedin || "",
         job_title: jobTitleArray,
         remote_work: remoteWorkArray,
-        employement_type: employementTypeArray
+        employement_type: employementTypeArray,
+        location: {
+          adresse: finalSelectedAddress?.display_name || finalLocation || '',
+          location: finalSelectedLocation ? {
+            key: "data.location",
+            geo_radius: {
+              center: {
+                lon: finalSelectedLocation.lon,
+                lat: finalSelectedLocation.lat
+              },
+              radius: 25000 // 25km in meters
+            }
+          } : {}
+        }
       }
 
       console.log('Sending onboarding data to API:', payload)
+      console.log('Location data being sent:', {
+        location: finalLocation,
+        selectedAddress: finalSelectedAddress,
+        selectedLocation: finalSelectedLocation,
+        adresse: finalSelectedAddress?.display_name || finalLocation || '',
+        locationStructure: payload.location
+      })
       console.log('Profile data structure:', profileData)
       console.log('Search data structure:', parsedSearchData)
       console.log('Full payload JSON:', JSON.stringify(payload, null, 2))
       
       // Try with the full payload first
-      let response = await fetch('https://api.jobjaeger.de/api:cP4KlfKj/v3/onboarding7complete', {
+      let response = await fetch('https://api.jobjaeger.de/api:cP4KlfKj/v4/onboarding/complete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -307,7 +291,7 @@ export function OnboardingModal({
         
         console.log('Trying minimal payload:', minimalPayload)
         
-        response = await fetch('https://api.jobjaeger.de/api:cP4KlfKj/v3/onboarding7complete', {
+        response = await fetch('https://api.jobjaeger.de/api:cP4KlfKj/v4/onboarding/complete', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -390,7 +374,7 @@ export function OnboardingModal({
         employement_type: transformJobTypeToEmployementType(jobType),
         work_location_preference: workLocation || "flexible",
         work_time_preference: jobType || "flexible",
-        salary_expectation: parseSalaryExpectation(salaryExpectation)
+        salary_expectation: salaryExpectation ? parseSalaryExpectation(salaryExpectation) : { type: "Monthly salary (gross)", amount_eur: 3500 }
       }
       localStorage.setItem('onboarding_search', JSON.stringify(onboardingSearchData))
     }
@@ -406,6 +390,15 @@ export function OnboardingModal({
         const step = parseInt(savedStep, 10)
         if (step >= 1 && step <= 8) {
           setCurrentStep(step)
+        } else if (step > 8) {
+          // If step is 9 or higher (old step numbers), complete onboarding and redirect
+          clearOnboardingData()
+          // Set flag to show welcome dialog on jobs page
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('onboarding_show_welcome_dialog', 'true')
+          }
+          router.push('/dashboard/job-recommend')
+          return
         }
       }
       
@@ -421,6 +414,9 @@ export function OnboardingModal({
           if (data.workLocation) setWorkLocation(data.workLocation)
           if (data.jobType) setJobType(data.jobType)
           if (data.salaryExpectation) setSalaryExpectation(data.salaryExpectation)
+          if (data.jobLocation) setJobLocation(data.jobLocation)
+          if (data.jobSelectedAddress) setJobSelectedAddress(data.jobSelectedAddress)
+          if (data.jobSelectedLocation) setJobSelectedLocation(data.jobSelectedLocation)
           if (data.characterIndex !== undefined) setCharacterIndex(data.characterIndex)
         } catch (error) {
           console.error('Error parsing saved onboarding data:', error)
@@ -429,55 +425,56 @@ export function OnboardingModal({
     }
   }
 
-  // Load saved data when modal opens
+  // Load saved data on mount
   useEffect(() => {
-    if (isOpen) {
-      console.log('Onboarding modal opened, loading saved data...')
-      loadSavedStep()
+    console.log('Onboarding page loaded, loading saved data...')
+    loadSavedStep()
+  }, [])
 
+  // Redirect if somehow on step 9 or higher
+  useEffect(() => {
+    if (currentStep > 8) {
+      clearOnboardingData()
+      // Set flag to show welcome dialog on jobs page
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('onboarding_show_welcome_dialog', 'true')
+      }
+      router.push('/dashboard/job-recommend')
     }
-  }, [isOpen])
+  }, [currentStep, router])
 
   // Ensure correct character for each step
   useEffect(() => {
-    if (isOpen) {
-      if (currentStep === 1) {
-        setCharacterIndex(0) // Force character index 0 for step 1
-      } else if (currentStep === 2) {
-        setCharacterIndex(1) // Force character index 1 for step 2
-      } else if (currentStep === 3) {
-        setCharacterIndex(2) // Force character index 2 for step 3
-      } else if (currentStep === 4) {
-        setCharacterIndex(3) // Force character index 3 for step 4
-      } else if (currentStep === 5) {
-        setCharacterIndex(4) // Force character index 4 for step 5
-      } else if (currentStep === 6) {
-        setCharacterIndex(5) // Force character index 5 for step 6 (job location)
-      } else if (currentStep === 7) {
-        setCharacterIndex(5) // Force character index 5 for step 7 (work location)
-      } else if (currentStep === 8) {
-        setCharacterIndex(6) // Force character index 6 for step 8 (job type)
-      }
+    if (currentStep === 1) {
+      setCharacterIndex(0)
+    } else if (currentStep === 2) {
+      setCharacterIndex(1)
+    } else if (currentStep === 3) {
+      setCharacterIndex(2)
+    } else if (currentStep === 4) {
+      setCharacterIndex(3)
+    } else if (currentStep === 5) {
+      setCharacterIndex(4)
+    } else if (currentStep === 6) {
+      setCharacterIndex(5) // Job location
+    } else if (currentStep === 7) {
+      setCharacterIndex(5) // Work location
+    } else if (currentStep === 8) {
+      setCharacterIndex(6) // Job type
     }
-  }, [isOpen, currentStep])
+  }, [currentStep])
 
   // Save step whenever currentStep changes
   useEffect(() => {
-    if (isOpen && currentStep > 1) {
+    if (currentStep > 1) {
       saveCurrentStep(currentStep)
     }
-  }, [currentStep, isOpen, firstName, lastName, resumeData, profileData, jobSearchIntensity, jobTitle, workLocation, jobType, salaryExpectation, jobLocation, jobSelectedAddress, jobSelectedLocation, characterIndex])
+  }, [currentStep, firstName, lastName, resumeData, profileData, jobSearchIntensity, jobTitle, workLocation, jobType, salaryExpectation, jobLocation, jobSelectedAddress, jobSelectedLocation, characterIndex])
 
   // Auto-scroll to top when step changes
   useEffect(() => {
-    if (isOpen) {
-      // Find the scrollable form content area and scroll to top
-      const formContent = document.querySelector('[data-step-content]')
-      if (formContent) {
-        formContent.scrollTo({ top: 0, behavior: 'smooth' })
-      }
-    }
-  }, [currentStep, isOpen])
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentStep])
 
   // Clear localStorage when onboarding is completed
   const clearOnboardingData = () => {
@@ -489,25 +486,6 @@ export function OnboardingModal({
     }
   }
 
-
-
-  // For development: manually clear localStorage
-  // Uncomment and call this function if you need to reset onboarding
-  // const resetOnboarding = () => {
-  //   clearOnboardingData()
-  //   setCurrentStep(1)
-  //   setFirstName("")
-  //   setLastName("")
-  //   setResumeData(null)
-  //   setProfileData(null)
-  //   setJobSearchIntensity("")
-  //   setJobTitle("")
-  //   setWorkLocation("")
-  //   setJobType("")
-  //   setSalaryExpectation("")
-  //   setCharacterIndex(0)
-  // }
-
   const handleContinue = async () => {
     if (currentStep === 1) {
       // Validate that both firstName and lastName are filled
@@ -516,44 +494,55 @@ export function OnboardingModal({
       }
       // Move to step 2 (resume upload)
       setCurrentStep(2)
-      setCharacterIndex(1) // Change to different character expression
+      setCharacterIndex(1)
     } else if (currentStep === 2) {
       // Move to step 3 (profile creation)
       setCurrentStep(3)
-      setCharacterIndex(2) // Change to different character expression
+      setCharacterIndex(2)
     } else if (currentStep === 3) {
       // Move to step 4 (job search intensity)
       setCurrentStep(4)
-      setCharacterIndex(3) // Change to different character expression
+      setCharacterIndex(3)
     } else if (currentStep === 4) {
       // Move to step 5 (job title)
       setCurrentStep(5)
-      setCharacterIndex(4) // Change to different character expression
+      setCharacterIndex(4)
     } else if (currentStep === 5) {
       // Move to step 6 (work location)
       setCurrentStep(6)
-      setCharacterIndex(5) // Change to different character expression
+      setCharacterIndex(5)
     } else if (currentStep === 6) {
       // Move to step 7 (job type)
       setCurrentStep(7)
-      setCharacterIndex(0) // Reset to first character expression
+      setCharacterIndex(0)
     } else if (currentStep === 7) {
       // Move to step 8 (salary expectation)
       setCurrentStep(8)
-      setCharacterIndex(1) // Change to different character expression
+      setCharacterIndex(1)
+    }
+  }
+
+  // Handle back navigation
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
     }
   }
 
   // Handle final completion
   const handleStartNow = () => {
-    clearOnboardingData() // Clear saved data
-    onComplete(firstName, lastName, resumeData)
+    clearOnboardingData()
+    // Set flag to show welcome dialog on jobs page
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('onboarding_show_welcome_dialog', 'true')
+    }
+    router.push('/dashboard/job-recommend')
   }
 
   const handleResumeProcessing = async (data: any) => {
-    console.log('OnboardingModal: handleResumeProcessing called with:', data)
+    console.log('OnboardingPage: handleResumeProcessing called with:', data)
     
-    if (data.method === 'file' && data.parsedData) {
+    if ((data.method === 'file' || data.method === 'linkedin') && data.parsedData) {
       // Resume was successfully parsed, store the data
       setResumeData(data)
       
@@ -645,9 +634,8 @@ export function OnboardingModal({
       setProfileData(transformedProfileData)
       
       // Save the raw parsed data to localStorage for the profile modal to access
-      // This allows ProfileContent to properly transform and display the CV data
       localStorage.setItem('onboarding_parsed_resume', JSON.stringify(data.parsedData))
-      console.log('OnboardingModal: Stored raw parsed resume data in localStorage:', data.parsedData)
+      console.log('OnboardingPage: Stored raw parsed resume data in localStorage:', data.parsedData)
       
       // Move to profile creation step
       setCurrentStep(3)
@@ -662,7 +650,7 @@ export function OnboardingModal({
 
   const handleJobSearchIntensityComplete = (intensity: string) => {
     setJobSearchIntensity(intensity)
-    setCurrentStep(5) // Move to job title step
+    setCurrentStep(5)
   }
 
   const handleProfileModalComplete = (data: any) => {
@@ -675,13 +663,13 @@ export function OnboardingModal({
     } : data
     
     setProfileData(transformedData)
-    setCurrentStep(4) // Move to job search intensity step
+    setCurrentStep(4)
   }
 
   const handleJobTitleComplete = (title: string) => {
-    console.log('OnboardingModal: handleJobTitleComplete called with:', title)
+    console.log('OnboardingPage: handleJobTitleComplete called with:', title)
     setJobTitle(title)
-    setCurrentStep(6) // Move to job location step
+    setCurrentStep(6) // Now goes to job location
   }
 
   const handleJobLocationComplete = (data: {
@@ -689,7 +677,7 @@ export function OnboardingModal({
     selectedAddress: any;
     selectedLocation: { lat: number; lon: number } | null;
   }) => {
-    console.log('OnboardingModal: handleJobLocationComplete called with:', data)
+    console.log('OnboardingPage: handleJobLocationComplete called with:', data)
     setJobLocation(data.location)
     setJobSelectedAddress(data.selectedAddress)
     setJobSelectedLocation(data.selectedLocation)
@@ -697,13 +685,13 @@ export function OnboardingModal({
   }
 
   const handleWorkLocationComplete = (location: string) => {
-    console.log('OnboardingModal: handleWorkLocationComplete called with:', location)
+    console.log('OnboardingPage: handleWorkLocationComplete called with:', location)
     setWorkLocation(location)
-    setCurrentStep(8) // Continue to job type step
+    setCurrentStep(8) // Continue to job type
   }
 
   const handleJobTypeComplete = async (type: string) => {
-    console.log('OnboardingModal: handleJobTypeComplete called with:', type)
+    console.log('OnboardingPage: handleJobTypeComplete called with:', type)
     setJobType(type)
     // Save data to API and complete onboarding
     await handleJobLocationCompleteAndSave({
@@ -718,7 +706,7 @@ export function OnboardingModal({
     selectedAddress: any;
     selectedLocation: { lat: number; lon: number } | null;
   }) => {
-    console.log('OnboardingModal: handleJobLocationCompleteAndSave called with:', data)
+    console.log('OnboardingPage: handleJobLocationCompleteAndSave called with:', data)
     setJobLocation(data.location)
     setJobSelectedAddress(data.selectedAddress)
     setJobSelectedLocation(data.selectedLocation)
@@ -726,10 +714,14 @@ export function OnboardingModal({
     // Save data to API before completing onboarding
     try {
       setIsLoading(true)
-      setApiError("") // Clear any previous errors
-      await saveOnboardingToAPI()
+      setApiError("")
+      await saveOnboardingToAPI({
+        location: data.location,
+        selectedAddress: data.selectedAddress,
+        selectedLocation: data.selectedLocation
+      })
       console.log('Onboarding data saved to API successfully')
-      // Complete onboarding and close modal
+      // Complete onboarding and redirect
       handleStartNow()
     } catch (error) {
       console.error('Failed to save onboarding data to API:', error)
@@ -747,12 +739,9 @@ export function OnboardingModal({
       }
       
       setApiError(errorMessage)
-      // Show error notification
       toast.error(errorMessage, {
         duration: 5000,
       })
-      // DO NOT move to completion step - keep user on step 8
-      // User can try again by clicking the button again
     } finally {
       setIsLoading(false)
     }
@@ -766,101 +755,90 @@ export function OnboardingModal({
     setLastName(value)
   }
 
-  const handleResumeDataChange = (data: any) => {
-    setResumeData(data)
-  }
-
-  // Handle modal close
-  const handleModalClose = () => {
-    // Prevent closing during onboarding process
-    if (currentStep < 8) {
-      return // Don't allow closing until completion
-    }
-    // Only allow closing after step 8 (completion)
-    onClose()
-  }
+  // Calculate progress percentage
+  const progressPercentage = (currentStep / 8) * 100
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleModalClose}>
-      <DialogContent className={`mx-auto p-0 rounded-2xl shadow-2xl border-3 border-[#0F973D] max-h-[80vh] ${currentStep === 3 ? 'max-w-4xl' : currentStep === 4 || currentStep === 5 || currentStep === 6 || currentStep === 7 || currentStep === 8 ? 'max-w-4xl' : 'max-w-md'}`} showCloseButton={false}>
-        <VisuallyHidden>
-          <DialogTitle>Onboarding - Name eingeben</DialogTitle>
-        </VisuallyHidden>
-        {/* Character and Speech Bubble - Above Modal */}
-        <div className="relative bg-transparent">
-          {/* Speech Bubble */}
-          <div className="absolute -top-22 right-36 z-10">
-            <SpeechBubble text={
-              isLoading ? "Einen Moment bitte, ich analysiere deine Daten..." :
-              currentStep === 1 ? "Nice, dass du da bist! Lass uns gleich starten – wie heißt du?" : 
-              currentStep === 2 ? "Next Step! Wie willst du deinen Lebenslauf hinzufügen?" :
-              currentStep === 3 ? "Fast geschafft! Lass uns dein Profil aufpolieren 💼" :
-              currentStep === 4 ? "Wie sehr bist du im Job-Hunt-Modus? 🔍" :
-              currentStep === 5 ? "Dein Zieljob? Sag's uns – wir finden ihn! 💫" :
-              currentStep === 6 ? "Wo suchst du nach Jobs? 📍" :
-              currentStep === 7 ? "Wo fühlst du dich am produktivsten? 🏠🏢" :
-              currentStep === 8 ? "Wie viel willst du reinhauen? ⏰" :
-              "Boom! Dein Profil ist am Start 🎯"
-            } />
+    <div className="min-h-screen bg-white md:bg-gradient-to-br md:from-gray-50 md:to-gray-100 flex flex-col">
+      {/* Header with Progress */}
+      <div className="w-full bg-white border-b border-gray-200 px-4 py-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              {currentStep > 1 && currentStep < 8 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBack}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Zurück
+                </Button>
+              )}
+            </div>
+            <div className="text-sm text-gray-600">
+              Schritt {currentStep} von 8
+            </div>
           </div>
-
-          {/* Character */}
-          <div className="absolute -top-30 right-4 z-20 bg-transparent">
-            <CharacterImage
-              src={characterExpressions[characterIndex]}
-              alt={characterAlt}
-              className="w-32 h-32"
-            />
-          </div>
+          <Progress 
+            value={progressPercentage} 
+            className="h-2 [&>div]:bg-[#0F973D]" 
+          />
         </div>
-        
-        <div className="relative p-2 rounded-b-2xl max-h-[calc(80vh-120px)] overflow-hidden">
-          {/* Form Content - Scrollable */}
-          <div className="mt-2 mb-6 px-4 overflow-y-auto max-h-[calc(80vh-200px)]" data-step-content>
-            <StepContent
-              step={currentStep}
-              firstName={firstName}
-              lastName={lastName}
-              onFirstNameChange={handleFirstNameChange}
-              onLastNameChange={handleLastNameChange}
-              onResumeDataChange={handleResumeProcessing}
-              onJobSearchIntensityComplete={handleJobSearchIntensityComplete}
-              onProfileComplete={handleProfileModalComplete}
-              onProfileSkip={() => {
-                setProfileData({ method: 'skipped' })
-                setCurrentStep(4)
-              }}
-              onBack={() => setCurrentStep(2)}
-              onJobTitleComplete={handleJobTitleComplete}
-              onJobLocationComplete={handleJobLocationComplete}
-              onWorkLocationComplete={handleWorkLocationComplete}
-              onJobTypeComplete={handleJobTypeComplete}
-              resumeData={resumeData}
-              isLoading={isLoading}
-            />
-          </div>
+      </div>
 
-          {/* Action Button - Fixed at bottom */}
-          <div className="flex justify-center pt-2 border-t border-gray-100">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-4 md:py-8">
+        <div className={`w-full ${currentStep === 3 ? 'max-w-4xl' : 'max-w-lg'} mx-auto`}>
+          {/* Step Content */}
+          <div className="md:bg-white md:rounded-2xl md:shadow-xl md:border md:border-gray-200 p-4 md:p-8 relative">
+            <div className="overflow-y-auto max-h-[calc(100vh-180px)] md:max-h-[calc(100vh-400px)] px-1" data-step-content>
+              <StepContent
+                step={currentStep}
+                firstName={firstName}
+                lastName={lastName}
+                onFirstNameChange={handleFirstNameChange}
+                onLastNameChange={handleLastNameChange}
+                onResumeDataChange={handleResumeProcessing}
+                onJobSearchIntensityComplete={handleJobSearchIntensityComplete}
+                onProfileComplete={handleProfileModalComplete}
+                onProfileSkip={() => {
+                  setProfileData({ method: 'skipped' })
+                  setCurrentStep(4)
+                }}
+                onBack={() => setCurrentStep(2)}
+                onJobTitleComplete={handleJobTitleComplete}
+                onJobLocationComplete={handleJobLocationComplete}
+                onWorkLocationComplete={handleWorkLocationComplete}
+                onJobTypeComplete={handleJobTypeComplete}
+                resumeData={resumeData}
+                isLoading={isLoading}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-center pt-6 mt-6 md:border-t border-gray-100">
               {!isLoading && currentStep !== 3 && currentStep !== 4 && currentStep !== 5 && currentStep !== 6 && currentStep !== 7 && currentStep !== 8 && (
-              <Button
-                onClick={handleContinue}
-                disabled={currentStep === 1 && (!firstName.trim() || !lastName.trim())}
-                className={`px-8 py-3 rounded-lg font-medium ${
-                  currentStep === 1 && (!firstName.trim() || !lastName.trim())
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-[#0F973D] hover:bg-[#0D7A32] text-white'
-                }`}
-              >
-                {currentStep === 1 ? (firstName && lastName ? `weiter als ${firstName} ${lastName}` : "Weiter") : 
-                 currentStep === 2 ? "Weiter" : "Onboarding abschließen"}
-              </Button>
-            )}
+                <Button
+                  onClick={handleContinue}
+                  disabled={currentStep === 1 && (!firstName.trim() || !lastName.trim())}
+                  className={`px-8 py-3 rounded-lg font-medium ${
+                    currentStep === 1 && (!firstName.trim() || !lastName.trim())
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-[#0F973D] hover:bg-[#0D7A32] text-white'
+                  }`}
+                >
+                  {currentStep === 1 ? (firstName && lastName ? `weiter als ${firstName} ${lastName}` : "Weiter") : 
+                   currentStep === 2 ? "Weiter" : "Onboarding abschließen"}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-      </DialogContent>
-      
-
-    </Dialog>
+      </div>
+    </div>
   )
-} 
+}
+
+

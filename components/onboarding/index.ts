@@ -1,4 +1,5 @@
 export { OnboardingModal } from "./onboarding-modal"
+export { OnboardingPage } from "./onboarding-page"
 export { SpeechBubble } from "./speech-bubble"
 export { CharacterImage } from "./character-image"
 export { OnboardingForm } from "./onboarding-form"

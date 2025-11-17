@@ -23,16 +23,11 @@ export function JobTitleStep({ onComplete }: JobTitleStepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <div className="flex justify-center mb-4">
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <Briefcase className="h-8 w-8 text-blue-600" />
-          </div>
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Was ist dein Dream Job? 💼
-        </h3>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          Welchen Job suchst du?
+        </h2>
         <p className="text-gray-600">
-          Sag uns, welchen Job-Titel du suchst - das hilft uns dabei, dir die perfekten Stellen zu finden!
+          Gib uns deinen Wunsch-Jobtitel an, damit wir dir passende Stellenanzeigen zeigen können.
         </p>
       </div>
 

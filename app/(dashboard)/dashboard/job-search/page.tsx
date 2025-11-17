@@ -15,23 +15,24 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { JobSearchComponent } from "@/components/job-search"
-import { OnboardingModal } from '@/components/onboarding'
 import { getCurrentUser } from '@/lib/xano'
 
 function JobSearchContent() {
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [userChecked, setUserChecked] = useState(false);
   const searchParams = useSearchParams();
+
+  const redirectToOnboarding = () => {
+    if (typeof window === 'undefined') return
+    const currentPath = window.location.pathname + window.location.search
+    const target = `/onboarding?redirect=${encodeURIComponent(currentPath)}`
+    window.location.href = target
+  }
 
   useEffect(() => {
     // Check if onboarding parameter is present
     const onboardingParam = searchParams.get('onboarding');
     if (onboardingParam === 'true') {
-      setOnboardingOpen(true);
-      // Clean up the URL by removing the parameter
-      const url = new URL(window.location.href);
-      url.searchParams.delete('onboarding');
-      window.history.replaceState({}, '', url.toString());
+      redirectToOnboarding();
     }
   }, [searchParams]);
 
@@ -54,7 +55,7 @@ function JobSearchContent() {
         
         // Check if onboarding is not completed
         if (user.onboarding && user.onboarding !== 'success') {
-          setOnboardingOpen(true);
+          redirectToOnboarding();
         }
       } catch (error) {
         console.error('Error checking user onboarding status:', error);
@@ -96,20 +97,6 @@ function JobSearchContent() {
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         <JobSearchComponent />
       </div>
-      
-      <OnboardingModal
-        isOpen={onboardingOpen}
-        onClose={() => setOnboardingOpen(false)}
-        onComplete={(firstName, lastName) => {
-          console.log(`Onboarding completed for ${firstName} ${lastName}`)
-          setOnboardingOpen(false)
-          // Redirect to dashboard after onboarding completion
-          window.location.href = '/dashboard'
-        }}
-        speechText="Hey, cool dich zu sehen! Wie heißt du?"
-        characterSrc="/images/characters/Job-Jäger Expressions.png"
-        characterAlt="Friendly onboarding character"
-      />
     </>
   )
 }

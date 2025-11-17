@@ -136,8 +136,8 @@ export function DocumentCard({ document, onEdit, onDelete, onView, showDelete = 
                 <span>Letztes Update: {formatDate(document.updated_at)}</span>
               </div>
 
-              {/* Actions in 2x2 Grid */}
-              <div className="grid grid-cols-2 gap-1">
+              {/* Actions - Vertical Stack */}
+              <div className="flex flex-col gap-1">
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -150,21 +150,21 @@ export function DocumentCard({ document, onEdit, onDelete, onView, showDelete = 
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => onEdit?.(document.id)}
-                  className="h-7 px-2 text-xs justify-start hover:text-[#0F973D] hover:bg-[#0F973D]/10"
-                >
-                  <Edit className="mr-1 h-3 w-3" />
-                  Bearbeiten
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
                   onClick={handleDownload}
                   disabled={isDownloading}
                   className="h-7 px-2 text-xs justify-start hover:text-[#0F973D] hover:bg-[#0F973D]/10"
                 >
                   <Download className="mr-1 h-3 w-3" />
                   {isDownloading ? "Download..." : "Download"}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onEdit?.(document.id)}
+                  className="h-7 px-2 text-xs justify-start hover:text-[#0F973D] hover:bg-[#0F973D]/10"
+                >
+                  <Edit className="mr-1 h-3 w-3" />
+                  Bearbeiten
                 </Button>
                 {showDelete && (
                   <Button 

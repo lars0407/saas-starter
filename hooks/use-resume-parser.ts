@@ -76,6 +76,67 @@ export function useResumeParser() {
     }
   }, [])
 
+  const parseLinkedIn = useCallback(async (linkedinUrl: string) => {
+    try {
+      setState(prev => ({
+        ...prev,
+        isParsing: true,
+        error: null,
+        selectedFile: null,
+      }))
+
+      // Get auth token
+      const authToken = ResumeParserService.getAuthToken()
+      if (!authToken) {
+        throw new Error('Bitte melde dich erneut an, um dein LinkedIn-Profil zu importieren')
+      }
+
+      // Parse LinkedIn profile
+      const parsedData = await ResumeParserService.parseLinkedInProfile(linkedinUrl, authToken)
+      
+      // Transform to onboarding format
+      const transformedData = ResumeParserService.transformToOnboardingFormat(parsedData)
+      
+      setState(prev => ({
+        ...prev,
+        isParsing: false,
+        parsedData: transformedData,
+        error: null,
+      }))
+
+      return {
+        method: 'linkedin',
+        linkedinUrl: linkedinUrl,
+        parsedData: transformedData,
+        originalApiResponse: parsedData
+      }
+      
+    } catch (error) {
+      console.error('Error parsing LinkedIn profile:', error)
+      
+      let errorMessage = 'Fehler beim Importieren des LinkedIn-Profils'
+      if (error instanceof Error) {
+        if (error.message.includes('Authentication') || error.message.includes('Sitzung abgelaufen')) {
+          errorMessage = 'Sitzung abgelaufen. Bitte melde dich erneut an.'
+        } else if (error.message.includes('API request failed')) {
+          errorMessage = 'Server-Fehler. Bitte versuche es später erneut.'
+        } else if (error.message.includes('Ungültige LinkedIn-URL')) {
+          errorMessage = error.message
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
+      setState(prev => ({
+        ...prev,
+        isParsing: false,
+        error: errorMessage,
+      }))
+
+      throw error
+    }
+  }, [])
+
   const reset = useCallback(() => {
     setState({
       isParsing: false,
@@ -95,6 +156,7 @@ export function useResumeParser() {
   return {
     ...state,
     parseResume,
+    parseLinkedIn,
     reset,
     clearError,
   }

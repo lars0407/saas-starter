@@ -19,11 +19,11 @@ export function JobSearchIntensity({ onComplete }: JobSearchIntensityProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Wie aktiv suchst du gerade? 🔍
-        </h3>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          Wie aktiv bist du auf Jobsuche?
+        </h2>
         <p className="text-gray-600">
-          Das hilft uns dabei, dir die perfekten Features zu zeigen!
+          Du entscheidest, wie oft wir dich für neue Jobangebote kontaktieren.
         </p>
       </div>
 

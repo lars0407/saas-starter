@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, MapPin, Briefcase, Building2, Clock, DollarSign, Filter, Star, Bookmark, ExternalLink, Eye, X, Plus, HelpCircle, Target, Globe, Calendar, Settings, Save, Bot, Loader2 } from "lucide-react"
+import { Search, MapPin, Briefcase, Building2, Clock, DollarSign, Filter, Star, Bookmark, ExternalLink, Eye, X, Plus, HelpCircle, Target, Globe, Calendar, Settings, Save, Bot, Loader2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,6 +19,8 @@ import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from 'sonner'
+import { useJobMatchUpdates } from '@/hooks/use-job-match-updates'
+import { JobMatchUpdateBanner } from './job-match-update-banner'
 
 interface JobSearchFilters {
   keyword: string
@@ -37,6 +39,8 @@ interface JobSearchComponentProps {
   hideSearch?: boolean
   hideCompanyInfo?: boolean
   matchReason?: string
+  isLoadingFromOnboarding?: boolean
+  onLoadingComplete?: () => void
 }
 
 const initialFilters: JobSearchFilters = {
@@ -50,7 +54,7 @@ const initialFilters: JobSearchFilters = {
   datePublished: "",
 }
 
-export function JobSearchComponent({ title = "Jobsuche", description = "Finde deinen Traumjob mit unseren intelligenten Suchfunktionen", hideSearch = false, hideCompanyInfo = false, matchReason }: JobSearchComponentProps) {
+export function JobSearchComponent({ title = "Jobsuche", description = "Finde deinen Traumjob mit unseren intelligenten Suchfunktionen", hideSearch = false, hideCompanyInfo = false, matchReason, isLoadingFromOnboarding = false, onLoadingComplete }: JobSearchComponentProps) {
   const formatScore = (score: string | undefined) => {
     if (!score) return '';
     // If score already contains %, return as is
@@ -98,6 +102,18 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
   const [hasInitialized, setHasInitialized] = useState(false)
   const [sortOption, setSortOption] = useState<string>("alle")
   const [isInitialMount, setIsInitialMount] = useState(true)
+  const [timestampInitialized, setTimestampInitialized] = useState(false)
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0)
+  
+  // Job match updates polling - only enabled for job recommendations page
+  const {
+    newMatchesCount,
+    updateTimestamp,
+    isPolling,
+  } = useJobMatchUpdates({
+    enabled: hideSearch, // Only poll on job recommendations page
+    interval: 3000, // 3 seconds
+  })
   
   // Search Profile State
   const [searchProfile, setSearchProfile] = useState({
@@ -745,6 +761,13 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
 
       if (!isLoadMore) {
         setJobs(newJobs)
+        // Update timestamp after successful refresh (not load more)
+        // This handles both initial load and manual refresh
+        const currentTimestamp = Date.now()
+        updateTimestamp(currentTimestamp)
+        if (!timestampInitialized) {
+          setTimestampInitialized(true)
+        }
       } else {
         setJobs(prev => [...prev, ...newJobs])
       }
@@ -895,6 +918,39 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
       setLoadingMore(false)
     }
   }
+
+  // Note: Timestamp initialization is handled in fetchJobRecommendations
+  // to ensure it happens after successful API response
+
+  // Handle onboarding loading completion
+  useEffect(() => {
+    if (isLoadingFromOnboarding && !loading && (jobs.length > 0 || totalJobs > 0)) {
+      // Jobs have been loaded, notify parent to hide loading state
+      onLoadingComplete?.()
+    }
+  }, [isLoadingFromOnboarding, loading, jobs.length, totalJobs, onLoadingComplete])
+
+  // Rotate loading messages for onboarding loading state
+  useEffect(() => {
+    if (!isLoadingFromOnboarding || !hideSearch) return
+
+    const loadingMessages = [
+      "Durchsuche LinkedIn",
+      "Analysiere Karriereseiten",
+      "Suche nach Jobs auf Indeed",
+      "Durchforste Stepstone",
+      "Prüfe XING Stellenangebote",
+      "Scanne Jobbörsen",
+      "Finde passende Positionen",
+      "Analysiere Jobprofile"
+    ]
+
+    const interval = setInterval(() => {
+      setLoadingMessageIndex((prev) => (prev + 1) % loadingMessages.length)
+    }, 2000) // Change message every 2 seconds
+
+    return () => clearInterval(interval)
+  }, [isLoadingFromOnboarding, hideSearch])
 
   // Load jobs based on whether search is hidden or not
   useEffect(() => {
@@ -1294,6 +1350,10 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
         result = await createResponse.json()
       } else {
         result = await response.json()
+      }
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('search_profile_saved', 'true')
       }
 
       console.log('Search profile saved successfully:', result)
@@ -1696,11 +1756,22 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
     <div className="h-screen max-h-screen flex flex-col space-y-3 md:space-y-6 overflow-hidden min-h-0 pb-4 md:pb-0">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl md:text-3xl font-bold">{title}</h1>
+        <h1 className="hidden md:block text-2xl md:text-3xl font-bold">{title}</h1>
         <p className="text-sm md:text-base text-muted-foreground hidden sm:block">
           {description}
         </p>
       </div>
+
+      {/* Job Match Update Banner - only shown on job recommendations page */}
+      {hideSearch && (
+        <JobMatchUpdateBanner
+          newMatchesCount={newMatchesCount}
+          onRefresh={() => {
+            fetchJobRecommendations(false)
+          }}
+          isRefreshing={loading}
+        />
+      )}
 
       {/* Search Bar */}
       {!hideSearch && (
@@ -2324,7 +2395,53 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
       </div>
 
                      <div className="flex-1 overflow-y-auto space-y-2 md:space-y-4 job-list-container scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 min-h-0 max-h-[calc(100vh-320px)] md:max-h-none pr-2 md:pr-1">
-        {loading ? (
+        {isLoadingFromOnboarding && hideSearch ? (
+          // Onboarding loading state
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center space-y-4 max-w-md">
+              <div className="flex justify-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0F973D]"></div>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium text-gray-900">
+                  {(() => {
+                    const loadingMessages = [
+                      "Durchsuche LinkedIn",
+                      "Analysiere Karriereseiten",
+                      "Suche nach Jobs auf Indeed",
+                      "Durchforste Stepstone",
+                      "Prüfe XING Stellenangebote",
+                      "Scanne Jobbörsen",
+                      "Finde passende Positionen",
+                      "Analysiere Jobprofile"
+                    ]
+                    return loadingMessages[loadingMessageIndex]
+                  })()}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Das dauert nur ein paar Sekunden! ⚡
+                </p>
+                <p className="text-sm font-medium text-[#0F973D] mt-3">
+                  {totalJobs === 0 
+                    ? "Suche nach Matches..." 
+                    : totalJobs === 1 
+                    ? `${totalJobs} Match gefunden` 
+                    : `${totalJobs} Matches gefunden`}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchJobRecommendations(false)}
+                disabled={loading}
+                className="mt-4"
+              >
+                <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
+                {loading ? "Lade..." : "Aktualisieren"}
+              </Button>
+            </div>
+          </div>
+        ) : loading ? (
           // Loading skeletons
           Array.from({ length: 3 }).map((_, index) => (
             <Card key={index} className="animate-pulse">
@@ -2383,10 +2500,10 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
 
                   {/* Job Details */}
                     <div className="flex-1 space-y-1 md:space-y-2 min-w-0">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-base hover:text-[#0F973D] truncate">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <h3 className="font-semibold text-base hover:text-[#0F973D] truncate min-w-0 flex-1">
                               {job.title}
                             </h3>
                             {isJobMatchNew(job.job_match_created_at) && (
@@ -2435,43 +2552,51 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
 
                                            {/* Job Meta */}
                        <div className="flex flex-wrap gap-2 md:gap-3 text-xs text-muted-foreground">
-                         <div className="flex items-center gap-1">
-                           <MapPin className="h-3 w-3" />
-                           {job.job_city}
+                         <div className="flex items-center gap-1 min-w-0">
+                           <MapPin className="h-3 w-3 flex-shrink-0" />
+                           <span className="truncate">{job.job_city}</span>
                          </div>
                        </div>
 
                                            {/* Tags */}
                        <div className="flex flex-wrap gap-1 md:gap-1">
                          {job.job_employement_type && job.job_employement_type !== 'null' && job.job_employement_type !== 'Not Applicable' && (
-                           <Badge variant="outline" className="text-xs">
-                             {translateEmploymentType(job.job_employement_type)}
+                           <Badge variant="outline" className="text-xs max-w-full">
+                             <span className="truncate block">{translateEmploymentType(job.job_employement_type)}</span>
                            </Badge>
                          )}
                          {job.salary && job.salary !== 'null' && job.salary !== 'Not Applicable' && (
-                           <Badge variant="outline" className="text-xs">{job.salary}</Badge>
+                           <Badge variant="outline" className="text-xs max-w-full">
+                             <span className="truncate block">{job.salary}</span>
+                           </Badge>
                          )}
                          {job.seniority && job.seniority !== 'null' && job.seniority !== 'Not Applicable' && (
-                           <Badge variant="outline" className="text-xs">
-                             {job.seniority === 'Entry level' ? 'Berufseinstieg' :
-                              job.seniority === 'Junior' ? 'Berufseinstieg' :
-                              job.seniority === 'Internship' ? 'Praktikum' :
-                              job.seniority === 'Mid-Senior Level' ? 'Management' :
-                              job.seniority === 'Associate' ? 'Berufserfahren' :
-                              job.seniority === 'Director' ? 'Direktor' :
-                              job.seniority === 'Management' ? 'Management' :
-                              job.seniority}
+                           <Badge variant="outline" className="text-xs max-w-full">
+                             <span className="truncate block">
+                               {job.seniority === 'Entry level' ? 'Berufseinstieg' :
+                                job.seniority === 'Junior' ? 'Berufseinstieg' :
+                                job.seniority === 'Internship' ? 'Praktikum' :
+                                job.seniority === 'Mid-Senior Level' ? 'Management' :
+                                job.seniority === 'Associate' ? 'Berufserfahren' :
+                                job.seniority === 'Director' ? 'Direktor' :
+                                job.seniority === 'Management' ? 'Management' :
+                                job.seniority}
+                             </span>
                            </Badge>
                          )}
                          {job.working_hours && job.working_hours !== 'null' && job.working_hours !== 'Not Applicable' && (
-                           <Badge variant="outline" className="text-xs">{job.working_hours}</Badge>
+                           <Badge variant="outline" className="text-xs max-w-full">
+                             <span className="truncate block">{job.working_hours}</span>
+                           </Badge>
                          )}
                          {job.remote_work && job.remote_work !== 'null' && job.remote_work !== 'Not Applicable' && (
-                           <Badge variant="secondary" className="text-xs">
-                             {job.remote_work === 'Remote' ? 'Vollständig Remote' :
-                              job.remote_work === 'Hybrid' ? 'Hybrid' :
-                              job.remote_work === 'On-site' ? 'Vor Ort' :
-                              job.remote_work}
+                           <Badge variant="secondary" className="text-xs max-w-full">
+                             <span className="truncate block">
+                               {job.remote_work === 'Remote' ? 'Vollständig Remote' :
+                                job.remote_work === 'Hybrid' ? 'Hybrid' :
+                                job.remote_work === 'On-site' ? 'Vor Ort' :
+                                job.remote_work}
+                             </span>
                            </Badge>
                          )}
                        </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, MapPin, X, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,9 @@ export default function AddressSearch({
   const [debouncedQuery, setDebouncedQuery] = useState(initialValue);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
+  const justSelectedRef = useRef(false);
 
   // Debounce search query
   useEffect(() => {
@@ -58,6 +62,12 @@ export default function AddressSearch({
 
   // Search addresses when debounced query changes
   useEffect(() => {
+    // Don't search if we just selected an address
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false;
+      return;
+    }
+
     if (debouncedQuery.trim().length < 3) {
       setAddresses([]);
       setShowDropdown(false);
@@ -130,6 +140,7 @@ export default function AddressSearch({
   }, []);
 
   const handleAddressSelect = (address: Address) => {
+    justSelectedRef.current = true; // Mark that we just selected an address
     setQuery(address.display_name);
     setShowDropdown(false);
     setAddresses([]);
@@ -143,8 +154,23 @@ export default function AddressSearch({
     if (!value.trim()) {
       setAddresses([]);
       setShowDropdown(false);
+      setDropdownPosition(null);
     }
   };
+
+  // Update dropdown position when it should be shown
+  useEffect(() => {
+    if (showDropdown && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    } else {
+      setDropdownPosition(null);
+    }
+  }, [showDropdown, addresses]);
 
   const handleClear = () => {
     setQuery('');
@@ -183,8 +209,65 @@ export default function AddressSearch({
     return parts.length > 0 ? parts.join(', ') : address.display_name;
   };
 
+  const dropdownContent = showDropdown && addresses.length > 0 && dropdownPosition && (
+    <Card 
+      ref={dropdownRef}
+      className="fixed z-[9999] shadow-lg border-gray-200"
+      style={{
+        top: `${dropdownPosition.top}px`,
+        left: `${dropdownPosition.left}px`,
+        width: `${dropdownPosition.width}px`
+      }}
+    >
+      <CardContent className="p-0">
+        <div className="max-h-60 overflow-y-auto">
+          {addresses.map((address, index) => (
+            <button
+              key={address.id}
+              type="button"
+              onClick={() => handleAddressSelect(address)}
+              className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors ${
+                index === selectedIndex ? 'bg-gray-100' : ''
+              } ${index < addresses.length - 1 ? 'border-b border-gray-100' : ''}`}
+            >
+              <div className="flex items-start gap-3">
+                <MapPin className="h-4 w-4 text-[#0F973D] mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-gray-900 truncate">
+                    {formatAddress(address)}
+                  </div>
+                  <div className="text-sm text-gray-500 truncate">
+                    {address.display_name}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {address.type} • Koordinaten: {address.lat.toFixed(6)}, {address.lon.toFixed(6)}
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const noResultsContent = showDropdown && !loading && addresses.length === 0 && debouncedQuery.trim().length >= 3 && dropdownPosition && (
+    <Card 
+      className="fixed z-[9999] shadow-lg border-gray-200"
+      style={{
+        top: `${dropdownPosition.top}px`,
+        left: `${dropdownPosition.left}px`,
+        width: `${dropdownPosition.width}px`
+      }}
+    >
+      <CardContent className="p-4 text-center text-gray-500">
+        Keine Adressen gefunden für "{debouncedQuery}"
+      </CardContent>
+    </Card>
+  );
+
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} ref={containerRef}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         <Input
@@ -195,7 +278,8 @@ export default function AddressSearch({
           placeholder={placeholder}
           className="pl-10 pr-20 border-gray-300 focus:ring-2 focus:ring-[#0F973D] focus:border-[#0F973D] focus-visible:ring-2 focus-visible:ring-[#0F973D] focus-visible:border-[#0F973D]"
           onFocus={() => {
-            if (addresses.length > 0) {
+            // Only show dropdown if we have addresses and haven't just selected one
+            if (addresses.length > 0 && !justSelectedRef.current) {
               setShowDropdown(true);
             }
           }}
@@ -216,52 +300,9 @@ export default function AddressSearch({
         )}
       </div>
 
-      {/* Address Dropdown */}
-      {showDropdown && addresses.length > 0 && (
-        <Card 
-          ref={dropdownRef}
-          className="absolute top-full left-0 right-0 z-50 mt-1 shadow-lg border-gray-200"
-        >
-          <CardContent className="p-0">
-            <div className="max-h-60 overflow-y-auto">
-              {addresses.map((address, index) => (
-                <button
-                  key={address.id}
-                  type="button"
-                  onClick={() => handleAddressSelect(address)}
-                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors ${
-                    index === selectedIndex ? 'bg-gray-100' : ''
-                  } ${index < addresses.length - 1 ? 'border-b border-gray-100' : ''}`}
-                >
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-4 w-4 text-[#0F973D] mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 truncate">
-                        {formatAddress(address)}
-                      </div>
-                      <div className="text-sm text-gray-500 truncate">
-                        {address.display_name}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {address.type} • Koordinaten: {address.lat.toFixed(6)}, {address.lon.toFixed(6)}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* No results message */}
-      {showDropdown && !loading && addresses.length === 0 && debouncedQuery.trim().length >= 3 && (
-        <Card className="absolute top-full left-0 right-0 z-50 mt-1 shadow-lg border-gray-200">
-          <CardContent className="p-4 text-center text-gray-500">
-            Keine Adressen gefunden für "{debouncedQuery}"
-          </CardContent>
-        </Card>
-      )}
+      {/* Render dropdown via portal to avoid overflow clipping */}
+      {typeof window !== 'undefined' && dropdownContent && createPortal(dropdownContent, document.body)}
+      {typeof window !== 'undefined' && noResultsContent && createPortal(noResultsContent, document.body)}
     </div>
   );
 }

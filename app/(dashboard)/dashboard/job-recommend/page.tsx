@@ -15,23 +15,45 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { JobSearchComponent } from "@/components/job-search"
-import { OnboardingModal } from '@/components/onboarding'
+import { WelcomeDialog } from '@/components/welcome-dialog'
 import { getCurrentUser } from '@/lib/xano'
+import { SearchProfileSaveBanner } from '@/components/job-search/search-profile-save-banner'
 
 function JobRecommendContent() {
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [userChecked, setUserChecked] = useState(false);
+  const [isLoadingFromOnboarding, setIsLoadingFromOnboarding] = useState(false);
+  const [showSearchProfileBanner, setShowSearchProfileBanner] = useState(false);
   const searchParams = useSearchParams();
+
+  const redirectToOnboarding = () => {
+    if (typeof window === 'undefined') return
+    const currentPath = window.location.pathname + window.location.search
+    const target = `/onboarding?redirect=${encodeURIComponent(currentPath)}`
+    window.location.href = target
+  }
 
   useEffect(() => {
     // Check if onboarding parameter is present
     const onboardingParam = searchParams.get('onboarding');
     if (onboardingParam === 'true') {
-      setOnboardingOpen(true);
-      // Clean up the URL by removing the parameter
-      const url = new URL(window.location.href);
-      url.searchParams.delete('onboarding');
-      window.history.replaceState({}, '', url.toString());
+      redirectToOnboarding();
+    }
+
+    // Check if welcome dialog should be shown (after onboarding completion)
+    if (typeof window !== 'undefined') {
+      const showWelcomeDialog = localStorage.getItem('onboarding_show_welcome_dialog');
+      if (showWelcomeDialog === 'true') {
+        setWelcomeDialogOpen(true);
+        setIsLoadingFromOnboarding(true);
+        // Remove flag so dialog only shows once
+        localStorage.removeItem('onboarding_show_welcome_dialog');
+      }
+      const searchProfileSaved = localStorage.getItem('search_profile_saved');
+      if (searchProfileSaved === 'true') {
+        setShowSearchProfileBanner(true);
+        localStorage.removeItem('search_profile_saved');
+      }
     }
   }, [searchParams]);
 
@@ -54,7 +76,7 @@ function JobRecommendContent() {
         
         // Check if onboarding is not completed
         if (user.onboarding && user.onboarding !== 'success') {
-          setOnboardingOpen(true);
+          redirectToOnboarding();
         }
       } catch (error) {
         console.error('Error checking user onboarding status:', error);
@@ -94,26 +116,29 @@ function JobRecommendContent() {
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        {showSearchProfileBanner && (
+          <SearchProfileSaveBanner
+            onClose={() => {
+              setShowSearchProfileBanner(false);
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('search_profile_saved');
+              }
+            }}
+          />
+        )}
         <JobSearchComponent 
           title="Jobs"
           description="Entdecke personalisierte Jobempfehlungen basierend auf deinem Profil"
           hideSearch={true}
           hideCompanyInfo={true}
+          isLoadingFromOnboarding={isLoadingFromOnboarding}
+          onLoadingComplete={() => setIsLoadingFromOnboarding(false)}
         />
       </div>
       
-      <OnboardingModal
-        isOpen={onboardingOpen}
-        onClose={() => setOnboardingOpen(false)}
-        onComplete={(firstName, lastName) => {
-          console.log(`Onboarding completed for ${firstName} ${lastName}`)
-          setOnboardingOpen(false)
-          // Redirect to dashboard after onboarding completion
-          window.location.href = '/dashboard'
-        }}
-        speechText="Hey, cool dich zu sehen! Wie heißt du?"
-        characterSrc="/images/characters/Job-Jäger Expressions.png"
-        characterAlt="Friendly onboarding character"
+      <WelcomeDialog
+        open={welcomeDialogOpen}
+        onOpenChange={setWelcomeDialogOpen}
       />
     </>
   )

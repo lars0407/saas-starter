@@ -11,23 +11,19 @@ export function JobTypeStep({ onComplete }: JobTypeStepProps) {
   const [selectedJobType, setSelectedJobType] = useState<string>("")
 
   const handleContinue = () => {
+    if (!selectedJobType) return // Don't proceed if nothing selected
     console.log('JobTypeStep: handleContinue called with:', selectedJobType)
-    onComplete(selectedJobType || 'flexible') // Default to flexible if nothing selected
+    onComplete(selectedJobType)
   }
 
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <div className="flex justify-center mb-4">
-          <div className="p-3 bg-orange-100 rounded-lg">
-            <Clock className="h-8 w-8 text-orange-600" />
-          </div>
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Wie viel Zeit hast du? ⏰
-        </h3>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          Wie viel Zeit möchtest du investieren?
+        </h2>
         <p className="text-gray-600">
-          Wähle deine bevorzugte Arbeitszeit - das hilft uns dabei, passende Jobs zu finden!
+          Wähle deine bevorzugte Arbeitszeit aus.
         </p>
       </div>
 
@@ -108,7 +104,12 @@ export function JobTypeStep({ onComplete }: JobTypeStepProps) {
       <div className="flex justify-center pt-4">
         <Button 
           onClick={handleContinue}
-          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white px-8 py-3 rounded-lg font-medium"
+          disabled={!selectedJobType}
+          className={`px-8 py-3 rounded-lg font-medium ${
+            !selectedJobType
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-[#0F973D] hover:bg-[#0D7A32] text-white'
+          }`}
         >
           Weiter
         </Button>

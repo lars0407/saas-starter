@@ -254,6 +254,10 @@ export default function SearchProfilePage() {
         toast.success('Suchprofil erfolgreich aktualisiert! 💾');
       }
 
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('search_profile_saved', 'true');
+      }
+
       console.log('Search profile operation successful:', result);
       
     } catch (error: any) {

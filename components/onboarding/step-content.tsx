@@ -2,13 +2,12 @@ import React from "react"
 import { OnboardingForm } from "./onboarding-form"
 import { ResumeUploadForm } from "./resume-upload-form"
 import { LoadingStep } from "./loading-step"
-import { CompletionStep } from "./completion-step"
 import { ProfileContent } from "./profile-content"
 import { JobSearchIntensity } from "./job-search-intensity"
 import { JobTitleStep } from "./job-title-step"
 import { WorkLocationStep } from "./work-location-step"
 import { JobTypeStep } from "./job-type-step"
-import { SalaryExpectationStep } from "./salary-expectation-step"
+import { JobLocationStep } from "./job-location-step"
 import { Button } from "@/components/ui/button"
 
 interface StepContentProps {
@@ -25,7 +24,11 @@ interface StepContentProps {
   onJobTitleComplete?: (title: string) => void
   onWorkLocationComplete?: (location: string) => void
   onJobTypeComplete?: (type: string) => void
-  onSalaryExpectationComplete?: (salary: string) => void
+  onJobLocationComplete?: (data: {
+    location: string;
+    selectedAddress: any;
+    selectedLocation: { lat: number; lon: number } | null;
+  }) => void
   resumeData?: any
   isLoading?: boolean
 }
@@ -44,7 +47,7 @@ export function StepContent({
   onJobTitleComplete,
   onWorkLocationComplete,
   onJobTypeComplete,
-  onSalaryExpectationComplete,
+  onJobLocationComplete,
   resumeData,
   isLoading,
 }: StepContentProps) {
@@ -102,8 +105,17 @@ export function StepContent({
     )
   }
 
-  // Step 6: Work location
+  // Step 6: Job location
   if (step === 6) {
+    return (
+      <JobLocationStep
+        onComplete={onJobLocationComplete || (() => {})}
+      />
+    )
+  }
+
+  // Step 7: Work location
+  if (step === 7) {
     return (
       <WorkLocationStep
         onComplete={onWorkLocationComplete || (() => {})}
@@ -111,8 +123,8 @@ export function StepContent({
     )
   }
 
-  // Step 7: Job type
-  if (step === 7) {
+  // Step 8: Job type
+  if (step === 8) {
     return (
       <JobTypeStep
         onComplete={onJobTypeComplete || (() => {})}
@@ -120,29 +132,11 @@ export function StepContent({
     )
   }
 
-  // Step 8: Salary expectation
-  if (step === 8) {
-    return (
-      <SalaryExpectationStep
-        onComplete={onSalaryExpectationComplete || (() => {})}
-      />
-    )
-  }
-
-  // Step 9: Loading state
-  if (isLoading) {
+  // Loading state (only show if not on step 8, as it has its own loading state)
+  if (isLoading && step !== 8) {
     return <LoadingStep />
   }
 
-  // Step 10: Completion
-  if (step === 9) {
-    return <CompletionStep firstName={firstName} lastName={lastName} />
-  }
-
-  // Placeholder for future steps
-  return (
-    <div className="text-center py-8">
-      <p className="text-gray-500">Step {step} - Coming soon!</p>
-    </div>
-  )
+  // Invalid step - should not happen, but return empty if it does
+  return null
 } 
