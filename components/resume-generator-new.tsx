@@ -33,6 +33,7 @@ interface DownloadResponse {
 
 // Import the existing PDF viewer component
 import { PDFViewer } from './ui/pdf-viewer';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 interface ResumeData {
   personalInfo: {
@@ -119,6 +120,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const [pdfGenerationStatus, setPdfGenerationStatus] = useState<'idle' | 'generating' | 'polling' | 'ready' | 'error'>('idle');
+  const [previewDrawerOpen, setPreviewDrawerOpen] = useState(false);
   const { downloadDocument, isLoading: isDownloading } = useDocumentDownload();
   
   
@@ -839,7 +841,7 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
       </div>
 
       {/* Right Column - Preview */}
-      <div className="lg:w-1/2 flex flex-col min-h-0">
+      <div className="hidden lg:flex lg:w-1/2 flex-col min-h-0">
         <Card className="h-full flex flex-col min-h-0">
           <CardHeader className="flex-shrink-0">
             <div className="flex items-center justify-between">
@@ -926,6 +928,87 @@ export function ResumeGeneratorNew({ documentId }: ResumeGeneratorNewProps) {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Preview Drawer - Mobile Overlay */}
+      <Sheet open={previewDrawerOpen} onOpenChange={setPreviewDrawerOpen}>
+        <SheetContent 
+          side="bottom" 
+          className="h-[90vh] max-h-[90vh] w-full rounded-t-xl border-t-4 border-t-[#0F973D] overflow-hidden flex flex-col"
+        >
+          <SheetHeader className="flex-shrink-0 pb-4 border-b">
+            <SheetTitle className="text-xl font-bold">
+              Live Vorschau
+            </SheetTitle>
+            <p className="text-sm text-muted-foreground">
+              So sieht dein Lebenslauf aus
+            </p>
+          </SheetHeader>
+
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden mt-4">
+            {pdfGenerationStatus === 'generating' || pdfGenerationStatus === 'polling' ? (
+              <div className="min-h-full flex items-center justify-center p-8">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0F973D] mx-auto mb-4" />
+                  <p className="text-sm font-medium mb-2">
+                    Generiere PDF...
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Ihr Lebenslauf wird generiert
+                  </p>
+                </div>
+              </div>
+            ) : pdfGenerationStatus === 'error' ? (
+              <div className="min-h-full flex items-center justify-center text-red-500 bg-red-50 rounded-lg p-8">
+                <div className="text-center">
+                  <div className="mx-auto h-12 w-12 text-red-400 mb-4 flex items-center justify-center">
+                    <span className="text-2xl">⚠️</span>
+                  </div>
+                  <p className="text-sm font-medium mb-2">Fehler beim Generieren</p>
+                  <p className="text-xs text-red-400">
+                    Versuchen Sie es erneut
+                  </p>
+                </div>
+              </div>
+            ) : generatedPdfUrl ? (
+              <PDFViewer
+                pdfUrl={generatedPdfUrl}
+                showToolbar={false}
+                showNavigation={false}
+                showBorder={false}
+                fallbackMessage="Vorschau nicht verfügbar"
+                downloadMessage=""
+                placeholderMessage="Lade Vorschau…"
+                className="w-full h-full max-w-full"
+              />
+            ) : (
+              <div className="min-h-full flex items-center justify-center text-gray-500 bg-gray-50 rounded-lg p-8">
+                <div className="text-center">
+                  <Eye className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-sm mb-2">Live Vorschau</p>
+                  <p className="text-xs text-gray-400">
+                    {resumeData.personalInfo.fullName ? 
+                      `Lebenslauf für ${resumeData.personalInfo.fullName}` : 
+                      'Fülle die Formulare aus, um eine Vorschau zu sehen'
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Fixed Mobile Preview Button - Similar to job detail page */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 border-t bg-white z-50 p-4">
+        <Button
+          onClick={() => setPreviewDrawerOpen(true)}
+          className="w-full bg-[#0F973D] hover:bg-[#0F973D]/90 text-white font-semibold py-3"
+          disabled={!generatedPdfUrl}
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          Live Vorschau ansehen
+        </Button>
       </div>
     </div>
   );

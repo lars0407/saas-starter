@@ -656,6 +656,32 @@ export function MobileJobDetailDrawer({
             </div>
           </SheetHeader>
 
+          {/* Create Documents Button - Directly under header */}
+          <div className="px-4 pt-4 pb-2">
+            <Button 
+              onClick={generateDocuments}
+              disabled={jobDocuments.length > 0 || generatingDocuments}
+              className={cn(
+                "w-full text-white font-semibold py-3",
+                jobDocuments.length > 0 
+                  ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
+                  : "bg-[#0F973D] hover:bg-[#0F973D]/90"
+              )}
+            >
+              {generatingDocuments ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4 mr-2" />
+              )}
+              {jobDocuments.length > 0 ? 
+                (jobTrackerCreated ? "Job gespeichert & Bewerbung erstellt 🎉" : "Bewerbungsunterlagen bereits erstellt") 
+                : generatingDocuments 
+                  ? "Erstelle..." 
+                  : "Bewerbungsunterlagen erstellen"
+              }
+            </Button>
+          </div>
+
           {/* Job Content */}
           <div className="space-y-6 pt-4 px-4">
           {/* Job Documents Section - Debug Mode */}
@@ -843,19 +869,17 @@ export function MobileJobDetailDrawer({
         </div>
         {/* Apply Button - Fixed at bottom */}
         <div className="border-t bg-transparent">
-          <div className="flex justify-center py-4">
+          <div className="px-4 py-4">
             <Button 
-              onClick={isJobRecommendations && job.auto_apply ? createApplication : generateDocuments}
-              disabled={isJobRecommendations && job.auto_apply ? isCreatingApplication : jobDocuments.length > 0 || generatingDocuments}
+              onClick={isJobRecommendations && job.auto_apply ? createApplication : handleApply}
+              disabled={isJobRecommendations && job.auto_apply ? isCreatingApplication : false}
               className={cn(
-                "text-white font-semibold py-3 px-8",
+                "w-full text-white font-semibold py-3",
                 isJobRecommendations && job.auto_apply 
                   ? (isCreatingApplication 
                       ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
                       : "bg-[#0F973D] hover:bg-[#0F973D]/90")
-                  : (jobDocuments.length > 0 
-                      ? "bg-gray-400 cursor-not-allowed hover:bg-gray-400" 
-                      : "bg-[#0F973D] hover:bg-[#0F973D]/90")
+                  : "bg-[#0F973D] hover:bg-[#0F973D]/90"
               )}
             >
               {isJobRecommendations && job.auto_apply ? (
@@ -864,19 +888,11 @@ export function MobileJobDetailDrawer({
                 ) : (
                   <Bot className="h-4 w-4 mr-2" />
                 )
-              ) : generatingDocuments ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <FileText className="h-4 w-4 mr-2" />
-              )}
+              ) : null}
               {isJobRecommendations && job.auto_apply ? (
                 isCreatingApplication ? "Erstelle..." : "Auto Apply starten"
               ) : (
-                jobDocuments.length > 0 ? 
-                  (jobTrackerCreated ? "Job gespeichert & Bewerbung erstellt 🎉" : "Bewerbungsunterlagen bereits erstellt") 
-                  : generatingDocuments 
-                    ? "Erstelle..." 
-                    : "Bewerbungsunterlagen erstellen"
+                "Bewerben"
               )}
             </Button>
           </div>

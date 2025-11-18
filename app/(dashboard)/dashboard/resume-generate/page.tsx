@@ -44,14 +44,15 @@ export default async function ResumeGeneratePage({ searchParams }: ResumeGenerat
           </Breadcrumb>
         </div>
       </header>
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0 min-h-0">
+      <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4 pt-0 min-h-0">
         <div className="flex-shrink-0 mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {documentId ? 'Lebenslauf bearbeiten' : 'Lebenslauf Generator'} 🚀
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 flex-wrap">
+                <span>{documentId ? 'Lebenslauf bearbeiten' : 'Lebenslauf Generator'}</span>
+                <span>🚀</span>
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-2">
                 {documentId 
                   ? 'Bearbeite deinen bestehenden Lebenslauf' 
                   : 'Erstelle deinen perfekten CV Schritt für Schritt'

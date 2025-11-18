@@ -308,8 +308,8 @@ export default function CoverLetterPage() {
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-        <div className="flex items-center gap-2 px-4">
+      <header className="flex h-14 sm:h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <div className="flex items-center gap-2 px-2 sm:px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
@@ -337,36 +337,38 @@ export default function CoverLetterPage() {
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+      <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4 pt-0">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 Deine Anschreiben – ready to impress 💼
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-2">
                 Hier findest du alle Bewerbungsanschreiben, die du erstellt oder mit KI generiert hast.
               </p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:space-x-3 sm:space-y-0">
               <Button 
                 onClick={handleCreateCoverLetter}
-                className="bg-[#0F973D] hover:bg-[#0D7A32] text-white"
+                className="bg-[#0F973D] hover:bg-[#0D7A32] text-white w-full sm:w-auto"
+                size="sm"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                Anschreiben generieren
+                <span className="hidden sm:inline">Anschreiben generieren</span>
+                <span className="sm:hidden">Anschreiben</span>
               </Button>
             </div>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-fit grid-cols-2">
-            <TabsTrigger value="human">Basis</TabsTrigger>
-            <TabsTrigger value="ai">KI-generiert</TabsTrigger>
+          <TabsList className="grid w-full sm:w-fit grid-cols-2">
+            <TabsTrigger value="human" className="text-xs sm:text-sm px-2 sm:px-3">Basis</TabsTrigger>
+            <TabsTrigger value="ai" className="text-xs sm:text-sm px-2 sm:px-3">KI-generiert</TabsTrigger>
           </TabsList>
 
-          <TabsContent value={activeTab} className="mt-6">
+          <TabsContent value={activeTab} className="mt-4 sm:mt-6">
             {loading ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {renderSkeletons()}
@@ -406,8 +408,8 @@ export default function CoverLetterPage() {
                   ))}
                 </div>
                 
-                <div className="mt-8 flex items-center justify-between">
-                  <p className="text-sm text-gray-500 whitespace-nowrap">
+                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <p className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
                     {totalDocuments} Anschreiben gefunden
                   </p>
                   {renderPagination()}

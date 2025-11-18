@@ -200,7 +200,7 @@ export default function SettingsPage() {
         </div>
         
         <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-          <currentTab.icon className="h-6 w-6 text-[#0F973D]" />
+          <currentTab.icon className="h-6 w-6 text-[#0F973D] hidden sm:block" />
           <span>{currentTab.headerTitle}</span>
         </h1>
         <p className="text-gray-600 mt-2">

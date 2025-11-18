@@ -568,40 +568,42 @@ export function ProfileSettings() {
       {/* Tab Navigation */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 pb-4">
         <Tabs value={activeTab} onValueChange={scrollToSection} className="w-full">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="personal" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Persönlich
-            </TabsTrigger>
-            <TabsTrigger value="education" className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4" />
-              Ausbildung
-            </TabsTrigger>
-            <TabsTrigger value="experience" className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4" />
-              Erfahrung
-            </TabsTrigger>
-            <TabsTrigger value="skills" className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              Skills
-            </TabsTrigger>
-            <TabsTrigger value="certifications" className="flex items-center gap-2">
-              <Award className="h-4 w-4" />
-              Zertifikate
-            </TabsTrigger>
-            <TabsTrigger value="courses" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              Kurse
-            </TabsTrigger>
-            <TabsTrigger value="publications" className="flex items-center gap-2">
-              <FileTextIcon className="h-4 w-4" />
-              Publikationen
-            </TabsTrigger>
-            <TabsTrigger value="interests" className="flex items-center gap-2">
-              <Heart className="h-4 w-4" />
-              Interessen
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0 scrollbar-hide">
+            <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:grid-cols-8">
+              <TabsTrigger value="personal" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap flex-shrink-0">
+                <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Persönlich</span>
+              </TabsTrigger>
+              <TabsTrigger value="education" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap flex-shrink-0">
+                <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Ausbildung</span>
+              </TabsTrigger>
+              <TabsTrigger value="experience" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap flex-shrink-0">
+                <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Erfahrung</span>
+              </TabsTrigger>
+              <TabsTrigger value="skills" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap flex-shrink-0">
+                <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Skills</span>
+              </TabsTrigger>
+              <TabsTrigger value="certifications" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap flex-shrink-0">
+                <Award className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Zertifikate</span>
+              </TabsTrigger>
+              <TabsTrigger value="courses" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap flex-shrink-0">
+                <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Kurse</span>
+              </TabsTrigger>
+              <TabsTrigger value="publications" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap flex-shrink-0">
+                <FileTextIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Publikationen</span>
+              </TabsTrigger>
+              <TabsTrigger value="interests" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap flex-shrink-0">
+                <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Interessen</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
         </Tabs>
       </div>
 

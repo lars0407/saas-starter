@@ -189,7 +189,7 @@ export function DocumentDrawer({
         </SheetHeader>
 
         {/* PDF Preview */}
-        <div className="flex-1">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           <PDFViewer
             pdfUrl={document.url}
             showToolbar={false}
@@ -198,7 +198,7 @@ export function DocumentDrawer({
             fallbackMessage="Vorschau nicht verfügbar – aber du kannst's trotzdem runterladen 📄"
             downloadMessage=""
             placeholderMessage="Lade dein Meisterwerk… 🔄"
-            className="w-full h-full"
+            className="w-full h-full max-w-full"
           />
         </div>
       </SheetContent>

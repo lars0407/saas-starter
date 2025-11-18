@@ -44,14 +44,15 @@ export default async function CoverLetterGeneratePage({ searchParams }: CoverLet
           </Breadcrumb>
         </div>
       </header>
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0 min-h-0">
+      <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4 pt-0 min-h-0">
         <div className="flex-shrink-0 mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {documentId ? 'Anschreiben bearbeiten' : 'Anschreiben Generator'} ✨
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 flex-wrap">
+                <span>{documentId ? 'Anschreiben bearbeiten' : 'Anschreiben Generator'}</span>
+                <span>✨</span>
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-2">
                 {documentId 
                   ? 'Bearbeite dein bestehendes Anschreiben' 
                   : 'Erstelle dein perfektes Anschreiben mit KI'

@@ -223,7 +223,7 @@ export function PDFViewer({
       )}
 
       {/* PDF Content */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         {!isLoaded ? (
           <div className="flex items-center justify-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -231,8 +231,9 @@ export function PDFViewer({
         ) : (
           <iframe
             ref={iframeRef}
-            src={`${pdfUrl}#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=0`}
-            className="w-full h-full min-h-[400px]"
+            src={`${pdfUrl}#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=0&zoom=page-fit`}
+            className="w-full h-full min-h-[400px] max-w-full"
+            style={{ maxWidth: '100%', width: '100%' }}
             onError={handleError}
             title="PDF Viewer"
           />

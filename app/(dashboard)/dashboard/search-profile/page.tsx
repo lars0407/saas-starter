@@ -649,18 +649,18 @@ export default function SearchProfilePage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-2 sm:p-6">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <div className="flex items-center space-x-2 mb-4">
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-4" />
           <Breadcrumb>
             <BreadcrumbList>
-              <BreadcrumbItem>
+              <BreadcrumbItem className="hidden md:block">
                 <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator />
+              <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
                 <BreadcrumbPage>Suchprofil</BreadcrumbPage>
               </BreadcrumbItem>
@@ -668,38 +668,46 @@ export default function SearchProfilePage() {
           </Breadcrumb>
         </div>
         
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-              <Target className="h-6 w-6 text-[#0F973D]" />
-              <span>Dein Suchprofil – Jobsuche optimieren 🎯</span>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex flex-col sm:flex-row sm:items-center gap-2">
+              <div className="flex items-center space-x-2">
+                <Target className="h-5 w-5 sm:h-6 sm:w-6 text-[#0F973D]" />
+                <span>Dein Suchprofil – Jobsuche optimieren 🎯</span>
+              </div>
               {loading && (
-                <div className="flex items-center space-x-2 text-sm text-gray-500">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#0F973D]"></div>
+                <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500">
+                  <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-[#0F973D]"></div>
                   <span>Lade Suchprofil...</span>
                 </div>
               )}
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-sm sm:text-base text-gray-600 mt-2">
               Hier kannst du deine Jobsuche-Präferenzen definieren. Alles safe und vertraulich! 🔒
             </p>
           </div>
           {loading ? (
             <div className="flex items-center gap-2">
-              <Skeleton className="h-10 w-32 rounded-md" />
+              <Skeleton className="h-10 w-full sm:w-32 rounded-md" />
             </div>
           ) : (
             <Button 
               onClick={handleSave} 
               disabled={!searchProfile.jobTitle || loading || saving}
-              className={`${
+              className={`w-full sm:w-auto ${
                 !searchProfile.jobTitle || loading || saving
                   ? 'bg-gray-400 cursor-not-allowed hover:bg-gray-400' 
                   : 'bg-[#0F973D] hover:bg-[#0F973D]/90'
               }`}
+              size="sm"
             >
               <Save className="h-4 w-4 mr-2" />
-              {loading ? 'Laden...' : saving ? 'Speichern...' : !searchProfile.jobTitle ? 'Job Titel erforderlich' : 'Speichern'}
+              <span className="hidden sm:inline">
+                {loading ? 'Laden...' : saving ? 'Speichern...' : !searchProfile.jobTitle ? 'Job Titel erforderlich' : 'Speichern'}
+              </span>
+              <span className="sm:hidden">
+                {loading ? 'Laden...' : saving ? 'Speichern...' : !searchProfile.jobTitle ? 'Titel fehlt' : 'Speichern'}
+              </span>
             </Button>
           )}
         </div>
