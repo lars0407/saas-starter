@@ -256,6 +256,7 @@ export default function SearchProfilePage() {
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('search_profile_saved', 'true');
+        localStorage.setItem('search_profile_loading', 'true');
       }
 
       console.log('Search profile operation successful:', result);

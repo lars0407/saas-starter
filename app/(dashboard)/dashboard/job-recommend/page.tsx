@@ -23,7 +23,10 @@ function JobRecommendContent() {
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [userChecked, setUserChecked] = useState(false);
   const [isLoadingFromOnboarding, setIsLoadingFromOnboarding] = useState(false);
+  const [isLoadingFromSearchProfile, setIsLoadingFromSearchProfile] = useState(false);
   const [showSearchProfileBanner, setShowSearchProfileBanner] = useState(false);
+  const [jobsCount, setJobsCount] = useState(0);
+  const [newMatchesCount, setNewMatchesCount] = useState(0);
   const searchParams = useSearchParams();
 
   const redirectToOnboarding = () => {
@@ -53,6 +56,11 @@ function JobRecommendContent() {
       if (searchProfileSaved === 'true') {
         setShowSearchProfileBanner(true);
         localStorage.removeItem('search_profile_saved');
+      }
+      const searchProfileLoading = localStorage.getItem('search_profile_loading');
+      if (searchProfileLoading === 'true') {
+        setIsLoadingFromSearchProfile(true);
+        localStorage.removeItem('search_profile_loading');
       }
     }
   }, [searchParams]);
@@ -116,7 +124,7 @@ function JobRecommendContent() {
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        {showSearchProfileBanner && (
+        {showSearchProfileBanner && jobsCount === 0 && newMatchesCount === 0 && (
           <SearchProfileSaveBanner
             onClose={() => {
               setShowSearchProfileBanner(false);
@@ -131,8 +139,13 @@ function JobRecommendContent() {
           description="Entdecke personalisierte Jobempfehlungen basierend auf deinem Profil"
           hideSearch={true}
           hideCompanyInfo={true}
-          isLoadingFromOnboarding={isLoadingFromOnboarding}
-          onLoadingComplete={() => setIsLoadingFromOnboarding(false)}
+          isLoadingFromOnboarding={isLoadingFromOnboarding || isLoadingFromSearchProfile}
+          onLoadingComplete={() => {
+            setIsLoadingFromOnboarding(false);
+            setIsLoadingFromSearchProfile(false);
+          }}
+          onJobsCountChange={(count) => setJobsCount(count)}
+          onNewMatchesCountChange={(count) => setNewMatchesCount(count)}
         />
       </div>
       

@@ -41,6 +41,8 @@ interface JobSearchComponentProps {
   matchReason?: string
   isLoadingFromOnboarding?: boolean
   onLoadingComplete?: () => void
+  onJobsCountChange?: (count: number) => void
+  onNewMatchesCountChange?: (count: number) => void
 }
 
 const initialFilters: JobSearchFilters = {
@@ -54,7 +56,7 @@ const initialFilters: JobSearchFilters = {
   datePublished: "",
 }
 
-export function JobSearchComponent({ title = "Jobsuche", description = "Finde deinen Traumjob mit unseren intelligenten Suchfunktionen", hideSearch = false, hideCompanyInfo = false, matchReason, isLoadingFromOnboarding = false, onLoadingComplete }: JobSearchComponentProps) {
+export function JobSearchComponent({ title = "Jobsuche", description = "Finde deinen Traumjob mit unseren intelligenten Suchfunktionen", hideSearch = false, hideCompanyInfo = false, matchReason, isLoadingFromOnboarding = false, onLoadingComplete, onJobsCountChange, onNewMatchesCountChange }: JobSearchComponentProps) {
   const formatScore = (score: string | undefined) => {
     if (!score) return '';
     // If score already contains %, return as is
@@ -114,6 +116,13 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
     enabled: hideSearch, // Only poll on job recommendations page
     interval: 3000, // 3 seconds
   })
+
+  // Notify parent component about new matches count change
+  useEffect(() => {
+    if (onNewMatchesCountChange) {
+      onNewMatchesCountChange(newMatchesCount);
+    }
+  }, [newMatchesCount, onNewMatchesCountChange]);
   
   // Search Profile State
   const [searchProfile, setSearchProfile] = useState({
@@ -1752,13 +1761,22 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
 
   const isEmpty = !loading && !error && jobs.length === 0;
 
+  // Notify parent component about jobs count change
+  useEffect(() => {
+    if (onJobsCountChange) {
+      onJobsCountChange(jobs.length);
+    }
+  }, [jobs.length, onJobsCountChange]);
+
   return (
     <div className="h-screen max-h-screen flex flex-col space-y-3 md:space-y-6 overflow-hidden min-h-0 pb-4 md:pb-0">
       {/* Header */}
       <div className="flex flex-col gap-2">
         <h1 className="hidden md:block text-2xl md:text-3xl font-bold">{title}</h1>
         <p className="text-sm md:text-base text-muted-foreground hidden sm:block">
-          {description}
+          {isLoadingFromOnboarding && hideSearch 
+            ? "Der Agent arbeitet gerade und sucht nach passenden Jobs für dich... 🔍"
+            : description}
         </p>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface JobMatchUpdateBannerProps {
@@ -48,13 +48,8 @@ export function JobMatchUpdateBanner({
           variant="outline"
           className="shrink-0 border-blue-300 bg-white text-blue-900 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800"
         >
-          <RefreshCw
-            className={cn(
-              'mr-2 h-4 w-4',
-              isRefreshing && 'animate-spin'
-            )}
-          />
-          Aktualisieren
+          <Eye className="mr-2 h-4 w-4" />
+          Anzeigen
         </Button>
       </AlertDescription>
     </Alert>
