@@ -159,6 +159,7 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
 
       if (!token) {
         console.error("No auth token found")
+        toast.error('Ein Fehler ist aufgetreten.')
         setGeneratingDocuments(false)
         return
       }
@@ -178,6 +179,7 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
       )
 
       if (!response.ok) {
+        toast.error('Ein Fehler ist aufgetreten.')
         throw new Error(`Failed to generate documents: ${response.status}`)
       }
 
@@ -198,9 +200,13 @@ export function JobDetailComponent({ jobId, job: propJob, isSaved = false, onTog
             onToggleSaved()
           }
         }
+      } else {
+        // API returned success: false
+        toast.error('Ein Fehler ist aufgetreten.')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating documents:", error)
+      toast.error('Ein Fehler ist aufgetreten.')
     } finally {
       clearInterval(messageInterval)
       setGeneratingDocuments(false)

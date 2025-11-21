@@ -135,6 +135,7 @@ export function MobileJobDetailDrawer({
 
       if (!token) {
         console.error("No auth token found")
+        toast.error('Ein Fehler ist aufgetreten.')
         setGeneratingDocuments(false)
         return
       }
@@ -154,6 +155,7 @@ export function MobileJobDetailDrawer({
       )
 
       if (!response.ok) {
+        toast.error('Ein Fehler ist aufgetreten.')
         throw new Error(`Failed to generate documents: ${response.status}`)
       }
 
@@ -174,9 +176,13 @@ export function MobileJobDetailDrawer({
             onToggleSaved()
           }
         }
+      } else {
+        // API returned success: false
+        toast.error('Ein Fehler ist aufgetreten.')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating documents:", error)
+      toast.error('Ein Fehler ist aufgetreten.')
     } finally {
       clearInterval(messageInterval)
       setGeneratingDocuments(false)
