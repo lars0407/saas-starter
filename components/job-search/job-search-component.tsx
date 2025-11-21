@@ -1769,7 +1769,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
   }, [jobs.length, onJobsCountChange]);
 
   return (
-    <div className="h-screen max-h-screen flex flex-col space-y-3 md:space-y-6 overflow-hidden min-h-0 pb-4 md:pb-0">
+    <div className="h-full flex flex-col space-y-3 md:space-y-6 overflow-hidden min-h-0 pb-0">
       {/* Header */}
       <div className="flex flex-col gap-2">
         <h1 className="hidden md:block text-2xl md:text-3xl font-bold">{title}</h1>
@@ -2412,7 +2412,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
             </Select>
       </div>
 
-                     <div className="flex-1 overflow-y-auto space-y-2 md:space-y-4 job-list-container scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 min-h-0 max-h-[calc(100vh-320px)] md:max-h-none pr-2 md:pr-1">
+                     <div className="flex-1 overflow-y-auto space-y-2 md:space-y-4 job-list-container scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 min-h-0 pr-2 md:pr-1">
         {isLoadingFromOnboarding && hideSearch ? (
           // Onboarding loading state
           <div className="flex items-center justify-center min-h-[400px]">

@@ -123,7 +123,7 @@ function JobRecommendContent() {
           </Breadcrumb>
         </div>
       </header>
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+      <div className="flex flex-1 flex-col gap-4 px-4 pt-0 pb-0 md:p-4 md:pt-0 md:pb-4 overflow-hidden min-h-0">
         {showSearchProfileBanner && jobsCount === 0 && newMatchesCount === 0 && (
           <SearchProfileSaveBanner
             onClose={() => {
