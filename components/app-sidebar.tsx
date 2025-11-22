@@ -26,15 +26,22 @@ import { FeedbackModal } from '@/components/feedback-modal'
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
-import { Button } from "@/components/ui/button"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  SidebarMenuButton,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { JobjaegerLogo } from "@/components/jobjaeger-logo"
+import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 // Define Xano user type
 type XanoUser = {
@@ -174,13 +181,9 @@ const data = {
   ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
+function StartApplicationButton() {
   const router = useRouter()
-  const { data: user, error } = useSWR<XanoUser>('/api/user', fetcher, {
-    revalidateOnFocus: false,
-    shouldRetryOnError: false
-  });
+  const { state, isMobile } = useSidebar()
 
   const handleStartApplication = () => {
     // Check if we're already on the agent-chat page
@@ -192,6 +195,40 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       router.push('/dashboard/agent-chat');
     }
   };
+
+  const button = (
+    <SidebarMenuButton
+      onClick={handleStartApplication}
+      className="w-full bg-[#0F973D] hover:bg-[#0F973D]/90 text-white font-semibold data-[active=true]:bg-[#0F973D] data-[active=true]:text-white group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:text-center group-data-[collapsible=icon]:gap-0 [&>span]:group-data-[collapsible=icon]:hidden"
+    >
+      <Play />
+      <span>Bewerbung starten</span>
+    </SidebarMenuButton>
+  )
+
+  return (
+    <div className="p-4 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
+      {state === "collapsed" && !isMobile ? (
+        <Tooltip>
+          <TooltipTrigger asChild>{button}</TooltipTrigger>
+          <TooltipContent side="right" align="center">
+            Bewerbung starten
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        button
+      )}
+    </div>
+  )
+}
+
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const router = useRouter()
+  const { data: user, error } = useSWR<XanoUser>('/api/user', fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false
+  });
 
   // Transform Xano user data to match NavUser component expectations
   const userData = user ? {
@@ -210,15 +247,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <JobjaegerLogo />
       </SidebarHeader>
       <SidebarContent>
-        <div className="p-4">
-          <Button 
-            onClick={handleStartApplication}
-            className="w-full bg-[#0F973D] hover:bg-[#0F973D]/90 text-white font-semibold"
-          >
-            <Play className="h-4 w-4 mr-2" />
-            Bewerbung starten
-          </Button>
-        </div>
+        <StartApplicationButton />
         <NavMain sections={data.navSections} />
       </SidebarContent>
       
