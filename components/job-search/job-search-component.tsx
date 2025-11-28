@@ -2386,7 +2386,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
       )}
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6 flex-1 min-h-0 overflow-hidden">
         {/* Left Column - Job List - Full width on mobile */}
         <div className={cn(isEmpty ? "lg:col-span-3" : "lg:col-span-1", "flex flex-col space-y-2 md:space-y-4 min-h-0 overflow-hidden")}>
           {/* Mobile-only title */}
@@ -2397,7 +2397,7 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
             </p>
           </div>
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between shrink-0">
              <h2 className="text-lg font-semibold hidden lg:block">
                {loading ? "Lade Jobs..." : "Jobs gefunden"}
              </h2>
@@ -2688,9 +2688,9 @@ export function JobSearchComponent({ title = "Jobsuche", description = "Finde de
 
         {/* Right Column - Job Details - Hidden when empty */}
         {!isEmpty && (
-        <div className="hidden lg:flex lg:col-span-2 flex-col space-y-4 min-h-0">
-          <h2 className="text-lg font-semibold">Job Details</h2>
-          <div className="flex-1 overflow-y-auto">
+        <div className="hidden lg:flex lg:col-span-2 flex-col space-y-4 min-h-0 overflow-hidden">
+          <h2 className="text-lg font-semibold shrink-0">Job Details</h2>
+          <div className="flex-1 overflow-y-auto min-h-0">
             {loading ? (
               // Loading skeleton for job details - represents actual JobDetailComponent structure
               <div className="space-y-6">
