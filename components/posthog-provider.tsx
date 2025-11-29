@@ -27,6 +27,9 @@ export function PostHogProvider() {
     // Initialize PostHog
     posthog.init(posthogKey, {
       api_host: 'https://eu.i.posthog.com',
+      autocapture: true,
+      capture_pageview: true,
+      capture_pageleave: true,
       person_profiles: 'identified_only',
       loaded: (posthog) => {
         if (process.env.NODE_ENV === 'development') {
