@@ -4,7 +4,6 @@ import { Manrope } from 'next/font/google';
 import { SWRConfig } from 'swr';
 import { Toaster } from '@/components/ui/sonner';
 import { CrispChat } from '@/components/crisp-chat';
-import { MobileDevModal } from '@/components/mobile-dev-modal';
 import { PostHogProvider } from '@/components/posthog-provider';
 
 export const metadata: Metadata = {
@@ -39,7 +38,6 @@ export default function RootLayout({
           {children}
           <Toaster />
           <CrispChat />
-          <MobileDevModal />
           <PostHogProvider />
         </SWRConfig>
       </body>
