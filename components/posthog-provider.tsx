@@ -17,15 +17,8 @@ export function PostHogProvider() {
     // Check if PostHog is already initialized
     if (window.posthog && window.posthog.__loaded) return;
 
-    const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-    
-    if (!posthogKey) {
-      console.warn('PostHog key is not set. Please add NEXT_PUBLIC_POSTHOG_KEY to your environment variables.');
-      return;
-    }
-
-    // Initialize PostHog
-    posthog.init(posthogKey, {
+    // Initialize PostHog with hardcoded API key
+    posthog.init('phc_lcTufyPIhuXWqKkeWOttVU0PQSJn8Gs1B9Pprt5qtKk', {
       api_host: 'https://eu.i.posthog.com',
       autocapture: true,
       capture_pageview: true,
