@@ -12,6 +12,14 @@ export function OnboardingPage() {
   const router = useRouter()
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [address, setAddress] = useState("")
+  const [city, setCity] = useState("")
+  const [state, setState] = useState("")
+  const [zipCode, setZipCode] = useState("")
+  // Store original name from step 1 to ensure it's always used for user table
+  const [originalFirstName, setOriginalFirstName] = useState("")
+  const [originalLastName, setOriginalLastName] = useState("")
   const [currentStep, setCurrentStep] = useState(1)
   const [characterIndex, setCharacterIndex] = useState(0)
   const [resumeData, setResumeData] = useState<any>(null)
@@ -208,8 +216,18 @@ export function OnboardingPage() {
       // Use default salary if not set (since salary step was removed)
       const salaryData = salaryExpectation ? parseSalaryExpectation(salaryExpectation) : { type: "Monthly salary (gross)", amount_eur: 3500 }
       
+      // Always use the original name from step 1 for the user table
+      // This ensures the name is always saved even if removed in step 3
+      const step1FirstName = (originalFirstName || firstName || transformedProfileData?.basics?.first_name || '').trim()
+      const step1LastName = (originalLastName || lastName || transformedProfileData?.basics?.surname || '').trim()
+      // Combine first and last name with a space, ensuring both parts are included
+      const userName = step1FirstName && step1LastName 
+        ? `${step1FirstName} ${step1LastName}` 
+        : step1FirstName || step1LastName || ''
+      
       // Prepare the request payload according to new API specification
       const payload = {
+        name: userName, // Add name from first step to update user table
         profile_data: transformedProfileData,
         search_profile: {
           job_search_activity: jobSearchIntensity || "active",
@@ -281,6 +299,7 @@ export function OnboardingPage() {
       if (!response.ok && response.status !== 401) {
         console.log('Full payload failed, trying with minimal payload...')
         const minimalPayload = {
+          name: userName, // Include name even in minimal payload
           profile_data: {},
           search_profile: {},
           linkedin_url: "",
@@ -324,6 +343,30 @@ export function OnboardingPage() {
 
       const result = await response.json()
       console.log('Onboarding data saved successfully:', result)
+      
+      // Update user name separately if it's not empty
+      if (userName && userName.trim()) {
+        try {
+          const updateUserResponse = await fetch('https://api.jobjaeger.de/api:fgXLZBBL/user/update', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ name: userName })
+          })
+          
+          if (updateUserResponse.ok) {
+            console.log('User name updated successfully:', userName)
+          } else {
+            console.warn('Failed to update user name, but onboarding was successful')
+          }
+        } catch (updateError) {
+          console.warn('Error updating user name, but onboarding was successful:', updateError)
+          // Don't throw - onboarding was successful, name update is secondary
+        }
+      }
+      
       return result
     } catch (error) {
       console.error('Error saving onboarding data to API:', error)
@@ -352,6 +395,8 @@ export function OnboardingPage() {
       const onboardingData = {
         firstName,
         lastName,
+        originalFirstName: originalFirstName || firstName, // Preserve original name
+        originalLastName: originalLastName || lastName, // Preserve original name
         resumeData,
         profileData,
         jobSearchIntensity,
@@ -405,8 +450,28 @@ export function OnboardingPage() {
       if (savedData) {
         try {
           const data = JSON.parse(savedData)
-          if (data.firstName) setFirstName(data.firstName)
-          if (data.lastName) setLastName(data.lastName)
+          // Load original names FIRST - these should never be overwritten
+          if (data.originalFirstName) {
+            setOriginalFirstName(data.originalFirstName)
+          }
+          if (data.originalLastName) {
+            setOriginalLastName(data.originalLastName)
+          }
+          // Only set original names from firstName/lastName if they don't exist yet (first time loading)
+          if (data.firstName) {
+            setFirstName(data.firstName)
+            // Only set original if it doesn't exist yet (preserve from step 1)
+            if (!originalFirstName && !data.originalFirstName) {
+              setOriginalFirstName(data.firstName)
+            }
+          }
+          if (data.lastName) {
+            setLastName(data.lastName)
+            // Only set original if it doesn't exist yet (preserve from step 1)
+            if (!originalLastName && !data.originalLastName) {
+              setOriginalLastName(data.lastName)
+            }
+          }
           if (data.resumeData) setResumeData(data.resumeData)
           if (data.profileData) setProfileData(data.profileData)
           if (data.jobSearchIntensity) setJobSearchIntensity(data.jobSearchIntensity)
@@ -488,9 +553,9 @@ export function OnboardingPage() {
 
   const handleContinue = async () => {
     if (currentStep === 1) {
-      // Validate that both firstName and lastName are filled
-      if (!firstName.trim() || !lastName.trim()) {
-        return // Don't proceed if either field is empty
+      // Validate that all required fields are filled
+      if (!firstName.trim() || !lastName.trim() || !phone.trim() || !address.trim() || !city.trim() || !state.trim() || !zipCode.trim()) {
+        return // Don't proceed if any required field is empty
       }
       // Move to step 2 (resume upload)
       setCurrentStep(2)
@@ -749,10 +814,38 @@ export function OnboardingPage() {
 
   const handleFirstNameChange = (value: string) => {
     setFirstName(value)
+    // Save original value ONLY in step 1 - never overwrite after that
+    if (value && currentStep === 1 && !originalFirstName) {
+      setOriginalFirstName(value)
+    }
   }
 
   const handleLastNameChange = (value: string) => {
     setLastName(value)
+    // Save original value ONLY in step 1 - never overwrite after that
+    if (value && currentStep === 1 && !originalLastName) {
+      setOriginalLastName(value)
+    }
+  }
+
+  const handlePhoneChange = (value: string) => {
+    setPhone(value)
+  }
+
+  const handleAddressChange = (value: string) => {
+    setAddress(value)
+  }
+
+  const handleCityChange = (value: string) => {
+    setCity(value)
+  }
+
+  const handleStateChange = (value: string) => {
+    setState(value)
+  }
+
+  const handleZipCodeChange = (value: string) => {
+    setZipCode(value)
   }
 
   // Calculate progress percentage
@@ -798,8 +891,18 @@ export function OnboardingPage() {
                 step={currentStep}
                 firstName={firstName}
                 lastName={lastName}
+                phone={phone}
+                address={address}
+                city={city}
+                state={state}
+                zipCode={zipCode}
                 onFirstNameChange={handleFirstNameChange}
                 onLastNameChange={handleLastNameChange}
+                onPhoneChange={handlePhoneChange}
+                onAddressChange={handleAddressChange}
+                onCityChange={handleCityChange}
+                onStateChange={handleStateChange}
+                onZipCodeChange={handleZipCodeChange}
                 onResumeDataChange={handleResumeProcessing}
                 onJobSearchIntensityComplete={handleJobSearchIntensityComplete}
                 onProfileComplete={handleProfileModalComplete}
@@ -822,9 +925,9 @@ export function OnboardingPage() {
               {!isLoading && currentStep !== 3 && currentStep !== 4 && currentStep !== 5 && currentStep !== 6 && currentStep !== 7 && currentStep !== 8 && (
                 <Button
                   onClick={handleContinue}
-                  disabled={currentStep === 1 && (!firstName.trim() || !lastName.trim())}
+                  disabled={currentStep === 1 && (!firstName.trim() || !lastName.trim() || !phone.trim() || !address.trim() || !city.trim() || !state.trim() || !zipCode.trim())}
                   className={`px-8 py-3 rounded-lg font-medium ${
-                    currentStep === 1 && (!firstName.trim() || !lastName.trim())
+                    currentStep === 1 && (!firstName.trim() || !lastName.trim() || !phone.trim() || !address.trim() || !city.trim() || !state.trim() || !zipCode.trim())
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-[#0F973D] hover:bg-[#0D7A32] text-white'
                   }`}

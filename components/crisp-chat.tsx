@@ -11,30 +11,17 @@ declare global {
 
 export function CrispChat() {
   useEffect(() => {
-    // Initialize Crisp
+    // Initialize Crisp exactly as provided
     window.$crisp = [];
     window.CRISP_WEBSITE_ID = "608ebcb6-a75d-4144-bbf7-ff1ebe354ee9";
-
-    // Create and append the script
-    const script = document.createElement('script');
-    script.src = 'https://client.crisp.chat/l.js';
-    script.async = true;
-    document.head.appendChild(script);
-
-    // Hide launcher after the widget script attaches
-    script.addEventListener("load", () => {
-      // Hide the bubble
-      window.$crisp.push(["do", "chat:hide"]);
-    });
-
-    // Cleanup function
-    return () => {
-      // Remove the script when component unmounts
-      const existingScript = document.querySelector('script[src="https://client.crisp.chat/l.js"]');
-      if (existingScript) {
-        existingScript.remove();
-      }
-    };
+    
+    (function() {
+      const d = document;
+      const s = d.createElement("script");
+      s.src = "https://client.crisp.chat/l.js";
+      s.async = 1;
+      d.getElementsByTagName("head")[0].appendChild(s);
+    })();
   }, []);
 
   return null; // This component doesn't render anything visible

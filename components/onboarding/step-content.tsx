@@ -14,8 +14,18 @@ interface StepContentProps {
   step: number
   firstName: string
   lastName: string
+  phone: string
+  address: string
+  city: string
+  state: string
+  zipCode: string
   onFirstNameChange: (value: string) => void
   onLastNameChange: (value: string) => void
+  onPhoneChange: (value: string) => void
+  onAddressChange: (value: string) => void
+  onCityChange: (value: string) => void
+  onStateChange: (value: string) => void
+  onZipCodeChange: (value: string) => void
   onResumeDataChange?: (data: any) => void
   onJobSearchIntensityComplete?: (intensity: string) => void
   onProfileComplete?: (data: any) => void
@@ -37,8 +47,18 @@ export function StepContent({
   step,
   firstName,
   lastName,
+  phone,
+  address,
+  city,
+  state,
+  zipCode,
   onFirstNameChange,
   onLastNameChange,
+  onPhoneChange,
+  onAddressChange,
+  onCityChange,
+  onStateChange,
+  onZipCodeChange,
   onResumeDataChange,
   onJobSearchIntensityComplete,
   onProfileComplete,
@@ -57,8 +77,18 @@ export function StepContent({
       <OnboardingForm
         firstName={firstName}
         lastName={lastName}
+        phone={phone}
+        address={address}
+        city={city}
+        state={state}
+        zipCode={zipCode}
         onFirstNameChange={onFirstNameChange}
         onLastNameChange={onLastNameChange}
+        onPhoneChange={onPhoneChange}
+        onAddressChange={onAddressChange}
+        onCityChange={onCityChange}
+        onStateChange={onStateChange}
+        onZipCodeChange={onZipCodeChange}
       />
     )
   }

@@ -1,11 +1,12 @@
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { User, GraduationCap, Briefcase, Zap, AlertTriangle } from "lucide-react"
+import { User, GraduationCap, Briefcase, Zap, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { PersonalInfo } from "../resume-sections/personal-info"
 import { Education } from "../resume-sections/education"
 import { Experience } from "../resume-sections/experience"
 import { Skills } from "../resume-sections/skills"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 // Types from profile-modal.tsx
 interface PersonalInfoData {
@@ -72,6 +73,8 @@ export function ProfileContent({
   lastName,
 }: ProfileContentProps) {
   const [showSkipConfirmation, setShowSkipConfirmation] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [showValidationErrors, setShowValidationErrors] = useState(false)
 
   // Profile data state
   const [personalInfo, setPersonalInfo] = useState<PersonalInfoData>({
@@ -199,21 +202,93 @@ export function ProfileContent({
 
   const handlePersonalInfoChange = (data: PersonalInfoData) => {
     setPersonalInfo(data)
+    // Clear validation errors when user fills in required fields
+    if (showValidationErrors) {
+      const newErrors = validationErrors.filter(err => {
+        if (err.includes('Vorname') && data.firstName.trim()) return false
+        if (err.includes('Nachname') && data.lastName.trim()) return false
+        if (err.includes('E-Mail') && data.email.trim() && /\S+@\S+\.\S+/.test(data.email)) return false
+        if (err.includes('Stadt') && data.adresse_city.trim()) return false
+        return true
+      })
+      setValidationErrors(newErrors)
+    }
   }
 
   const handleEducationChange = (data: EducationEntry[]) => {
     setEducation(data)
+    // Clear validation errors when user adds education
+    if (showValidationErrors && data.length > 0) {
+      setValidationErrors(prev => prev.filter(err => !err.includes('Ausbildung')))
+    }
   }
 
   const handleExperienceChange = (data: ExperienceEntry[]) => {
     setExperience(data)
+    // Clear validation errors when user adds experience
+    if (showValidationErrors && data.length > 0) {
+      setValidationErrors(prev => prev.filter(err => !err.includes('Berufserfahrung')))
+    }
   }
 
   const handleSkillsChange = (data: Skill[]) => {
     setSkills(data)
+    // Clear validation errors when user adds skills
+    if (showValidationErrors && data.length > 0) {
+      setValidationErrors(prev => prev.filter(err => !err.includes('Fähigkeit')))
+    }
+  }
+
+  // Validation function
+  const validateForm = (): boolean => {
+    const errors: string[] = []
+
+    // Check name (first and last name)
+    if (!personalInfo.firstName.trim()) {
+      errors.push('Vorname ist erforderlich')
+    }
+    if (!personalInfo.lastName.trim()) {
+      errors.push('Nachname ist erforderlich')
+    }
+
+    // Check email
+    if (!personalInfo.email.trim()) {
+      errors.push('E-Mail ist erforderlich')
+    } else if (!/\S+@\S+\.\S+/.test(personalInfo.email)) {
+      errors.push('Gültige E-Mail-Adresse ist erforderlich')
+    }
+
+    // Check address (at least city)
+    if (!personalInfo.adresse_city.trim()) {
+      errors.push('Stadt ist erforderlich')
+    }
+
+    // Check education (at least one entry)
+    if (education.length === 0) {
+      errors.push('Mindestens eine Ausbildung ist erforderlich')
+    }
+
+    // Check experience (at least one entry)
+    if (experience.length === 0) {
+      errors.push('Mindestens eine Berufserfahrung ist erforderlich')
+    }
+
+    // Check skills (at least one entry)
+    if (skills.length === 0) {
+      errors.push('Mindestens eine Fähigkeit ist erforderlich')
+    }
+
+    setValidationErrors(errors)
+    return errors.length === 0
   }
 
   const handleSave = () => {
+    if (!validateForm()) {
+      setShowValidationErrors(true)
+      return
+    }
+
+    setShowValidationErrors(false)
     const profileData = {
       personalInfo,
       education,
@@ -223,17 +298,63 @@ export function ProfileContent({
     onComplete(profileData)
   }
 
+  // Check if form is valid for button state
+  const isFormValid = 
+    personalInfo.firstName.trim() &&
+    personalInfo.lastName.trim() &&
+    personalInfo.email.trim() &&
+    /\S+@\S+\.\S+/.test(personalInfo.email) &&
+    personalInfo.adresse_city.trim() &&
+    education.length > 0 &&
+    experience.length > 0 &&
+    skills.length > 0
+
+  // Check completion status for each required section
+  const getCompletionStatus = () => {
+    const hasName = personalInfo.firstName.trim() && personalInfo.lastName.trim()
+    const hasEmail = personalInfo.email.trim() && /\S+@\S+\.\S+/.test(personalInfo.email)
+    const hasAddress = personalInfo.adresse_city.trim()
+    const hasEducation = education.length > 0
+    const hasExperience = experience.length > 0
+    const hasSkills = skills.length > 0
+
+    return {
+      name: hasName,
+      email: hasEmail,
+      address: hasAddress,
+      education: hasEducation,
+      experience: hasExperience,
+      skills: hasSkills,
+    }
+  }
+
+  const completionStatus = getCompletionStatus()
+  const completedCount = Object.values(completionStatus).filter(Boolean).length
+  const totalRequired = 6
+
   const handleSkip = () => {
     setShowSkipConfirmation(true)
+    setShowValidationErrors(false)
+    setValidationErrors([])
   }
 
   const handleSkipConfirm = () => {
     setShowSkipConfirmation(false)
+    setShowValidationErrors(false)
+    setValidationErrors([])
     onComplete({ method: 'skipped' })
   }
 
   const handleSkipCancel = () => {
     setShowSkipConfirmation(false)
+  }
+
+  const handleBack = () => {
+    setShowValidationErrors(false)
+    setValidationErrors([])
+    if (onBack) {
+      onBack()
+    }
   }
 
   return (
@@ -247,15 +368,39 @@ export function ProfileContent({
         </p>
       </div>
 
+      {/* Validation Errors Alert */}
+      {showValidationErrors && validationErrors.length > 0 && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <div className="font-semibold mb-2">Bitte vervollständige dein Profil:</div>
+            <ul className="list-disc list-inside space-y-1">
+              {validationErrors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* All sections in a single scrollable flow */}
       <div className="space-y-8 pb-6">
         {/* Personal Information Section */}
         <div className="space-y-4">
-          <div className="flex items-center gap-3 pb-2 md:border-b border-gray-200">
+          <div className={`flex items-center gap-3 pb-2 md:border-b border-gray-200 ${!completionStatus.name || !completionStatus.email || !completionStatus.address ? 'border-l-4 border-l-orange-400 pl-3' : ''}`}>
             <div className="p-2 bg-blue-100 rounded-lg">
               <User className="h-5 w-5 text-blue-600" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900">Persönlich</h4>
+            <div className="flex-1">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                Persönlich
+                {completionStatus.name && completionStatus.email && completionStatus.address ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                ) : (
+                  <span className="text-xs text-orange-600 font-normal">(Pflichtfelder: Name, E-Mail, Stadt)</span>
+                )}
+              </h4>
+            </div>
           </div>
           <PersonalInfo 
             data={personalInfo} 
@@ -266,11 +411,20 @@ export function ProfileContent({
 
         {/* Education Section */}
         <div className="space-y-4">
-          <div className="flex items-center gap-3 pb-2 md:border-b border-gray-200">
+          <div className={`flex items-center gap-3 pb-2 md:border-b border-gray-200 ${!completionStatus.education ? 'border-l-4 border-l-orange-400 pl-3' : ''}`}>
             <div className="p-2 bg-green-100 rounded-lg">
               <GraduationCap className="h-5 w-5 text-green-600" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900">Ausbildung</h4>
+            <div className="flex-1">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                Ausbildung
+                {completionStatus.education ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                ) : (
+                  <span className="text-xs text-orange-600 font-normal">(Pflichtfeld - mindestens eine Ausbildung)</span>
+                )}
+              </h4>
+            </div>
           </div>
           <Education 
             data={education} 
@@ -281,11 +435,20 @@ export function ProfileContent({
 
         {/* Experience Section */}
         <div className="space-y-4">
-          <div className="flex items-center gap-3 pb-2 md:border-b border-gray-200">
+          <div className={`flex items-center gap-3 pb-2 md:border-b border-gray-200 ${!completionStatus.experience ? 'border-l-4 border-l-orange-400 pl-3' : ''}`}>
             <div className="p-2 bg-purple-100 rounded-lg">
               <Briefcase className="h-5 w-5 text-purple-600" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900">Erfahrung</h4>
+            <div className="flex-1">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                Erfahrung
+                {completionStatus.experience ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                ) : (
+                  <span className="text-xs text-orange-600 font-normal">(Pflichtfeld - mindestens eine Erfahrung)</span>
+                )}
+              </h4>
+            </div>
           </div>
           <Experience 
             data={experience} 
@@ -296,11 +459,20 @@ export function ProfileContent({
 
         {/* Skills Section */}
         <div className="space-y-4">
-          <div className="flex items-center gap-3 pb-2 md:border-b border-gray-200">
+          <div className={`flex items-center gap-3 pb-2 md:border-b border-gray-200 ${!completionStatus.skills ? 'border-l-4 border-l-orange-400 pl-3' : ''}`}>
             <div className="p-2 bg-orange-100 rounded-lg">
               <Zap className="h-5 w-5 text-orange-600" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900">Fähigkeiten</h4>
+            <div className="flex-1">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                Fähigkeiten
+                {completionStatus.skills ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                ) : (
+                  <span className="text-xs text-orange-600 font-normal">(Pflichtfeld - mindestens eine Fähigkeit)</span>
+                )}
+              </h4>
+            </div>
           </div>
           <Skills 
             data={skills} 
@@ -314,7 +486,7 @@ export function ProfileContent({
       <div className="flex justify-between pt-4 md:border-t border-gray-100 mt-6">
         <div className="flex gap-2">
           {onBack && (
-            <Button variant="outline" onClick={onBack} className="text-gray-600 hover:text-gray-800">
+            <Button variant="outline" onClick={handleBack} className="text-gray-600 hover:text-gray-800">
               Zurück
             </Button>
           )}
@@ -322,8 +494,17 @@ export function ProfileContent({
             Überspringen
           </Button>
         </div>
-        <Button onClick={handleSave} className="bg-[#0F973D] hover:bg-[#0D7A32] text-white">
-          Profil speichern
+        <Button 
+          onClick={handleSave} 
+          disabled={!isFormValid}
+          className="bg-[#0F973D] hover:bg-[#0D7A32] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          title={!isFormValid ? `Noch ${totalRequired - completedCount} Pflichtfeld${totalRequired - completedCount !== 1 ? 'er' : ''} ausfüllen` : 'Profil speichern'}
+        >
+          {isFormValid ? (
+            'Profil speichern'
+          ) : (
+            `Profil speichern (${completedCount}/${totalRequired})`
+          )}
         </Button>
       </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import {
   Breadcrumb,
@@ -78,6 +79,7 @@ interface UsersResponse {
 }
 
 export default function UsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -235,14 +237,9 @@ export default function UsersPage() {
       
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-            <p className="text-gray-600">Manage user accounts and permissions</p>
-          </div>
-          <div className="text-sm text-gray-500">
-            {pagination.itemsTotal} total users
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+          <p className="text-gray-600">Manage user accounts and permissions</p>
         </div>
 
         {/* Search and Filters */}
@@ -303,9 +300,6 @@ export default function UsersPage() {
         <Card>
           <CardHeader>
             <CardTitle>Users</CardTitle>
-            <CardDescription>
-              Showing {users.length} of {pagination.itemsTotal} users
-            </CardDescription>
           </CardHeader>
           <CardContent>
             {error ? (
@@ -321,7 +315,6 @@ export default function UsersPage() {
                       <TableHead>User</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Completion</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -359,19 +352,17 @@ export default function UsersPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm">
-                            <div>Profile: {user.profile_completion_score}%</div>
-                            <div>Search: {user.searchprofile_completion_score}%</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
                           <div className="text-sm text-gray-500">
                             {formatDate(user.created_at)}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-1">
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => router.push(`/internal/users/${user.id}`)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="sm">
