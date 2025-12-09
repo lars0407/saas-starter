@@ -1,10 +1,5 @@
 import type { NextConfig } from 'next';
 
-const nextConfig: NextConfig = {
-  experimental: {
-    clientSegmentCache: true,
-    nodeMiddleware: true
-  }
-};
+const nextConfig: NextConfig = {};
 
 export default nextConfig;
