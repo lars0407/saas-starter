@@ -39,6 +39,11 @@ export function OnboardingModal({
 }: OnboardingModalProps) {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [address, setAddress] = useState("")
+  const [city, setCity] = useState("")
+  const [state, setState] = useState("")
+  const [zipCode, setZipCode] = useState("")
   // Store original name from step 1 to ensure it's always used for user table
   const [originalFirstName, setOriginalFirstName] = useState("")
   const [originalLastName, setOriginalLastName] = useState("")
@@ -570,9 +575,9 @@ export function OnboardingModal({
 
   const handleContinue = async () => {
     if (currentStep === 1) {
-      // Validate that both firstName and lastName are filled
-      if (!firstName.trim() || !lastName.trim()) {
-        return // Don't proceed if either field is empty
+      // Validate that all required fields are filled
+      if (!firstName.trim() || !lastName.trim() || !phone.trim() || !address.trim() || !city.trim() || !state.trim() || !zipCode.trim()) {
+        return // Don't proceed if any required field is empty
       }
       // Move to step 2 (resume upload)
       setCurrentStep(2)
@@ -834,6 +839,26 @@ export function OnboardingModal({
     }
   }
 
+  const handlePhoneChange = (value: string) => {
+    setPhone(value)
+  }
+
+  const handleAddressChange = (value: string) => {
+    setAddress(value)
+  }
+
+  const handleCityChange = (value: string) => {
+    setCity(value)
+  }
+
+  const handleStateChange = (value: string) => {
+    setState(value)
+  }
+
+  const handleZipCodeChange = (value: string) => {
+    setZipCode(value)
+  }
+
   const handleResumeDataChange = (data: any) => {
     setResumeData(data)
   }
@@ -889,8 +914,18 @@ export function OnboardingModal({
               step={currentStep}
               firstName={firstName}
               lastName={lastName}
+              phone={phone}
+              address={address}
+              city={city}
+              state={state}
+              zipCode={zipCode}
               onFirstNameChange={handleFirstNameChange}
               onLastNameChange={handleLastNameChange}
+              onPhoneChange={handlePhoneChange}
+              onAddressChange={handleAddressChange}
+              onCityChange={handleCityChange}
+              onStateChange={handleStateChange}
+              onZipCodeChange={handleZipCodeChange}
               onResumeDataChange={handleResumeProcessing}
               onJobSearchIntensityComplete={handleJobSearchIntensityComplete}
               onProfileComplete={handleProfileModalComplete}
@@ -913,9 +948,9 @@ export function OnboardingModal({
               {!isLoading && currentStep !== 3 && currentStep !== 4 && currentStep !== 5 && currentStep !== 6 && currentStep !== 7 && currentStep !== 8 && (
               <Button
                 onClick={handleContinue}
-                disabled={currentStep === 1 && (!firstName.trim() || !lastName.trim())}
+                disabled={currentStep === 1 && (!firstName.trim() || !lastName.trim() || !phone.trim() || !address.trim() || !city.trim() || !state.trim() || !zipCode.trim())}
                 className={`px-8 py-3 rounded-lg font-medium ${
-                  currentStep === 1 && (!firstName.trim() || !lastName.trim())
+                  currentStep === 1 && (!firstName.trim() || !lastName.trim() || !phone.trim() || !address.trim() || !city.trim() || !state.trim() || !zipCode.trim())
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : 'bg-[#0F973D] hover:bg-[#0D7A32] text-white'
                 }`}
