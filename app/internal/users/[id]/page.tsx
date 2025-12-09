@@ -238,6 +238,7 @@ export default function UserDetailPage() {
 
   // Transform admin API profile data to resume section format
   const transformProfileData = () => {
+    if (!user) return null;
     if (!user.profile_of_user?.profile) return null;
     
     const profileData = user.profile_of_user.profile;
