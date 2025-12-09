@@ -27,12 +27,18 @@ import { Certifications } from '@/components/resume-sections/certifications';
 import { Courses } from '@/components/resume-sections/courses';
 import { Publications } from '@/components/resume-sections/publications';
 import { Interests } from '@/components/resume-sections/interests';
-import { User, GraduationCap, Briefcase, Zap, Award, BookOpen, FileText as FileTextIcon, Heart } from 'lucide-react';
 import { 
+  User,
+  GraduationCap,
+  Briefcase,
+  Zap,
+  Award,
+  BookOpen,
+  FileText as FileTextIcon,
+  Heart,
   ArrowLeft,
   Shield,
   Building,
-  User,
   UserCheck,
   UserX,
   Mail,
